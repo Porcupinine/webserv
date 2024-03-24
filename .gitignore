@@ -25,7 +25,7 @@
 *.la
 *.a
 *.lib
-
+0
 # Executables
 *.exe
 *.out
@@ -33,6 +33,7 @@
 
 # Builds
 cmake-build*/
+build/
 
 # IDE cache 
 .idea/
