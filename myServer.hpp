@@ -15,6 +15,8 @@ class MyServer {
         std::string _ipAddress;
         std::string _port;
 
+        int _epollFd;
+
         int _listenSocket;
         int _newSocket;
         long _incomingMsg;
@@ -23,6 +25,10 @@ class MyServer {
         
         int startServer();
         void closeServer();
+
+        void setupEpoll();
+        void addToEpoll(int fd, uint32_t events);
+
         void acceptConnection(int &new_socket);
         std::string buildResponse();
         void sendResponse();
