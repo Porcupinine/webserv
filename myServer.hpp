@@ -20,7 +20,7 @@ class MyServer {
         int _listenSocket;
         int _newSocket;
         long _incomingMsg;
-        std::string _serverMsg;
+        // std::string _serverMsg;
         struct addrinfo _hints, *_res, *_result;
         
         int startServer();
@@ -30,8 +30,9 @@ class MyServer {
         void addToEpoll(int fd, uint32_t events);
 
         void acceptConnection(int &new_socket);
-        std::string buildResponse();
-        void sendResponse();
+        /**************************************/std::string buildResponse(std::string &uri, std::string &protocol);
+        /***This should be part of a class..***/void sendResponse(std::string &serverMsgle);
+        /**************************************/void handleResponse(char *str);
 
     public:
         MyServer(std::string ipAddress, std::string port);

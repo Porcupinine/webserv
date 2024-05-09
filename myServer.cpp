@@ -1,18 +1,25 @@
 #include "myServer.hpp"
 
+#include <fstream>
+#include <vector>
 #include <sstream>
+
 #include <string.h>
 #include <unistd.h>
 
 #include <sys/epoll.h>
+#include <sys/types.h>
+#include <dirent.h>
 #include <fcntl.h>
+
+#include <stdlib.h>
 
 #define BACKLOG     1
 #define MAX_EVENTS 5
 #define BUFFER_SIZE 30000
 
 MyServer::MyServer(std::string ipAddress, std::string port) : _ipAddress(ipAddress), _port(port), _listenSocket(),
-    _newSocket(), _incomingMsg(), _serverMsg(buildResponse()), _hints(), _result(nullptr)
+    _newSocket(), _incomingMsg(),/*_serverMsg(buildResponse()),*/ _hints(), _result(nullptr)
 {
     memset(&_hints, 0, sizeof(_hints));
     _hints.ai_family = AF_INET;
@@ -93,8 +100,9 @@ void MyServer::startListening() {
                 }
 
                 std::cout << "------ RECEIVED REQUEST ------\n\n";
-                printf("%s", buffer);
-                sendResponse();
+                handleResponse(buffer);
+                // printf("%s", buffer);
+                // sendResponse();
                 close(_newSocket);
             }
         }
@@ -132,22 +140,120 @@ void MyServer::acceptConnection(int &newSocket) {
     }
 }
 
-std::string MyServer::buildResponse()
-{
-    std::string htmlFile = "<!DOCTYPE html><html lang=\"en\"><body><h1> HOME </h1><p> NOW WE KNOW :) </p></body></html>";
+std::stringstream setMethod(char *buffer){
+    std::stringstream ss(buffer);
+
+    std::string firstLine;
+    std::getline(ss, firstLine);
+
+    std::cout << "The first line is: " << firstLine << std::endl;
+
+    std::stringstream lineStream(firstLine);
+    return lineStream;
+}
+
+void MyServer::handleResponse(char *buffer) {
+    
+    std::stringstream methodLine = setMethod(buffer);
+    std::string method, uri, protocol;
+    methodLine >> method >> uri >> protocol; // Dit kan beter, maar weet nog niet hoe.
+    
+    std::cout << "Method: " << method << std::endl;
+    std::cout << "URI: " << uri << std::endl;
+    std::cout << "Protocol: " << protocol << std::endl;
+
+    std::string serverMessage = buildResponse(uri, protocol);
+    if (serverMessage.empty()){
+        std::cout << "Couldn't build a proper message\n";
+        return;
+    }
+    sendResponse(serverMessage);
+}
+
+std::string getExtension(const std::string& uri){
+    size_t lastDot = uri.find_last_of('.');
+    if (lastDot != std::string::npos && (lastDot + 1) < uri.size())
+        return uri.substr(lastDot+1);
+    std::cout << "no dot..?\n";
+    return "";
+}
+
+bool isValidExtension(const std::string& uriExt){
+    std::string extensions[] = {"html", "php", "py"};
+    for (int idx = 0; idx < 3; idx++){
+        if (extensions[idx] == uriExt)
+            return true;
+    }
+    return false;
+}
+
+std::string getFilePath(const std::string& uri) {
+    std::string basePath = "../www";
+    std::string fullPath;
+    if (uri == "/"){
+        fullPath = basePath + "/html/index.html";
+    } else {           
+        std::string uriExt = getExtension(uri);
+        std::cout << uriExt + "\n";
+        if (isValidExtension(uriExt) == false) return ""; // werk hier met exceptions?
+        fullPath = basePath + "/" + uriExt + uri;
+    }
+
+    return fullPath;
+}
+
+std::string getFileAsStream(std::string &uri) {
+    std::string filePath = getFilePath(uri);
+
+    std::cout << filePath + "\n";
+
+    std::ifstream file(filePath, std::ios::binary | std::ios::ate); // Open for reading at end to get size
+    if (!file) {
+        std::cerr << "hierzo..\n";
+        filePath = getFilePath("/nope.html");
+        std::cout << filePath + "\n";
+        file.clear();
+        file.open(filePath, std::ios::binary | std::ios::ate);
+        if (!file){
+            std::cout << "Hierzo dan?\n";
+            std::cout << "Couldn't do file related stuff\n";
+            return "";
+        }
+    }
+
+    std::streamsize size = file.tellg();
+    if (size < 0) {std::cout << size<< " we found the culprit\n"; exit (-2);}
+    file.seekg(0, std::ios::beg);
+    std::vector<char> buffer(size);
+    if (!file.read(buffer.data(), size)) {
+        // return ""; // or handle file read error
+        exit(-1);
+    }
+
+    std::string content = std::string(buffer.begin(), buffer.end());
+    // std::cout << content + "\n";
+    return content;
+    //find file in directory, depending on extension (?)
+    //make file into valid stream? then return filestream/stringstream as .str();
+}
+
+std::string MyServer::buildResponse(std::string &uri, std::string &protocol) {
+    std::string fileContents = getFileAsStream(uri);
+
+    if (fileContents.empty())
+        return "";
+
     std::ostringstream ss;
-    ss << "HTTP/1.1 200 OK\nContent-Type: text/html\nContent-Length: " << htmlFile.size() << "\n\n"
-       << htmlFile;
+    ss << protocol << "200 OK\nContent-Type: text/html\nContent-Length: " << fileContents.size() << "\n\n" << fileContents; // Need to build this whole response.
 
     return ss.str();
 }
 
-void MyServer::sendResponse()
-{
+void MyServer::sendResponse(std::string &serverMsg) {
     long bytesSent;
 
-    bytesSent = write(_newSocket, _serverMsg.c_str(), _serverMsg.size());
-    if (bytesSent == _serverMsg.size()){
+    bytesSent = write(_newSocket, serverMsg.c_str(), serverMsg.size());
+    if (bytesSent == serverMsg.size()){
         std::cout << "------ Server Response sent to client ------\n\n" << std::endl;
     }
     else{
