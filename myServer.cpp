@@ -209,14 +209,12 @@ std::string getFileAsStream(std::string &uri) {
 
     std::ifstream file(filePath, std::ios::binary | std::ios::ate); // Open for reading at end to get size
     if (!file) {
-        std::cerr << "hierzo..\n";
         filePath = getFilePath("/nope.html");
         std::cout << filePath + "\n";
         file.clear();
         file.open(filePath, std::ios::binary | std::ios::ate);
         if (!file){
-            std::cout << "Hierzo dan?\n";
-            std::cout << "Couldn't do file related stuff\n";
+            std::cerr << "Couldn't do file related stuff\n";
             return "";
         }
     }
@@ -233,8 +231,6 @@ std::string getFileAsStream(std::string &uri) {
     std::string content = std::string(buffer.begin(), buffer.end());
     // std::cout << content + "\n";
     return content;
-    //find file in directory, depending on extension (?)
-    //make file into valid stream? then return filestream/stringstream as .str();
 }
 
 std::string MyServer::buildResponse(std::string &uri, std::string &protocol) {
