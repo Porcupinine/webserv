@@ -7,7 +7,9 @@ set(SRC
 		src/cgiHandler.cpp
 		src/CGI.h
 		src/response.cpp
-		includes/response.h)
+		includes/response.h
+		src/Cgi.cpp
+		includes/Cgi.h)
 
 set(TESTSRC )
 

@@ -1,15 +1,15 @@
 //
-// Created by laura on 21-4-24.
+// Created by laura on 27-5-24.
 //
 
 #ifndef WEBSERV_CGI_H
 #define WEBSERV_CGI_H
 
 
-class CGI {
+class Cgi {
 private:
-public:
-	
+	size_t m_status;
+
 };
 
 
