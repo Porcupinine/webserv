@@ -4,8 +4,10 @@ project(webserv)
 set(CMAKE_CXX_STANDARD 11)
 
 set(SRC
-		src/CGI.cpp
-		src/CGI.h)
+		src/cgiHandler.cpp
+		src/CGI.h
+		src/response.cpp
+		includes/response.h)
 
 set(TESTSRC )
 
