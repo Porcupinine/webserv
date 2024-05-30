@@ -5,11 +5,12 @@ set(CMAKE_CXX_STANDARD 11)
 
 set(SRC
 		src/cgiHandler.cpp
-		src/CGI.h
 		src/response.cpp
 		includes/response.h
 		src/Cgi.cpp
-		includes/Cgi.h)
+		includes/Cgi.h
+		Request/parseRequest.cpp
+		Request/utilsRequest.cpp)
 
 set(TESTSRC )
 

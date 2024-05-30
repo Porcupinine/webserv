@@ -24,7 +24,7 @@ class parseRequest
         unsigned int _returnValue; // to what do we init this?? 200
         std::string _query;
         std::string _infoStr; // that we got from the server's buffer
-        std::map<std::string, std::string> _headers; // MAKE IT AN UNORERED MAP? NO
+        std::map<std::string, std::string> _headers; // MAKE IT AN UNORERED MAP? NO why a map?
         std::list<std::pair<std::string, float>> _language;
 
 
