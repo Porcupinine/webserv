@@ -44,6 +44,7 @@ void parseRequest::parseStr(std::string &info) {
     setBody(); // if any as they body comes after the headers and a newline first THEN the body message
     //return _returnValue; // DEPENDS IF VOID OR INT TO BE RETURNED
 }
+//TODO can't compile as the functions don't take any argument
 
 std::string parseRequest::readLine(const std::string &str, size_t &i) {
     std::string res;
@@ -61,7 +62,6 @@ std::string parseRequest::readLine(const std::string &str, size_t &i) {
         i = j + 1;
     return res;
 }
-
 
 /* SETS THE HEADER VALUES */
 
@@ -109,7 +109,7 @@ void parseRequest::setLanguage() {
                 language.resize(2);
             else
                 language.resize(i);
-			language.push_back(std::pair<std::string, float>(language, weight));
+			_language.push_back(std::pair<std::string, float>(language, weight));
 		}
         _language.sort(std::greater<std::pair<std::string, float>>()); // having the biggest on top
     }
@@ -185,14 +185,13 @@ int parseRequest::getRetVal(void) const {
     return _returnValue;
 }
 
-void parseRequest::setBody(std::string b) {
-    _body = b;
+void parseRequest::setBodyMsg(std::string b) {
+	_bodyMsg = b;
 }
 
 std::string parseRequest::getBody(void) const {
-    return _body;
+    return _bodyMsg;
 }
-
 
 /* HEADERS */
 
@@ -293,6 +292,7 @@ std::string initMethodString(Method method)
         case Method::DELETE:
             return "DELETE";
     }
+	return "HEY";
 }
 
 int parseRequest::validateMethodType() {

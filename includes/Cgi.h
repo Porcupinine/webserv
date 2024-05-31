@@ -6,11 +6,11 @@
 #define WEBSERV_CGI_H
 
 
-class Cgi {
-private:
-	size_t m_status;
-
-};
+//class Cgi {
+//private:
+//	size_t m_status;
+//
+//};
 
 
 #endif //WEBSERV_CGI_H

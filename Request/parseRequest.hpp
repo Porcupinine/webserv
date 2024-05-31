@@ -10,7 +10,7 @@
 #include <vector>
 #include <list>
 #include <utility>
-#include <pair>
+//#include <pair>
 #include <functional>
 
 class parseRequest
@@ -56,8 +56,6 @@ class parseRequest
         ~parseRequest();
         parseRequest& operator=(const parseRequest &cpy);
 
-        void initHeaders();
-
         /* GETTERS */
         std::string getMethod(void) const;
         std::string getPath(void) const;
@@ -73,7 +71,7 @@ class parseRequest
         void setVersion(std::string v);
         void setPort(std::string port);
         void setRetVal(int value);
-        void setBody(std::string b);
+        void setBodyMsg(std::string b);
 
 
 };
