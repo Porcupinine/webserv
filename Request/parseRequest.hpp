@@ -50,6 +50,7 @@ class parseRequest
         void setLanguage();
         void setQuery();
         void setBody(const std::string &str);
+        std::string readBody(const std::string &str, size_t &i);
 
     public:
         parseRequest(std::string &info);
@@ -62,7 +63,7 @@ class parseRequest
         std::string getVersion(void) const;
         unsigned int getPort(void) const;
         int getRetVal(void) const;
-        std::string getBody(void) const;
+        std::string getBodyMsg(void) const;
         const std::map<std::string, std::string>& getHeaders(void) const;
 
         /* SETTERS */

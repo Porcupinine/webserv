@@ -18,7 +18,7 @@ parseRequest&	parseRequest::operator=(const parseRequest &cpy)
 	this->_methodType = cpy.getMethod();
 	this->_version = cpy.getVersion();
 	this->_returnValue = cpy.getRetVal();
-	this->_bodyMsg = cpy.getBody();
+	this->_bodyMsg = cpy.getBodyMsg();
 	this->_port = cpy.getPort();
 	this->_path = cpy.getPath();
     // NOT QUERY??
@@ -38,6 +38,11 @@ void parseRequest::parseStr(std::string &info) {
         value = setValue(line);
         if (_headers.count(key))
             _headers[key] = value;
+        // if (line == "\n") {
+        //     line = readBody(info, i); // or does i need to be +1 here? if it hangs on the newline still
+        //     setBody(line);
+        //     break ;
+        // }
     }
     setQuery(); // then to decode later right?? or something
     setLanguage();
@@ -115,6 +120,18 @@ void parseRequest::setLanguage() {
     }
 }
 
+std::string parseRequest::readBody(const std::string &str, size_t &i) {
+    std::string res;
+
+    if (i == std::string::npos)
+        return "";
+    for (size_t j = 0; str[i] != std::string::npos; i++) { // EOF or std::string::npos
+        res[j] = str[i];
+        j++;
+    }
+    return res;
+}
+
 void	parseRequest::setBody(const std::string &str) {
     _bodyMsg.assign(str);
 
@@ -189,7 +206,7 @@ void parseRequest::setBodyMsg(std::string b) {
 	_bodyMsg = b;
 }
 
-std::string parseRequest::getBody(void) const {
+std::string parseRequest::getBodyMsg(void) const {
     return _bodyMsg;
 }
 
