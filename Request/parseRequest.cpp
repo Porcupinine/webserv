@@ -41,7 +41,7 @@ void parseRequest::parseStr(std::string &info) {
             _headers[key] = value;
         if (line == "\n") {
             if ((line = readLine(info, i)) != "")
-            bodyLine = readBody(info, i); // or does i need to be +1 here? if it hangs on the newline still
+            bodyLine = readBody(info, i); // or + 1 here?
             setBody(bodyLine);
             break ;
         }
