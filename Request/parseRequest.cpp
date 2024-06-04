@@ -28,6 +28,7 @@ parseRequest&	parseRequest::operator=(const parseRequest &cpy)
 void parseRequest::parseStr(std::string &info) {
     size_t i = 0;
     std::string line;
+    std::string bodyLine;
     std::string value;
     std::string key;
 
@@ -38,15 +39,16 @@ void parseRequest::parseStr(std::string &info) {
         value = setValue(line);
         if (_headers.count(key))
             _headers[key] = value;
-        // if (line == "\n") {
-        //     line = readBody(info, i); // or does i need to be +1 here? if it hangs on the newline still
-        //     setBody(line);
-        //     break ;
-        // }
+        if (line == "\n") {
+            if ((line = readLine(info, i)) != "")
+            bodyLine = readBody(info, i); // or does i need to be +1 here? if it hangs on the newline still
+            setBody(bodyLine);
+            break ;
+        }
     }
     setQuery(); // then to decode later right?? or something
     setLanguage();
-    setBody(); // if any as they body comes after the headers and a newline first THEN the body message
+    //setBody(); // if any as they body comes after the headers and a newline first THEN the body message
     //return _returnValue; // DEPENDS IF VOID OR INT TO BE RETURNED
 }
 //TODO can't compile as the functions don't take any argument
