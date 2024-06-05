@@ -86,6 +86,7 @@ namespace webserv {
 						std::cout << "path: " << request.getPath() << '\n';
 						std::cout << "port: " << request.getPort() << "\n\n\n";
 						respond(pollFd.fd);
+						std::cout << "HEY\n";
 						close(pollFd.fd);
 					}
 				}
@@ -123,7 +124,18 @@ namespace webserv {
 //	}
 
 	void webSocket::respond(int socketd) {
-		::write(socketd, "Yeah broh", 10);
+		// ::write(socketd, "Yeah broh", 10);
+		std::string htmlFile = "HTTP/1.1 302 Found\r\n"
+                           "Location: /htmls/form.html\r\n"
+                           "Content-Length: 0\r\n"
+                           "\r\n";
+    ::write(socketd, htmlFile.c_str(), htmlFile.size());
+		
+    // std::ostringstream ss;
+    // ss << "HTTP/1.1 200 OK\nContent-Type: text/html\nContent-Length: " << htmlFile.size() << "\n\n"
+    // 	<< htmlFile;
+
+    // return ss.str();
 	}
 
 	void webSocket::addPoll(const int fd) {
