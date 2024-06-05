@@ -33,33 +33,34 @@ void parseRequest::parseStr(std::string &info) {
     std::string key;
 
     parseFirstline(readLine(info, i)); // 400 RET?? -- BUT NEED TO HAVE A STACK RIGHT TO PUT ALL THIS STUFF ON
-    // CHECK IF IT RETURNS 400 OR NOT -- AS ITS A BAD REQUEST
     while ((line = readLine(info, i)) != "\r" && line != "" && _returnValue != 400) {
         key = setKey(line); // identifier of header
         value = setValue(line);
-        if (_headers.count(key))
+        if (_headers.count(key)) {
             _headers[key] = value;
-        if (line == "\n") {
+            // std::cout << "[" << key << "] " << value << '\n'; // to rm
+        }
+        if (line == "\n") { // TO TEST STILL
             if ((line = readLine(info, i)) != "")
             bodyLine = readBody(info, i); // or + 1 here?
             setBody(bodyLine);
             break ;
         }
     }
+    setPort(_headers["Host"]);
     setQuery(); // then to decode later right?? or something
     setLanguage();
     //setBody(); // if any as they body comes after the headers and a newline first THEN the body message
     //return _returnValue; // DEPENDS IF VOID OR INT TO BE RETURNED
 }
-//TODO can't compile as the functions don't take any argument
 
-std::string parseRequest::readLine(const std::string &str, size_t &i) {
+std::string parseRequest::readLine(const std::string &str, size_t &i) { // FIX THIS
     std::string res;
     size_t j;
 
-    if (i == std::string::npos)
-        return ""; // empty sring
-    j = str.find_first_of('\n', 1);
+    if (i == std::string::npos) 
+        return "";
+    j = str.find_first_of('\n', i); // changed this to i instead of 1 WTF
     res = str.substr(i, j - i);
     if (res[res.size() - 1] == '\r')
         res.pop_back(); // rm last char if \r
@@ -78,20 +79,21 @@ std::string parseRequest::setKey(const std::string &line) {
 
     i = line.find_first_of(":", 1);
     res.append(line, 0, i);
-    capsOn(res); // maybe this can go in a certain utils or something 
+    capsOn(res);
     return res;
 }
 
 std::string parseRequest::setValue(const std::string &line) {
     size_t i;
-    size_t len;
+    size_t endline;
     std::string res;
 
     i = line.find_first_of(":", 1);
     i = line.find_first_not_of(" ", i + 1); // so the search begings after :
+    endline = line.find_first_of("\r", i); // or /n??
+    line.substr(i, endline - 1);
     if (i != std::string::npos)
         res.append(line, i, std::string::npos);
-    len = res.size();
     return rmSpaces(res);
 }
 
@@ -183,13 +185,16 @@ std::string parseRequest::getVersion(void) const {
 }
 
 void parseRequest::setPort(std::string port) {
-    port = port.std::string::substr(port.find("localhost:"));
-    // std::cout << "after trim: " << port << '\n'; // to rm
+    size_t start;
+
+    start = port.find_first_of(":");
+
+    if (start != 0 && port.find("localhost:") != std::string::npos)
+        port = port.substr(start + 1);
     if (port.size() < 5)
         _port = std::stoul(port);
     else
         std::cout << "ERROR IN PORT\n"; // this will be checked later as well right
-    // std::cout << "after conversion: " << port << '\n'; // to rm
 }
 
 unsigned int parseRequest::getPort(void) const {
@@ -214,7 +219,7 @@ std::string parseRequest::getBodyMsg(void) const {
 
 /* HEADERS */
 
-void parseRequest::initHeaders() { // DO WE REALLY NEED ALL OF THEM??
+void parseRequest::initHeaders() { // MORE NEEDED??
     _headers.clear();
     _headers["Accept-Charsets"] = "";
     _headers["Accept-Language"] = "";
@@ -250,10 +255,10 @@ int parseRequest::parseFirstline(const std::string &info) {
     size_t i;
     std::string line;
 
-    i = info.find_first_of('\n'); // pour avoir la premiere ligne
-    line = info.substr(0, i); // isole premiere ligne
+    i = info.find_first_of('\n');
+    line = info.substr(0, i);
     i = line.find_first_of(' ');
-
+    
     if (i == std::string::npos) {
         _returnValue = 400;
         std::cerr << "Error: wrong syntax of HTTP method\n"; // OR WHAT??
@@ -276,8 +281,8 @@ int parseRequest::parsePath(const std::string &line, size_t i) {
         std::cerr << "Error: no HTTP version\n";
         return _returnValue;
     }
-    _path.assign(line, j, i - j);
-    return parseVersion(line, i);
+    _path.assign(line, i + 1, j - i);
+    return parseVersion(line, j);
 }
 
 int parseRequest::parseVersion(const std::string &line, size_t i) {
@@ -311,7 +316,7 @@ std::string initMethodString(Method method)
         case Method::DELETE:
             return "DELETE";
     }
-	return "HEY";
+	return "DONE INITING METHOD STRING";
 }
 
 int parseRequest::validateMethodType() {

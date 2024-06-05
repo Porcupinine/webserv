@@ -1,4 +1,5 @@
 #include "webSocket.h"
+#include "../Request/parseRequest.hpp"
 #include <cstdlib>
 #include <iostream>
 #include "defines.h"
@@ -44,6 +45,7 @@ namespace webserv {
 
 	void webSocket::read() {
 		int clonedSocket{};
+
 		for (;;) {
 			if (poll(m_pollFds.data(), m_pollFds.size(), -1) < 0) {
 				std::cout << "Failed poll: " << strerror(errno) << "\n";
@@ -76,6 +78,13 @@ namespace webserv {
 							std::cout << "Can't read: " << strerror(errno) << "\n";
 							exit(1);
 						}
+						parseRequest request(message);
+						std::cout << "version: " << request.getVersion() << '\n';
+						std::cout << "ret value: " << request.getRetVal() << '\n';
+						std::cout << "body: " << request.getBodyMsg() << '\n';
+						std::cout << "method: " << request.getMethod() << '\n';
+						std::cout << "path: " << request.getPath() << '\n';
+						std::cout << "port: " << request.getPort() << "\n\n\n";
 						respond(pollFd.fd);
 						close(pollFd.fd);
 					}
