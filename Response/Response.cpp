@@ -1,12 +1,7 @@
 #include "../includes/response.h"
 
-Response::Response(void) : _response(""), _version(""), _statusCode(200), _statusText(""), _respBody("") {
-    // _statusCode should inherit from the previous thing right?? or if it gets here we assume all is good already??
-
-    // init method map or something?
-    // based on that send to work on the right method
-    if (_statusCode != 200)
-        std::cout << "BIG PROBLEME\n"; // of courase not, revise this
+// Response::Response(void) : _response(""), _version(""), _statusCode(200), _statusText(""), _respBody("") {
+Response::Response(void) {
 }
 
 Response::~Response() {
@@ -22,21 +17,48 @@ Response&	Response::operator=(const Response &cpy) {
 }
 
 
-/* METHOD FUNCTIONS */
+/* PROCESS RESPONSE */
+void Response::giveResponse(parseRequest& request) {
+    // _statusCode should inherit from the previous thing right?? or if it gets here we assume all is good already??
+    _statusCode = request.getRetVal();
+    initMethods();// init method map or something?
 
-void Response::getMethod() {
+    // do check with regards to return code 
+        // have default responses with error pages (content type HTML, error code, error page)
+        // make a map or pointer fucntions for the error pages// based on that send to work on the right method
+    if (_statusCode != 200 || _statusCode != 204) // en gros si ca commence pas par 2
+        std::cout << "BIG PROBLEME\n"; // of courase not, revise this
 
+    // parseRequest.getMethod();
 }
 
-void Response::postMethod() {
+/* STATIC INIT */
+std::map<std::string, void (Response::*)(parseRequest&)> Response::initMethods()
+{
+	std::map<std::string, void (Response::*)(parseRequest&)> map;
 
+	map["GET"] = &Response::getMethod;
+	map["POST"] = &Response::postMethod;
+	map["DELETE"] = &Response::deleteMethod;
+	return map;
+}
+
+std::map<std::string, void (Response::*)(parseRequest &)> Response::_method = Response::initMethods();
+
+
+/* METHOD FUNCTIONS */
+void Response::getMethod(parseRequest& request) {
+    // stuff with CGI involved
+}
+
+void Response::postMethod(parseRequest& request) {
+    // stuff with CGI involved
 }
 
 void Response::deleteMethod(parseRequest& request) {
     _response = "";
-    if (fileExists(_path) == true){ // see if it was removed or not
-        // accordingly set _statusCode
-        if (remove(_path.c_str()) == 0)
+    if (fileExists(request.getPath()) == true){ // see if rm or not
+        if (remove(request.getPath().c_str()) == 0)
             _statusCode = 204; // meaning no content, returned to indicate success and there is no body message
         else
             _statusCode = 403; // forbidden to rm, insufficient rights
@@ -72,10 +94,10 @@ std::string Response::getResponse(void) const {
 
 
 /* UTILS */
-bool Response::fileExists(std::string path) {
-    struct stat s;
+bool Response::fileExists(const std::string& path) {
+    struct stat buffer;
 
-    if (stat(path.c_str(), &s) == 0)
+    if (stat(path.c_str(), &buffer) == 0)
         return false;
     return true;
 }

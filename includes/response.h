@@ -9,7 +9,7 @@
 
 #include "../Request/parseRequest.hpp"
 
-
+class parseRequest;
 
 class Response 
 {
@@ -26,9 +26,11 @@ class Response
         ~Response();
         Response& operator=(const Response &cpy);
 
+        void giveResponse(parseRequest& request);
+
         // add everything else also here in public, functions related to methods blabla
-        void getMethod(); // arg needed??
-        void postMethod(); // arg needed?
+        void getMethod(parseRequest& request); // arg needed??
+        void postMethod(parseRequest& request); // arg needed?
         void deleteMethod(parseRequest& request);
 
         /* GETTERS */
@@ -39,7 +41,11 @@ class Response
         std::string getRespBody(void) const;
 
         /* UTILS */
-        bool fileExists(std::string path);
+        bool fileExists(const std::string& path);
+
+        /* STATIC */
+        static std::map<std::string, void (Response::*)(parseRequest&)>	_method;
+	    static std::map<std::string, void (Response::*)(parseRequest&)>	initMethods();
 
 };
 
