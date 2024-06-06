@@ -27,3 +27,11 @@ std::vector<std::string> parseRequest::split(const std::string &str, char c) {
         vec.push_back(element);
     return vec;
 }
+
+bool parseRequest::cgiInvolved(std::string path) {
+    std::size_t found = path.find("cgi-bin");
+    
+    if (found != std::string::npos)
+        return true;
+    return false;
+}

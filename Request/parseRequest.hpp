@@ -46,6 +46,7 @@ class parseRequest
         std::string& capsOn(std::string &str); // maybe put this in utils
         std::string rmSpaces(std::string &str); // UTILS??
         std::vector<std::string> split(const std::string &str, char c); // UTILS??
+        bool cgiInvolved(std::string path);
 
         void setLanguage();
         void setQuery();
