@@ -50,7 +50,7 @@ void parseRequest::parseStr(std::string &info) {
     setPort(_headers["Host"]);
     setQuery(); // then to decode later right?? or something
     setLanguage();
-    if (cgiInvolved(_header["Path"]) == true)
+    if (cgiInvolved(_headers["Path"]) == true)
         // SEND TO LAURA
     //setBody(); // if any as they body comes after the headers and a newline first THEN the body message
     //return _returnValue; // DEPENDS IF VOID OR INT TO BE RETURNED
