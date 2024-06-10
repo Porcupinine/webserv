@@ -40,7 +40,7 @@ void parseRequest::parseStr(std::string &info) {
             _headers[key] = value;
             // std::cout << "[" << key << "] " << value << '\n'; // to rm
         }
-        if (line == "\n") { // TO TEST STILL
+        if (line == "\r\n") { // TO TEST STILL
             if ((line = readLine(info, i)) != "")
             bodyLine = readBody(info, i); // or + 1 here?
             setBody(bodyLine);
@@ -50,7 +50,7 @@ void parseRequest::parseStr(std::string &info) {
     setPort(_headers["Host"]);
     setQuery(); // then to decode later right?? or something
     setLanguage();
-    //setBody(); // if any as they body comes after the headers and a newline first THEN the body message
+//    setBody(); // if any as they body comes after the headers and a newline first THEN the body message
     //return _returnValue; // DEPENDS IF VOID OR INT TO BE RETURNED
 }
 

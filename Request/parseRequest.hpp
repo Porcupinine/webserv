@@ -25,7 +25,7 @@ class parseRequest
         std::string _query;
         std::string _infoStr; // that we got from the server's buffer
         std::map<std::string, std::string> _headers; // MAKE IT AN UNORERED MAP? NO why a map?
-        std::list<std::pair<std::string, float>> _language;
+		std::list<std::pair<std::string, float>> _language;
 
 
         void parseStr(std::string &info);

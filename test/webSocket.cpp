@@ -1,5 +1,6 @@
 #include "webSocket.h"
 #include "../Request/parseRequest.hpp"
+#include "../includes/cgiHandler.h"
 #include <cstdlib>
 #include <iostream>
 #include "defines.h"
@@ -86,6 +87,7 @@ namespace webserv {
 						std::cout << "path: " << request.getPath() << '\n';
 						std::cout << "port: " << request.getPort() << "\n\n\n";
 						respond(pollFd.fd);
+						cgiHandler(request);
 						std::cout << "HEY\n";
 						close(pollFd.fd);
 					}
@@ -93,35 +95,6 @@ namespace webserv {
 			}
 		}
 	}
-
-
-
-
-
-//			std::string buffer(BUFFER_SIZE, '\0');
-//			std::cout << "Waiting for connection...\n";
-//			if ((clonedSocket = accept(m_socket,(sockaddr *) &m_serverAddress,&m_serverAddressLen)) < 0) {
-//				std::cout << "Can't be cloned: "<< strerror(errno)<<"\n";
-//				exit(1);
-//			}
-//			addPoll(clonedSocket);
-//			message.clear();
-//			std::cout << "Wait for message from [" << clonedSocket << "]\n";
-//			while ((buff_len = ::read(clonedSocket, buffer.data(),BUFFER_SIZE)) > 0) {
-//				message.append(buffer.data(), buff_len);
-//			}
-//			std::cout << "message: " << message << std::endl;
-//			if (buff_len < 0) {
-//				std::cout << "Can't read: "<< strerror(errno)<<"\n";
-//				exit(1);
-//			}
-//			respond(clonedSocket);
-//			if (shutdown(clonedSocket, SHUT_RDWR) < 0) {
-//				std::cout << "Failed to close socket: " << strerror(errno)<< "\n";
-//				exit(1);
-//			}
-//		}
-//	}
 
 	void webSocket::respond(int socketd) {
 		// ::write(socketd, "Yeah broh", 10);

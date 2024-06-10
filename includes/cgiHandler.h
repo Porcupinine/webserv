@@ -5,12 +5,12 @@
 #ifndef WEBSERV_CGI_H
 #define WEBSERV_CGI_H
 
-
-class CGI {
-private:
-public:
-	
-};
+int cgiHandler(parseRequest& request);
+//class CGI {
+//private:
+//public:
+//	int cgiHandler(parseRequest& request);
+//};
 
 
 #endif //WEBSERV_CGI_H
