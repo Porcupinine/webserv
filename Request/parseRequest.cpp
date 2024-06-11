@@ -3,6 +3,7 @@
 parseRequest::parseRequest(std::string &info) : _methodType(""), _version(""), _returnValue(200),
                               _bodyMsg(""), _port(80), _path(""), _query(""), _infoStr(info) {
     initHeaders();
+    // init _path to a certain default location but depends on the config file
     parseStr(info);
     if (_returnValue != 200)
         std::cout << "Parse error: " << _returnValue << '\n';

@@ -30,6 +30,7 @@ void Response::giveResponse(parseRequest& request) {
         std::cout << "BIG PROBLEME\n"; // of courase not, revise this
 
     // parseRequest.getMethod();
+    // if method NOT among them -- _statusCode = 405; _statusText = "Method Not Allowed"; // with a new line or what??
 }
 
 /* STATIC INIT */
