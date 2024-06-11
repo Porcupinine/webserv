@@ -54,7 +54,7 @@ class parseRequest
         std::string readBody(const std::string &str, size_t &i);
 
     public:
-        parseRequest(std::string &info);
+        parseRequest(std::string &info); // ++ server instance -- TO DO
         ~parseRequest();
         parseRequest& operator=(const parseRequest &cpy);
 

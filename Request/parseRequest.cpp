@@ -1,5 +1,7 @@
 #include "../Request/parseRequest.hpp"
 
+
+// this will also take an instance of the server part to be able to retreive _path if it was overwritten/updated
 parseRequest::parseRequest(std::string &info) : _methodType(""), _version(""), _returnValue(200),
                               _bodyMsg(""), _port(80), _path(""), _query(""), _infoStr(info) {
     initHeaders();
@@ -230,6 +232,7 @@ void parseRequest::initHeaders() { // MORE NEEDED??
 	_headers["Auth-Scheme"] = "";
 	_headers["Authorization"] = ""; // 
 	_headers["Connection"] = "Keep-Alive";
+    _headers["Cookie"] = ""; // will need to be stored somewhere for later
 	_headers["Content-Language"] = "";
 	_headers["Content-Length"] = "";
 	_headers["Content-Location"] = "";
