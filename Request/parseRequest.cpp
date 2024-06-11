@@ -41,21 +41,24 @@ void parseRequest::parseStr(std::string &info) {
             _headers[key] = value;
             // std::cout << "[" << key << "] " << value << '\n'; // to rm
         }
-        if (line == "\r\n") { // TO TEST STILL
-            if ((line = readLine(info, i)) != "")
-            bodyLine = readBody(info, i); // or + 1 here?
-            setBody(bodyLine);
-            break ;
-        }
     }
+//	if ((line = readLine(info, i)) != "" ) { // TO TEST STILL
+//		if ((line = readLine(info, i)) != "")
+//			bodyLine = readBody(info, i); // or + 1 here?
+//		setBody(bodyLine);
+//		break ;
+//	}
+	size_t startBody = info.find("\r\n\r\n") + 4;
+	_bodyMsg = info.substr(startBody, std::string::npos);
     setPort(_headers["Host"]);
     setQuery(); // then to decode later right?? or something
     setLanguage();
-    if (cgiInvolved(_headers["Path"]) == true)
+//    if (cgiInvolved(_headers["Path"]) == true)
         // SEND TO LAURA
     //setBody(); // if any as they body comes after the headers and a newline first THEN the body message
     //return _returnValue; // DEPENDS IF VOID OR INT TO BE RETURNED
 }
+
 
 std::string parseRequest::readLine(const std::string &str, size_t &i) { // FIX THIS
     std::string res;
