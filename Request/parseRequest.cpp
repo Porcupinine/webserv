@@ -41,7 +41,7 @@ void parseRequest::parseStr(std::string &info) {
             _headers[key] = value;
             // std::cout << "[" << key << "] " << value << '\n'; // to rm
         }
-        if (line == "\n") { // TO TEST STILL
+        if (line == "\r\n") { // TO TEST STILL
             if ((line = readLine(info, i)) != "")
             bodyLine = readBody(info, i); // or + 1 here?
             setBody(bodyLine);
