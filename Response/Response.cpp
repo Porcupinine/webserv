@@ -57,6 +57,7 @@ void Response::postMethod(parseRequest& request) {
 }
 
 void Response::deleteMethod(parseRequest& request) {
+    // think this is correct, as CGI/Laura rm it and so i just need to check its really removed
     _response = "";
     if (fileExists(request.getPath()) == true){ // see if rm or not
         if (remove(request.getPath().c_str()) == 0)
