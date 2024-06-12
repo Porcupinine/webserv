@@ -50,10 +50,29 @@ std::map<std::string, void (Response::*)(parseRequest &)> Response::_method = Re
 /* METHOD FUNCTIONS */
 void Response::getMethod(parseRequest& request) {
     // stuff with CGI involved
+    if (cgiInvolved(request.getPath()) == true) {// or can i just use the path from repsonse?? 
+        // _response = cgi. ; // check with laura
+
+    }
+    else if (_statusCode == 200)
+        // WRITE FUNCTION FOR READING CONTENT
+    else
+         _response = errorHtml(_statusCode);
+    _response = buildResponseHeader(); // TO WRITE
 }
 
 void Response::postMethod(parseRequest& request) {
     // stuff with CGI involved
+    if (cgiInvolved(request.getPath()) == true) {// or can i just use the path from repsonse?? 
+        // _response = cgi. ; // check with laura
+
+    }
+    else {
+        // idk
+    }
+    if (_statusCode == 500)
+        _response = errorHtml(_statusCode);
+    _response = buildResponseHeader(); // to write
 }
 
 void Response::deleteMethod(parseRequest& request) {
@@ -72,7 +91,7 @@ void Response::deleteMethod(parseRequest& request) {
 
     if (_statusCode == 404 || _statusCode == 403)
         _response = errorHtml(_statusCode); // redirect to write error page or something right?? HTML format
-    _response = buildResponseHeader(); // 
+    _response = buildResponseHeader(); // TO WRITE
 }
 
 void Response::initErrorCodes()
