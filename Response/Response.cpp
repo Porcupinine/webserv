@@ -1,6 +1,5 @@
 #include "../includes/response.h"
 
-// Response::Response(void) : _response(""), _version(""), _statusCode(200), _statusText(""), _respBody("") {
 Response::Response(void) {
 }
 
@@ -21,6 +20,7 @@ Response&	Response::operator=(const Response &cpy) {
 void Response::giveResponse(parseRequest& request) {
     // _statusCode should inherit from the previous thing right?? or if it gets here we assume all is good already??
     _statusCode = request.getRetVal();
+    initErrorCodes();
     initMethods();// init method map or something?
 
     // do check with regards to return code 
@@ -58,7 +58,9 @@ void Response::postMethod(parseRequest& request) {
 
 void Response::deleteMethod(parseRequest& request) {
     // think this is correct, as CGI/Laura rm it and so i just need to check its really removed
-    _response = "";
+    (void)request; // as we actually don't really need what came out of this
+    _response = ""; // as its not initalised
+
     if (fileExists(request.getPath()) == true){ // see if rm or not
         if (remove(request.getPath().c_str()) == 0)
             _statusCode = 204; // meaning no content, returned to indicate success and there is no body message
@@ -67,9 +69,59 @@ void Response::deleteMethod(parseRequest& request) {
     }
     else
         _statusCode = 404; // not found
+
     if (_statusCode == 404 || _statusCode == 403)
-        // _response = ; // redirect to write error page or something right?? HTML format
-    // _response ; // do something with the header to send
+        _response = errorHtml(_statusCode); // redirect to write error page or something right?? HTML format
+    _response = buildResponseHeader(); // 
+}
+
+void Response::initErrorCodes()
+{
+	_errorCodes[100] = "Continue";
+	_errorCodes[200] = "OK";
+	_errorCodes[201] = "Created";
+	_errorCodes[204] = "No Content";
+	_errorCodes[400] = "Bad Request";
+	_errorCodes[403] = "Forbidden";
+	_errorCodes[404] = "Not Found";
+	_errorCodes[405] = "Method Not Allowed";
+	_errorCodes[413] = "Payload Too Large";
+	_errorCodes[500] = "Internal Server Error";
+}
+
+std::string Response::buildResponseHeader() {
+    
+}
+
+
+/* HTML RELATED */
+std::string Response::errorHtml(unsigned int error) {
+    // change this based on Laura's map: error code + html string directly
+    std::map<unsigned int, std::string>::iterator it = _errorCodes.find(error); // CHANGED THIS
+
+    if (it == _errorCodes.end()) // CHANGE IT HERE TOO
+        return ("<!DOCTYPE html><body><h1> 404 </h1><p> Error Page Not Found </p></body></html>");
+    else
+        return (it->second);
+}
+
+std::string Response::readHtmlFile(const std::string &path) { // this function needed actually??
+    std::ofstream file;
+
+    if (fileExists(path) == true){
+        file.open(path.c_str(), std::ifstream::in); // flag opening it for reading purpose
+        if (!file.is_open())
+            return ("<!DOCTYPE html><body><h1> 404 </h1><p> Page Not Found </p></body></html>");
+        
+        std::stringstream buffer;
+        buffer << file.rdbuf();
+        std::string content = buffer.str();
+        file.close();
+        _type = "text/html";
+        return (content);
+    }
+    else
+        return ("<!DOCTYPE html><body><h1> 404 </h1><p> Page Not Found </p></body></html>");
 }
 
 

@@ -30,8 +30,10 @@ std::vector<std::string> parseRequest::split(const std::string &str, char c) {
 
 bool parseRequest::cgiInvolved(std::string path) {
     std::size_t found = path.find("cgi-bin");
+    std::size_t foundExtension = path.find(".py");
+    // take in a list of possible extension for CGI -- thus if not html then check extensions
     
-    if (found != std::string::npos)
+    if (found != std::string::npos && foundExtension != std::string::npos) // or could it be only one of the two, check with Laura
         return true;
     return false;
 }

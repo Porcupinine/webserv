@@ -4,8 +4,9 @@
 
 #ifndef WEBSERV_RESPONSE_H
 #define WEBSERV_RESPONSE_H
-#include  <iostream>
+#include <iostream>
 #include <sys/stat.h>
+#include <fstream>
 
 #include "../Request/parseRequest.hpp"
 
@@ -14,12 +15,16 @@ class parseRequest;
 class Response 
 {
     private:
-	    std::string	_response{}; // final response string
-        std::string _version; // (like HTTP/1.1)
-        unsigned int _statusCode; // (like 200) or could we use _returnValue from parseRequest??
-        std::string _statusText; // (like OK)
+	    std::string     _response{}; // final response string
+        std::string     _version; // (like HTTP/1.1)
+        unsigned int    _statusCode; // (like 200) or could we use _returnValue from parseRequest??
+        std::string     _statusText; // (like OK)
         //std::string _respHeaders; // needed?? or make a map out of it?? PUT THIS ESLEWHERE PERHAPS? IN ANOTHER CLASS
-        std::string _respBody;
+        std::string     _respBody; // using ??
+        std::string     _type;
+        bool            _autoIndex; // meaning autoIndex = true; means to respond with /path/index.html when /path/ is requested
+        std::map<unsigned int, std::string> _errorCodes;
+
 
     public:
         Response(void);
@@ -32,6 +37,14 @@ class Response
         void getMethod(parseRequest& request); // arg needed??
         void postMethod(parseRequest& request); // arg needed?
         void deleteMethod(parseRequest& request);
+
+        void initErrorCodes();
+
+        std::string buildResponseHeader(); // check if args needed
+
+        /* HTML RELATED */
+        std::string errorHtml(unsigned int error);
+        std::string readHtmlFile(const std::string &path);
 
         /* GETTERS */
         std::string getResponse(void) const; 
