@@ -282,12 +282,12 @@ int parseRequest::parsePath(const std::string &line, size_t i) {
 
     if ((j = line.find_first_not_of(' ', i)) == std::string::npos) {
         _returnValue = 400;
-        std::cerr << "Error: no path\n";
+        std::cerr << "Error: no path\n"; // do we want this here, should go further not?
         return _returnValue;
     }
     if ((j = line.find_first_of(' ', j)) == std::string::npos) {
         _returnValue = 400;
-        std::cerr << "Error: no HTTP version\n";
+        std::cerr << "Error: no HTTP version\n"; // do we want this here, should go further not?
         return _returnValue;
     }
     _path.assign(line, i + 1, j - i);

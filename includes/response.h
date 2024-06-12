@@ -21,6 +21,7 @@ class Response
         std::string     _statusText; // (like OK)
         //std::string _respHeaders; // needed?? or make a map out of it?? PUT THIS ESLEWHERE PERHAPS? IN ANOTHER CLASS
         std::string     _respBody; // using ??
+        // std::string     _setCookie; // do we want/need this??
         std::string     _type;
         bool            _autoIndex; // meaning autoIndex = true; means to respond with /path/index.html when /path/ is requested
         std::map<unsigned int, std::string> _errorCodes;
