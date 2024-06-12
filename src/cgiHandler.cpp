@@ -30,7 +30,7 @@ char **convertEnv(const std::map<std::string, std::string> &mapHeaders) {
 int runRequest(parseRequest& request, int *pipeFd) {
 	//get the right path to run
 	//seta as variaveis no filho
-	char *argv[] = {"/usr/bin/python3", "/sam/Codam/webserv/cgi-bin/test.py", nullptr}; //path and NULL
+	char *argv[] = {"python3 /sam/Codam/webserv/cgi-bin/test.py", nullptr}; //path and NULL
 	char **env = convertEnv(request.getHeaders()); //need to convert the map into a char** after all
 	static std::string test = "/sam/Codam/webserv/cgi-bin/test.py";
 //	argv[0] = test.data();
@@ -51,7 +51,7 @@ int runRequest(parseRequest& request, int *pipeFd) {
 //	std::string line;
 //	std::string buffer;
 //	size_t buff_len = 0;
-	execve("/usr/bin/python3", argv, env);
+	execve(argv[0], argv, env);
 //	while ((buff_len = ::read(pipeFd[1], buffer.data(), BUFFER_SIZE)) > 0) {
 //		line.append(buffer.data(), buff_len);
 //	}
