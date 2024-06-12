@@ -30,25 +30,28 @@ char **convertEnv(const std::map<std::string, std::string> &mapHeaders) {
 int runRequest(parseRequest& request, int *pipeFd) {
 	//get the right path to run
 	//seta as variaveis no filho
-	char *argv[2]; //path and NULL
+	char *argv[] = {"python3 /sam/Codam/webserv/cgi-bin/test.py", nullptr}; //path and NULL
 	char **env = convertEnv(request.getHeaders()); //need to convert the map into a char** after all
-	static std::string test = "../cgi-bin/test.py";
-	argv[0] = test.data();
-	argv[1] = nullptr;
+	static std::string test = "/sam/Codam/webserv/cgi-bin/test.py";
+//	argv[0] = test.data();
+//	argv[1] = nullptr;
 //	for (size_t it = 0; env[it] != nullptr; it++) {
 //		std::cout<<"char**: "<<env[it]<<"\n";
 //	}
+	std::cout<<"call the kids\n";
 
 	if (dup2(pipeFd[0], STDIN_FILENO) == -1 || dup2(pipeFd[1], STDOUT_FILENO) == -1) {
 		std::cout<<"Leave the kids alone!\n";
 		//TODO do I need to close the fds?
 		return 1;
 	}
+	close(pipeFd[0]);
+	close(pipeFd[1]);
+
 //	std::string line;
 //	std::string buffer;
 //	size_t buff_len = 0;
-	std::cout<<"call the kids\n";
-	execv(reinterpret_cast<const char *>(argv), env);
+	execve(argv[0], argv, env);
 //	while ((buff_len = ::read(pipeFd[1], buffer.data(), BUFFER_SIZE)) > 0) {
 //		line.append(buffer.data(), buff_len);
 //	}
@@ -75,12 +78,12 @@ int cgiHandler(parseRequest& request) {
 	if (pid == 0) {
 		runRequest(request, pipeFd);//we got a kid, lets run shit here
 	}
-	std::string line;
-	std::string buffer;
-	size_t buff_len = 0;
-	while ((buff_len = ::read(pipeFd[1], buffer.data(), BUFFER_SIZE)) > 0) {
-		line.append(buffer.data(), buff_len);
-	}
-	std::cout<<line<<"\n";
+//	std::string line;
+//	std::string buffer;
+//	size_t buff_len = 0;
+//	while ((buff_len = ::read(pipeFd[1], buffer.data(), BUFFER_SIZE)) > 0) {
+//		line.append(buffer.data(), buff_len);
+//	}
+//	std::cout<<line<<"\n";
 	return 0;
 }
