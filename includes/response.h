@@ -46,6 +46,7 @@ class Response
         /* HTML RELATED */
         std::string errorHtml(unsigned int error);
         std::string readHtmlFile(const std::string &path);
+        int readContent(void); // check if the above can be merged with this one
 
         /* GETTERS */
         std::string getResponse(void) const; 

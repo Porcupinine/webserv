@@ -22,6 +22,7 @@ void Response::giveResponse(parseRequest& request) {
     _statusCode = request.getRetVal();
     initErrorCodes();
     initMethods();// init method map or something?
+    // _path = ; // get it from config ??
 
     // do check with regards to return code 
         // have default responses with error pages (content type HTML, error code, error page)
@@ -31,6 +32,7 @@ void Response::giveResponse(parseRequest& request) {
 
     // parseRequest.getMethod();
     // if method NOT among them -- _statusCode = 405; _statusText = "Method Not Allowed"; // with a new line or what??
+    // use a switch statement perhaps 
 }
 
 /* STATIC INIT */
@@ -57,7 +59,7 @@ void Response::getMethod(parseRequest& request) {
     else if (_statusCode == 200)
         // WRITE FUNCTION FOR READING CONTENT
     else
-         _response = errorHtml(_statusCode);
+        _response = errorHtml(_statusCode);
     _response = buildResponseHeader(); // TO WRITE
 }
 
@@ -125,7 +127,7 @@ std::string Response::errorHtml(unsigned int error) {
 }
 
 std::string Response::readHtmlFile(const std::string &path) { // this function needed actually??
-    std::ofstream file;
+    std::ofstream file; // allows to write to an outfile
 
     if (fileExists(path) == true){
         file.open(path.c_str(), std::ifstream::in); // flag opening it for reading purpose
@@ -141,6 +143,13 @@ std::string Response::readHtmlFile(const std::string &path) { // this function n
     }
     else
         return ("<!DOCTYPE html><body><h1> 404 </h1><p> Page Not Found </p></body></html>");
+}
+
+int Response::readContent(void) { // maybe use the above for it adding the autoIndex
+    std::ifstream file; // reading content from an infile
+
+
+
 }
 
 
