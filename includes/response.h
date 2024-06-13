@@ -46,7 +46,7 @@ class Response
         /* HTML RELATED */
         std::string errorHtml(unsigned int error);
         std::string readHtmlFile(const std::string &path);
-        int readContent(void); // check if the above can be merged with this one
+        void readContent(parseRequest& request); // check if the above can be merged with this one
 
         /* GETTERS */
         std::string getResponse(void) const; 
@@ -59,6 +59,8 @@ class Response
         bool fileExists(const std::string& path);
 
         /* STATIC */
+        // using MethodHandler = std::function<void(Response*, parseRequest&, const std::string&)>;
+        // std::map<std::string, MethodHandler> _method;
         static std::map<std::string, void (Response::*)(parseRequest&)>	_method;
 	    static std::map<std::string, void (Response::*)(parseRequest&)>	initMethods();
 

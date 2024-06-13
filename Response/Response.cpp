@@ -30,9 +30,15 @@ void Response::giveResponse(parseRequest& request) {
     if (_statusCode != 200 || _statusCode != 204) // en gros si ca commence pas par 2
         std::cout << "BIG PROBLEME\n"; // of courase not, revise this
 
-    // parseRequest.getMethod();
-    // if method NOT among them -- _statusCode = 405; _statusText = "Method Not Allowed"; // with a new line or what??
-    // use a switch statement perhaps 
+
+    std::map<std::string, void (Response::*)(parseRequest&)>::iterator it = _method.find(request.getMethod());
+    if (it != _method.end()) {
+        (this->*(it->second))(request);
+    }
+    else {
+        _statusCode = 405;
+        _response = errorHtml(_statusCode);
+    }
 }
 
 /* STATIC INIT */
@@ -57,7 +63,7 @@ void Response::getMethod(parseRequest& request) {
 
     }
     else if (_statusCode == 200)
-        // WRITE FUNCTION FOR READING CONTENT
+        readContent(request); // void or int
     else
         _response = errorHtml(_statusCode);
     _response = buildResponseHeader(); // TO WRITE
@@ -70,7 +76,8 @@ void Response::postMethod(parseRequest& request) {
 
     }
     else {
-        // idk
+        _statusCode = 204; // no content
+        _response = "";
     }
     if (_statusCode == 500)
         _response = errorHtml(_statusCode);
@@ -145,11 +152,31 @@ std::string Response::readHtmlFile(const std::string &path) { // this function n
         return ("<!DOCTYPE html><body><h1> 404 </h1><p> Page Not Found </p></body></html>");
 }
 
-int Response::readContent(void) { // maybe use the above for it adding the autoIndex
+void Response::readContent(parseRequest& request) { // maybe use the above for it adding the autoIndex
     std::ifstream file; // reading content from an infile
 
+    if (fileExists(request.getPath()) == true) {
+        file.open((request.getPath().c_str()), std::ifstream::in);
+        if (!file.is_open()) {
+            _statusCode = 403;
+            _response = errorHtml(_statusCode);
+            return ; // or break ??
+        }
 
-
+        std::stringstream buffer;
+        buffer << file.rdbuf();
+        std::string content = buffer.str();
+        _response = content;
+        file.close();
+    }
+    else if (_autoIndex == true) {
+        // FIGURE OUT WHAT NEEDS TO BE DONE
+        _type = "text/html";
+    }
+    else {
+        _statusCode = 404; // not found
+        _response = errorHtml(_statusCode);
+    }
 }
 
 
