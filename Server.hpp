@@ -20,15 +20,15 @@ class Server {
 
         int _listenSocket;
         int _newSocket;
-        std::string _serverMsg;
+        // std::string _serverMsg;
         struct addrinfo *_result;
 
         void setupEpoll();
         void addToEpoll(int fd, uint32_t events);
 
         void acceptConnection(int &new_socket);
-        std::string buildResponse();
-        void sendResponse();
+        // std::string buildResponse();
+        // void sendResponse();
 
     public:
         Server(std::string ipAddress, std::string port);
@@ -37,7 +37,6 @@ class Server {
         int startServer();
         void run();
         void closeServer();
-        // void startListening();
 };
 
 #endif

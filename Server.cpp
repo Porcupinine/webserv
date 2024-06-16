@@ -19,7 +19,7 @@
 #define BUFFER_SIZE 30000
 
 Server::Server(std::string ipAddress, std::string port) : _ipAddress(ipAddress), _port(port), _listenSocket(),
-    _newSocket(), _serverMsg(buildResponse()), _result(nullptr)
+    _newSocket(), /* _serverMsg(buildResponse()) ,*/ _result(nullptr)
 {
     struct addrinfo hints;
     memset(&hints, 0, sizeof(hints));
@@ -105,20 +105,6 @@ void Server::run() {
             if (events[i].data.fd == _listenSocket) {
                 acceptConnection(_newSocket);
                 addToEpoll(_newSocket, EPOLLIN|EPOLLET);
-                // char buffer[BUFFER_SIZE] = {0};
-                // bytesRead = read(_newSocket, buffer, BUFFER_SIZE);
-                // if (bytesRead < 0){ // Is this then allowed?
-                //     if (errno != EAGAIN && errno != EWOULDBLOCK) {
-                //          perror("read error");
-                //          exit(EXIT_FAILURE); // Throws some exception
-                //     }
-                //     std::cerr << "Couldn't read bytes from client connection\n";
-                //     exit(EXIT_FAILURE); // Throws some exception
-                // }
-
-                // std::cout << "------ RECEIVED REQUEST ------\n\n";
-                // sendResponse();
-                // close(_newSocket);
             }else if (events[i].events & EPOLLIN) {
                 char buffer[1024];
                 printf("%s", buffer);
@@ -131,7 +117,7 @@ void Server::run() {
                 } else if (bytes_read == 0) {
                     // Connection closed by client
                     close(events[i].data.fd);
-                } else {
+                } else { // Not sure this is necessary..
                     buffer[bytes_read] = '\0';
                     std::cout << "Received: " << buffer << std::endl;
 
@@ -195,31 +181,31 @@ void Server::acceptConnection(int &newSocket) {
     }
 }
 
-std::string Server::buildResponse()
-{
-    std::string htmlFile = "<!DOCTYPE html><html lang=\"en\"><body><h1> HOME </h1><p> NOW WE KNOW :) </p></body></html>";
-    std::ostringstream ss;
-    ss << "HTTP/1.1 200 OK\nContent-Type: text/html\nContent-Length: " << htmlFile.size() << "\n\n"
-       << htmlFile;
+// std::string Server::buildResponse()
+// {
+//     std::string htmlFile = "<!DOCTYPE html><html lang=\"en\"><body><h1> HOME </h1><p> NOW WE KNOW :) </p></body></html>";
+//     std::ostringstream ss;
+//     ss << "HTTP/1.1 200 OK\nContent-Type: text/html\nContent-Length: " << htmlFile.size() << "\n\n"
+//        << htmlFile;
 
-    return ss.str();
-}
+//     return ss.str();
+// }
 
-void Server::sendResponse()
-{
-    ssize_t bytesSent;
+// void Server::sendResponse()
+// {
+//     ssize_t bytesSent;
 
-    while (bytesSent = send(_newSocket, _serverMsg.c_str(), _serverMsg.size(), MSG_DONTWAIT) < 0){
-        // Is this allowed? This is not a write || read; it's a send.. 
-        // Checking the value of errno is strictly forbidden after a read or a write operation.
-        if (errno == EAGAIN || errno == EWOULDBLOCK){
-            usleep(1000);
-        } else {
-            perror("send");
-            exit(EXIT_FAILURE); // Throws some exception
-        }
-    }
-}
+//     while (bytesSent = send(_newSocket, _serverMsg.c_str(), _serverMsg.size(), MSG_DONTWAIT) < 0){
+//         // Is this allowed? This is not a write || read; it's a send.. 
+//         // Checking the value of errno is strictly forbidden after a read or a write operation.
+//         if (errno == EAGAIN || errno == EWOULDBLOCK){
+//             usleep(1000);
+//         } else {
+//             perror("send");
+//             exit(EXIT_FAILURE); // Throws some exception
+//         }
+//     }
+// }
 
 void Server::closeServer() {
     if (_result != nullptr){
