@@ -3,10 +3,21 @@
 #define LOCALHOST   "127.0.0.1"
 #define DEFAULTHTTP "8080"
 
+
+/*
+    Handle SIGINT & SIGTERM
+*/
 void sigHandler(int signum){
     std::cout << "Received signal (" << signum << ")." << std::endl;
     exit(1); // Needs attention
 }
+
+/*
+    Need to split
+    Add multiple ports.
+    Add exceptions
+*/
+
 
 /*
     int main(int argc, char **argv){
