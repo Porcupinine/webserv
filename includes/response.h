@@ -7,6 +7,7 @@
 #include <iostream>
 #include <sys/stat.h>
 #include <fstream>
+#include <filesystem>
 
 #include "../Request/parseRequest.hpp"
 
@@ -23,7 +24,9 @@ class Response
         std::string     _respBody; // using ??
         // std::string     _setCookie; // do we want/need this??
         std::string     _type;
-        bool            _autoIndex; // meaning autoIndex = true; means to respond with /path/index.html when /path/ is requested
+        int             _port;
+        std::string     _host;
+        bool            _isAutoIndex; // meaning autoIndex = true; means to respond with /path/index.html when /path/ is requested
         std::map<unsigned int, std::string> _errorCodes;
 
 
@@ -64,6 +67,8 @@ class Response
         static std::map<std::string, void (Response::*)(parseRequest&)>	_method;
 	    static std::map<std::string, void (Response::*)(parseRequest&)>	initMethods();
 
+        /* UTILS FOR AUTO INDEX */
+        std::string generateAutoIndexPage(const std::string& path, const std::string& host, int port)
 };
 
 

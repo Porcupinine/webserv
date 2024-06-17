@@ -20,6 +20,7 @@ Response&	Response::operator=(const Response &cpy) {
 void Response::giveResponse(parseRequest& request) {
     // _statusCode should inherit from the previous thing right?? or if it gets here we assume all is good already??
     _statusCode = request.getRetVal();
+    _isAutoIndex = false; // WRONG NEEDS TO BE UPDATED BASED ON CONFIG FILE
     initErrorCodes();
     initMethods();// init method map or something?
     // _path = ; // get it from config ??
@@ -60,6 +61,13 @@ void Response::getMethod(parseRequest& request) {
     // stuff with CGI involved
     if (cgiInvolved(request.getPath()) == true) {// or can i just use the path from repsonse?? 
         // _response = cgi. ; // check with laura
+            // retreive resonse from cgi handler
+            // have i = start // j - size of cgi response - 2
+            // look for the end or for the /r/n/r/n sequence (while loop)
+                // then read line by line looking for /r/n
+                // if finds "Status:" --> atoi the code and save it as _statusCode
+                // if finds "Content-Type: " --> substr in _type
+            // then _reponse = _response.substr(i, i - i); // or something like that
 
     }
     else if (_statusCode == 200)
@@ -73,6 +81,13 @@ void Response::postMethod(parseRequest& request) {
     // stuff with CGI involved
     if (cgiInvolved(request.getPath()) == true) {// or can i just use the path from repsonse?? 
         // _response = cgi. ; // check with laura
+            // retreive resonse from cgi handler
+            // have i = start // j - size of cgi response - 2
+            // look for the end or for the /r/n/r/n sequence (while loop)
+                // then read line by line looking for /r/n
+                // if finds "Status:" --> atoi the code and save it as _statusCode
+                // if finds "Content-Type: " --> substr in _type
+            // then _reponse = _response.substr(i, i - i); // or something like that
 
     }
     else {
@@ -169,8 +184,11 @@ void Response::readContent(parseRequest& request) { // maybe use the above for i
         _response = content;
         file.close();
     }
-    else if (_autoIndex == true) {
+    else if (_isAutoIndex == true) { // but this needs to be set to true somewhere
         // FIGURE OUT WHAT NEEDS TO BE DONE
+        std::stringstream buffer;
+        buffer << autoIndexFile(request.getPath(), _host, _port); // need to get these from lou tho
+        _response = buffer.str();
         _type = "text/html";
     }
     else {
