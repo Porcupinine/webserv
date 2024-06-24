@@ -20,7 +20,9 @@ Response&	Response::operator=(const Response &cpy) {
 void Response::giveResponse(parseRequest& request) {
     // _statusCode should inherit from the previous thing right?? or if it gets here we assume all is good already??
     _statusCode = request.getRetVal();
+    _type = "";
     _isAutoIndex = false; // WRONG NEEDS TO BE UPDATED BASED ON CONFIG FILE
+    // lou?
     initErrorCodes();
     initMethods();// init method map or something?
     // _path = ; // get it from config ??
@@ -74,7 +76,7 @@ void Response::getMethod(parseRequest& request) {
         readContent(request); // void or int
     else
         _response = errorHtml(_statusCode);
-    _response = buildResponseHeader(); // TO WRITE
+    _response = buildResponseHeader(request); // TO WRITE
 }
 
 void Response::postMethod(parseRequest& request) {
@@ -96,7 +98,7 @@ void Response::postMethod(parseRequest& request) {
     }
     if (_statusCode == 500)
         _response = errorHtml(_statusCode);
-    _response = buildResponseHeader(); // to write
+    _response = buildResponseHeader(request); // to write
 }
 
 void Response::deleteMethod(parseRequest& request) {
@@ -115,7 +117,7 @@ void Response::deleteMethod(parseRequest& request) {
 
     if (_statusCode == 404 || _statusCode == 403)
         _response = errorHtml(_statusCode); // redirect to write error page or something right?? HTML format
-    _response = buildResponseHeader(); // TO WRITE
+    _response = buildResponseHeader(request); // TO WRITE
 }
 
 void Response::initErrorCodes()
@@ -130,10 +132,6 @@ void Response::initErrorCodes()
 	_errorCodes[405] = "Method Not Allowed";
 	_errorCodes[413] = "Payload Too Large";
 	_errorCodes[500] = "Internal Server Error";
-}
-
-std::string Response::buildResponseHeader() {
-    
 }
 
 
@@ -185,9 +183,8 @@ void Response::readContent(parseRequest& request) { // maybe use the above for i
         file.close();
     }
     else if (_isAutoIndex == true) { // but this needs to be set to true somewhere
-        // FIGURE OUT WHAT NEEDS TO BE DONE
         std::stringstream buffer;
-        buffer << autoIndexFile(request.getPath(), _host, _port); // need to get these from lou tho
+        buffer << autoIndexPageListing(request.getPath(), _host, _port); // need to get these from lou tho
         _response = buffer.str();
         _type = "text/html";
     }

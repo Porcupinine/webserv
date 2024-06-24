@@ -7,6 +7,7 @@
 #include <iostream>
 #include <sys/stat.h>
 #include <fstream>
+#include <string>
 #include <filesystem>
 
 #include "../Request/parseRequest.hpp"
@@ -29,6 +30,18 @@ class Response
         bool            _isAutoIndex; // meaning autoIndex = true; means to respond with /path/index.html when /path/ is requested
         std::map<unsigned int, std::string> _errorCodes;
 
+        /*RESPONSE HEADER FIELDS*/
+        std::string					_allow;
+        std::string					_contentLanguage;
+        std::string					_contentLength;
+        std::string					_contentLocation;
+        std::string					_contentType;
+        std::string					_date;
+        std::string					_lastModified;
+        std::string					_location;
+        std::string					_retryAfter;
+        std::string					_server;
+        std::string					_transferEncoding;
 
     public:
         Response(void);
@@ -44,7 +57,12 @@ class Response
 
         void initErrorCodes();
 
-        std::string buildResponseHeader(); // check if args needed
+        /* RESPONSE HEADER BUIDLING RELATED */
+        std::string buildResponseHeader(parseRequest& request); // check if args needed
+        void initResponseHeaderFields();
+        void setValues(parseRequest& request);
+        std::string setAllow(parseRequest& request);
+
 
         /* HTML RELATED */
         std::string errorHtml(unsigned int error);
@@ -68,7 +86,7 @@ class Response
 	    static std::map<std::string, void (Response::*)(parseRequest&)>	initMethods();
 
         /* UTILS FOR AUTO INDEX */
-        std::string generateAutoIndexPage(const std::string& path, const std::string& host, int port)
+        std::string autoIndexPageListing(const std::string& path, const std::string& host, int port);
 };
 
 

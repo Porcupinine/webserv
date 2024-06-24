@@ -225,6 +225,18 @@ std::string parseRequest::getBodyMsg(void) const {
     return _bodyMsg;
 }
 
+std::string parseRequest::getLanguageStr(void) const {
+    std::ostringstream oss;
+
+    for (auto it = _language.begin(); it != _language.end(); ++it) {
+        oss << "(" << it->first << ", " << it->second << ")";
+        if (std::next(it) != _language.end()) {
+            oss << ", ";
+        }
+    }
+    return oss.str(); // Convert stringstream to string and return
+}
+
 /* HEADERS */
 
 void parseRequest::initHeaders() { // MORE NEEDED??

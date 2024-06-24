@@ -65,6 +65,7 @@ class parseRequest
         int getRetVal(void) const;
         std::string getBodyMsg(void) const;
         const std::map<std::string, std::string>& getHeaders(void) const;
+        std::string getLanguageStr(void) const;
 
         /* SETTERS */
         void setMethod(std::string type);
