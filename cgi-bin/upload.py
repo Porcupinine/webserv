@@ -13,6 +13,13 @@
 # ------WebKitFormBoundaryE19zNvXGzXaLvS5C--
 
 #will get the request, from body parse header and body, find filename
+#need to get the boundery from the content-type
 
-# import cgitb
-# cgi.
+import cgi
+import cgitb
+import os
+
+os.mkdir("logdir")
+cgitb.enable(display=0, logdir="logdir")  #for debuging
+form = cgi.FieldStorage()
+print (form)
