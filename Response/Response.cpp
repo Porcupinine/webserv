@@ -10,8 +10,10 @@ Response::~Response() {
 Response&	Response::operator=(const Response &cpy) {
 	this->_version = cpy.getVersion(); // do i need to write all these functions tho??
 	this->_statusCode = cpy.getStatusCode();
-	this->_statusText = cpy.getStatusText();
-    this->_respBody = cpy.getRespBody();
+	// this->_statusText = cpy.getStatusText();
+    // this->_respBody = cpy.getRespBody();
+
+    // add more stuff here no
 	return (*this);
 }
 
@@ -134,25 +136,35 @@ void Response::initErrorCodes()
 	_errorCodes[500] = "Internal Server Error";
 }
 
-void Response::htmlErrorCodesMap() {
-    _errorCodesHtml[400] = "HTTP/1.1 400 Bad Request\r\n\n"
-    "Content-Type: text/html\r\n\nContent-Length: 151\r\n\r\n "
-    "<!DOCTYPE html><html><head><title>400</title></head><body><h1> 400 Bad Request Error! </h1><p>We are not speaking the same language!</p></body></html>";
-    _errorCodesHtml[403] = "HTTP/1.1 403 Forbiden\r\n\n"
-    "Content-Type: text/html\r\n\nContent-Length: 130\r\n\r\n "
-    "<!DOCTYPE html><html><head><title>403</title></head><body><h1> 403 Forbiden! </h1><p>This is top secret, sorry!</p></body></html>";
-    _errorCodesHtml[404] = "HTTP/1.1 404 Not Found\r\n\n"
-    "Content-Type: text/html\r\n\nContent-Length: 115\r\n\r\n "
-    "<!DOCTYPE html><html><head><title>404</title></head><body><h1> 404 Page not found! </h1><p>Puff!</p></body></html>";
-    _errorCodesHtml[405] = "HTTP/1.1 405 Method Not Allowed\r\n\n"
-    "Content-Type: text/html\r\n\nContent-Length: 139\r\n\r\n "
-    "<!DOCTYPE html><html><head><title>405</title></head><body><h1> 405 Method Not Allowed! </h1><p>We forgot how to do that!</p></body></html>";
-    _errorCodesHtml[413] = "HTTP/1.1 413 Payload Too Large\r\n\n"
-    "Content-Type: text/html\r\n\nContent-Length: 163\r\n\r\n "
-    "<!DOCTYPE html><html><head><title>413</title></head><body><h1> 413 Payload Too Large! </h1><p>We are too busy right now, please try again later!</p></body></html>";
-    _errorCodesHtml[500] = "HTTP/1.1 500 Internal Server Error\r\n\n"
-    "Content-Type: text/html\r\n\nContent-Length: 146\r\n\r\n "
-    "<!DOCTYPE html><html><head><title>500</title></head><body><h1> 500 Internal Server Error! </h1><p>I probably should study more!</p></body></html>";
+void Response::htmlErrorCodesMap() { // but this includes already the whole header thing
+    // _errorCodesHtml[400] = "HTTP/1.1 400 Bad Request\r\n\n"
+    // "Content-Type: text/html\r\n\nContent-Length: 151\r\n\r\n "
+    // "<!DOCTYPE html><html><head><title>400</title></head><body><h1> 400 Bad Request Error! </h1><p>We are not speaking the same language!</p></body></html>";
+    // _errorCodesHtml[403] = "HTTP/1.1 403 Forbiden\r\n\n"
+    // "Content-Type: text/html\r\n\nContent-Length: 130\r\n\r\n "
+    // "<!DOCTYPE html><html><head><title>403</title></head><body><h1> 403 Forbiden! </h1><p>This is top secret, sorry!</p></body></html>";
+    // _errorCodesHtml[404] = "HTTP/1.1 404 Not Found\r\n\n"
+    // "Content-Type: text/html\r\n\nContent-Length: 115\r\n\r\n "
+    // "<!DOCTYPE html><html><head><title>404</title></head><body><h1> 404 Page not found! </h1><p>Puff!</p></body></html>";
+    // _errorCodesHtml[405] = "HTTP/1.1 405 Method Not Allowed\r\n\n"
+    // "Content-Type: text/html\r\n\nContent-Length: 139\r\n\r\n "
+    // "<!DOCTYPE html><html><head><title>405</title></head><body><h1> 405 Method Not Allowed! </h1><p>We forgot how to do that!</p></body></html>";
+    // _errorCodesHtml[413] = "HTTP/1.1 413 Payload Too Large\r\n\n"
+    // "Content-Type: text/html\r\n\nContent-Length: 163\r\n\r\n "
+    // "<!DOCTYPE html><html><head><title>413</title></head><body><h1> 413 Payload Too Large! </h1><p>We are too busy right now, please try again later!</p></body></html>";
+    // _errorCodesHtml[500] = "HTTP/1.1 500 Internal Server Error\r\n\n"
+    // "Content-Type: text/html\r\n\nContent-Length: 146\r\n\r\n "
+    // "<!DOCTYPE html><html><head><title>500</title></head><body><h1> 500 Internal Server Error! </h1><p>I probably should study more!</p></body></html>";
+
+    _errorCodesHtml[400] = "<!DOCTYPE html><html><head><title>400</title></head><body><h1> 400 Bad Request Error! </h1><p>We are not speaking the same language!</p></body></html>";
+    _errorCodesHtml[403] = "<!DOCTYPE html><html><head><title>403</title></head><body><h1> 403 Forbiden! </h1><p>This is top secret, sorry!</p></body></html>";
+    _errorCodesHtml[404] = "<!DOCTYPE html><html><head><title>404</title></head><body><h1> 404 Page not found! </h1><p>Puff!</p></body></html>";
+    _errorCodesHtml[405] = "<!DOCTYPE html><html><head><title>405</title></head><body><h1> 405 Method Not Allowed! </h1><p>We forgot how to do that!</p></body></html>";
+    _errorCodesHtml[413] = "<!DOCTYPE html><html><head><title>413</title></head><body><h1> 413 Payload Too Large! </h1><p>We are too busy right now, please try again later!</p></body></html>";
+    _errorCodesHtml[500] = "<!DOCTYPE html><html><head><title>500</title></head><body><h1> 500 Internal Server Error! </h1><p>I probably should study more!</p></body></html>";
+    if (_statusCode == 400 || _statusCode == 403 || _statusCode == 404 ||
+    _statusCode == 405 || _statusCode == 413 || _statusCode == 500)
+        _type = "text/html";
 }
 
 
@@ -224,13 +236,13 @@ unsigned int Response::getStatusCode(void) const {
     return _statusCode;
 }
 
-std::string Response::getStatusText(void) const {
-    return _statusText;
-}
+// std::string Response::getStatusText(void) const {
+//     return _statusText;
+// }
 
-std::string Response::getRespBody(void) const {
-    return _respBody;
-}
+// std::string Response::getRespBody(void) const {
+//     return _respBody;
+// }
 
 std::string Response::getResponse(void) const {
     return _response;

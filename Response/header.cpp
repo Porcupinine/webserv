@@ -3,13 +3,10 @@
 std::string Response::buildResponseHeader(parseRequest& request) {
     // _response = head.getHeader(_response.size(), _path, _code, _type, requestConf.getContentLocation(), requestConf.getLang()) + "\r\n" + _response;
 		std::string header = "";
-		// WRITE THAT FIRST LINE GET HTTP/1.1 200 OK -- OR SOMETHING
-
 		initResponseHeaderFields();
 		setHeaderValues(request);
-		// header += getHeaderValues(request, header); // write this
+		header = getHeaderValues(request, header); // write this
 }
-
 
 void Response::initResponseHeaderFields() {
 	_allow = "";
@@ -29,15 +26,16 @@ void Response::initResponseHeaderFields() {
 void Response::setHeaderValues(parseRequest& request) {
 	_allow = setAllow(request);
 	_contentLanguage = request.getLanguageStr();
-	_contentLength = ""; // how to find this out??
+	_contentLength = _response.size(); // test if this needs to be converted to string
 	_contentLocation = request.getPath(); // could this have chnaged based on config file??
 	_contentType = _type; // but what if empty??
 	_date = setDate(request); // i am putting the date of response not request is that fine??
-	_lastModified = "";
-	_location = "";
-	_retryAfter = ""; // needed??
-	_server = "";
-	_transferEncoding = ""; // needed??
+	// _lastModified = ""; // check where to get this info
+	// _location = ""; // 
+	// _retryAfter = ""; // needed??
+	// _server = ""; // needs to come from Lou
+	// _transferEncoding = ""; // needed??
+	// do we need to add connection (as closed)??
 }
 
 std::string Response::setAllow(parseRequest& request) {
@@ -65,9 +63,33 @@ std::string Response::setDate(parseRequest& request) {
 std::string Response::getHeaderValues(parseRequest& request, std::string header) {
 	header += request.getVersion() + " " + std::to_string(_statusCode) + " " + getMatchingCodeString(_statusCode) + "/r/n"; // first line
 	if (_allow != "")
-		header += _allow + "/r/n";
+		header += "Allow: " + _allow + "/r/n";
+	if (_contentLanguage != "")
+		header += "Content-Language: " + _contentLanguage + "/r/n";
+	if (_contentLength != "")
+		header += "Content-Length: " + _contentLength + "/r/n";
+	if (_contentLocation != "")
+		header += "Content-Location: " + _contentLocation + "/r/n";
+	if (_date != "")
+		header += "Date: " + _date + "/r/n";
 	
-	// DO FOR ALL THE OTHERS
+	// FIX THE SETTERS FOR THESE FIRST
+	// if (_lastModified != "")
+	// 	header += "Last-Modified: " + _lastModified + "/r/n";
+	// if (_location != "")
+	// 	header += "Location: " + _location + "/r/n";
+	// if (_retryAfter != "")
+	// 	header += "Retry-After: " + _retryAfter + "/r/n";
+	// if (_server != "")
+	// 	header += "Server: " + _server + "/r/n";
+	// if (_transferEncoding != "")
+	// 	header += "Transfer-Encoding: " + _transferEncoding + "/r/n";
+	// if (_connection != "")
+	// 	header += "Connection: " + _connection + "/r/n"; // needed??
+
+
+	if (_response != "")
+		header += "/r/n" + _response + "/r/n"; // is this right?? no clue
 
 }
 
