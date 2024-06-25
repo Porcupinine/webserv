@@ -37,3 +37,4 @@ bool cgiInvolved(std::string path) {
         return true;
     return false;
 }
+

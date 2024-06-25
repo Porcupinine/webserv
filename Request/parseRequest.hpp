@@ -29,7 +29,6 @@ class parseRequest
 
 
         void parseStr(std::string &info);
-        //bool validateStr();
 
         void initHeaders();
 
@@ -74,6 +73,7 @@ class parseRequest
         void setPort(std::string port);
         void setRetVal(int value);
         void setBodyMsg(std::string b);
+
 
 
 };

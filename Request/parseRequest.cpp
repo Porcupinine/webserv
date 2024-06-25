@@ -229,12 +229,12 @@ std::string parseRequest::getLanguageStr(void) const {
     std::ostringstream oss;
 
     for (auto it = _language.begin(); it != _language.end(); ++it) {
-        oss << "(" << it->first << ", " << it->second << ")";
+        oss << it->first;
         if (std::next(it) != _language.end()) {
             oss << ", ";
         }
     }
-    return oss.str(); // Convert stringstream to string and return
+    return oss.str();
 }
 
 /* HEADERS */

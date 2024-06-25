@@ -9,6 +9,9 @@
 #include <fstream>
 #include <string>
 #include <filesystem>
+#include <iomanip>
+#include <ctime>
+#include <sstream>
 
 #include "../Request/parseRequest.hpp"
 
@@ -29,6 +32,7 @@ class Response
         std::string     _host;
         bool            _isAutoIndex; // meaning autoIndex = true; means to respond with /path/index.html when /path/ is requested
         std::map<unsigned int, std::string> _errorCodes;
+        std::map<unsigned int, std::string> _errorCodesHtml;
 
         /*RESPONSE HEADER FIELDS*/
         std::string					_allow;
@@ -56,17 +60,20 @@ class Response
         void deleteMethod(parseRequest& request);
 
         void initErrorCodes();
+        void htmlErrorCodesMap();
 
         /* RESPONSE HEADER BUIDLING RELATED */
         std::string buildResponseHeader(parseRequest& request); // check if args needed
         void initResponseHeaderFields();
-        void setValues(parseRequest& request);
+        void setHeaderValues(parseRequest& request);
         std::string setAllow(parseRequest& request);
-
+        std::string setDate(parseRequest& request);
+        std::string getHeaderValues(parseRequest& request, std::string header);
+        std::string getMatchingCodeString(unsigned int code);
 
         /* HTML RELATED */
         std::string errorHtml(unsigned int error);
-        std::string readHtmlFile(const std::string &path);
+        // std::string readHtmlFile(const std::string &path);
         void readContent(parseRequest& request); // check if the above can be merged with this one
 
         /* GETTERS */

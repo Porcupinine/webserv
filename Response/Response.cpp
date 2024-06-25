@@ -73,9 +73,9 @@ void Response::getMethod(parseRequest& request) {
 
     }
     else if (_statusCode == 200)
-        readContent(request); // void or int
+        readContent(request);
     else
-        _response = errorHtml(_statusCode);
+        _response = errorHtml(_statusCode); // but could it be 100/201/204 ?? as its not in the list
     _response = buildResponseHeader(request); // TO WRITE
 }
 
@@ -116,7 +116,7 @@ void Response::deleteMethod(parseRequest& request) {
         _statusCode = 404; // not found
 
     if (_statusCode == 404 || _statusCode == 403)
-        _response = errorHtml(_statusCode); // redirect to write error page or something right?? HTML format
+        _response = errorHtml(_statusCode);
     _response = buildResponseHeader(request); // TO WRITE
 }
 
@@ -134,36 +134,56 @@ void Response::initErrorCodes()
 	_errorCodes[500] = "Internal Server Error";
 }
 
+void Response::htmlErrorCodesMap() {
+    _errorCodesHtml[400] = "HTTP/1.1 400 Bad Request\r\n\n"
+    "Content-Type: text/html\r\n\nContent-Length: 151\r\n\r\n "
+    "<!DOCTYPE html><html><head><title>400</title></head><body><h1> 400 Bad Request Error! </h1><p>We are not speaking the same language!</p></body></html>";
+    _errorCodesHtml[403] = "HTTP/1.1 403 Forbiden\r\n\n"
+    "Content-Type: text/html\r\n\nContent-Length: 130\r\n\r\n "
+    "<!DOCTYPE html><html><head><title>403</title></head><body><h1> 403 Forbiden! </h1><p>This is top secret, sorry!</p></body></html>";
+    _errorCodesHtml[404] = "HTTP/1.1 404 Not Found\r\n\n"
+    "Content-Type: text/html\r\n\nContent-Length: 115\r\n\r\n "
+    "<!DOCTYPE html><html><head><title>404</title></head><body><h1> 404 Page not found! </h1><p>Puff!</p></body></html>";
+    _errorCodesHtml[405] = "HTTP/1.1 405 Method Not Allowed\r\n\n"
+    "Content-Type: text/html\r\n\nContent-Length: 139\r\n\r\n "
+    "<!DOCTYPE html><html><head><title>405</title></head><body><h1> 405 Method Not Allowed! </h1><p>We forgot how to do that!</p></body></html>";
+    _errorCodesHtml[413] = "HTTP/1.1 413 Payload Too Large\r\n\n"
+    "Content-Type: text/html\r\n\nContent-Length: 163\r\n\r\n "
+    "<!DOCTYPE html><html><head><title>413</title></head><body><h1> 413 Payload Too Large! </h1><p>We are too busy right now, please try again later!</p></body></html>";
+    _errorCodesHtml[500] = "HTTP/1.1 500 Internal Server Error\r\n\n"
+    "Content-Type: text/html\r\n\nContent-Length: 146\r\n\r\n "
+    "<!DOCTYPE html><html><head><title>500</title></head><body><h1> 500 Internal Server Error! </h1><p>I probably should study more!</p></body></html>";
+}
+
 
 /* HTML RELATED */
 std::string Response::errorHtml(unsigned int error) {
-    // change this based on Laura's map: error code + html string directly
-    std::map<unsigned int, std::string>::iterator it = _errorCodes.find(error); // CHANGED THIS
+    std::map<unsigned int, std::string>::iterator it = _errorCodesHtml.find(error);
 
-    if (it == _errorCodes.end()) // CHANGE IT HERE TOO
+    if (it == _errorCodesHtml.end())
         return ("<!DOCTYPE html><body><h1> 404 </h1><p> Error Page Not Found </p></body></html>");
     else
         return (it->second);
 }
 
-std::string Response::readHtmlFile(const std::string &path) { // this function needed actually??
-    std::ofstream file; // allows to write to an outfile
+// std::string Response::readHtmlFile(const std::string &path) { // this function needed actually??
+//     std::ofstream file; // allows to write to an outfile
 
-    if (fileExists(path) == true){
-        file.open(path.c_str(), std::ifstream::in); // flag opening it for reading purpose
-        if (!file.is_open())
-            return ("<!DOCTYPE html><body><h1> 404 </h1><p> Page Not Found </p></body></html>");
+//     if (fileExists(path) == true){
+//         file.open(path.c_str(), std::ifstream::in); // flag opening it for reading purpose
+//         if (!file.is_open())
+//             return ("<!DOCTYPE html><body><h1> 404 </h1><p> Page Not Found </p></body></html>");
         
-        std::stringstream buffer;
-        buffer << file.rdbuf();
-        std::string content = buffer.str();
-        file.close();
-        _type = "text/html";
-        return (content);
-    }
-    else
-        return ("<!DOCTYPE html><body><h1> 404 </h1><p> Page Not Found </p></body></html>");
-}
+//         std::stringstream buffer;
+//         buffer << file.rdbuf();
+//         std::string content = buffer.str();
+//         file.close();
+//         _type = "text/html";
+//         return (content);
+//     }
+//     else
+//         return ("<!DOCTYPE html><body><h1> 404 </h1><p> Page Not Found </p></body></html>");
+// }
 
 void Response::readContent(parseRequest& request) { // maybe use the above for it adding the autoIndex
     std::ifstream file; // reading content from an infile

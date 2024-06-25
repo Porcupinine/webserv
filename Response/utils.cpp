@@ -40,3 +40,5 @@ std::string Response::autoIndexPageListing(const std::string& path, const std::s
 
     return html.str();
 }
+
+
