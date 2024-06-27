@@ -23,13 +23,10 @@ class Response
 	    std::string     _response{}; // response body string, storing the HTML
         std::string     _version; // (like HTTP/1.1)
         unsigned int    _statusCode; // (like 200) or could we use _returnValue from parseRequest??
-        // std::string     _statusText; // (like OK)
-        //std::string _respHeaders; // needed?? or make a map out of it?? PUT THIS ESLEWHERE PERHAPS? IN ANOTHER CLASS
-        //std::string     _respBody; // using ??
         // std::string     _setCookie; // do we want/need this??
         std::string     _type;
-        int             _port;
-        std::string     _host;
+        int             _port; // needed??
+        std::string     _host; // needed?
         bool            _isAutoIndex; // meaning autoIndex = true; means to respond with /path/index.html when /path/ is requested
         std::map<unsigned int, std::string> _errorCodes;
         std::map<unsigned int, std::string> _errorCodesHtml;
@@ -54,10 +51,9 @@ class Response
 
         void giveResponse(parseRequest& request);
 
-        // add everything else also here in public, functions related to methods blabla
-        void getMethod(parseRequest& request); // arg needed??
-        void postMethod(parseRequest& request); // arg needed?
-        void deleteMethod(parseRequest& request);
+        void getMethod(parseRequest& request); // arg needed?? yes from config file
+        void postMethod(parseRequest& request); // arg needed?? yes from config file
+        void deleteMethod(parseRequest& request); // arg needed?? yes from config file
 
         void initErrorCodes();
         void htmlErrorCodesMap();
@@ -80,8 +76,6 @@ class Response
         std::string getResponse(void) const; 
         std::string getVersion(void) const;
         unsigned int getStatusCode(void) const;
-        std::string getStatusText(void) const;
-        std::string getRespBody(void) const;
 
         /* UTILS */
         bool fileExists(const std::string& path);

@@ -10,8 +10,11 @@ Response::~Response() {
 Response&	Response::operator=(const Response &cpy) {
 	this->_version = cpy.getVersion(); // do i need to write all these functions tho??
 	this->_statusCode = cpy.getStatusCode();
-	// this->_statusText = cpy.getStatusText();
-    // this->_respBody = cpy.getRespBody();
+    this->_response = cpy._response;
+    this->_type = cpy._type;
+    this->_port = cpy._port; // NEEDED?
+    this->_host = cpy._host; // NEEDED?
+    this->_isAutoIndex = cpy._isAutoIndex;
 
     // add more stuff here no
 	return (*this);
@@ -23,11 +26,10 @@ void Response::giveResponse(parseRequest& request) {
     // _statusCode should inherit from the previous thing right?? or if it gets here we assume all is good already??
     _statusCode = request.getRetVal();
     _type = "";
-    _isAutoIndex = false; // WRONG NEEDS TO BE UPDATED BASED ON CONFIG FILE
-    // lou?
+    _isAutoIndex = false; // WRONG NEEDS TO BE UPDATED BASED ON CONFIG FILE -- lou??
+    // _path = ; // get it from config ?? Lou?
     initErrorCodes();
     initMethods();// init method map or something?
-    // _path = ; // get it from config ??
 
     // do check with regards to return code 
         // have default responses with error pages (content type HTML, error code, error page)
@@ -43,7 +45,10 @@ void Response::giveResponse(parseRequest& request) {
     else {
         _statusCode = 405;
         _response = errorHtml(_statusCode);
+        _response = buildResponseHeader(request); // OVER HERE RIGHT??
     }
+
+    // SEND END RESULT TO LOU
 }
 
 /* STATIC INIT */
@@ -62,36 +67,22 @@ std::map<std::string, void (Response::*)(parseRequest &)> Response::_method = Re
 
 /* METHOD FUNCTIONS */
 void Response::getMethod(parseRequest& request) {
-    // stuff with CGI involved
-    if (cgiInvolved(request.getPath()) == true) {// or can i just use the path from repsonse?? 
+    if (cgiInvolved(request.getPath()) == true) {
         // _response = cgi. ; // check with laura
-            // retreive resonse from cgi handler
-            // have i = start // j - size of cgi response - 2
-            // look for the end or for the /r/n/r/n sequence (while loop)
-                // then read line by line looking for /r/n
-                // if finds "Status:" --> atoi the code and save it as _statusCode
-                // if finds "Content-Type: " --> substr in _type
-            // then _reponse = _response.substr(i, i - i); // or something like that
+            // retreive response from cgi handler
 
     }
     else if (_statusCode == 200)
         readContent(request);
     else
         _response = errorHtml(_statusCode); // but could it be 100/201/204 ?? as its not in the list
-    _response = buildResponseHeader(request); // TO WRITE
+    _response = buildResponseHeader(request); // TO WRITE -- ALSO NEED WHEN CGI INVOLVED?
 }
 
 void Response::postMethod(parseRequest& request) {
-    // stuff with CGI involved
-    if (cgiInvolved(request.getPath()) == true) {// or can i just use the path from repsonse?? 
+    if (cgiInvolved(request.getPath()) == true) {
         // _response = cgi. ; // check with laura
-            // retreive resonse from cgi handler
-            // have i = start // j - size of cgi response - 2
-            // look for the end or for the /r/n/r/n sequence (while loop)
-                // then read line by line looking for /r/n
-                // if finds "Status:" --> atoi the code and save it as _statusCode
-                // if finds "Content-Type: " --> substr in _type
-            // then _reponse = _response.substr(i, i - i); // or something like that
+            // retreive response from cgi handler
 
     }
     else {
@@ -100,7 +91,7 @@ void Response::postMethod(parseRequest& request) {
     }
     if (_statusCode == 500)
         _response = errorHtml(_statusCode);
-    _response = buildResponseHeader(request); // to write
+    _response = buildResponseHeader(request); // TO WRITE -- ALSO NEED WHEN CGI INVOLVED?
 }
 
 void Response::deleteMethod(parseRequest& request) {
@@ -235,14 +226,6 @@ std::string Response::getVersion(void) const {
 unsigned int Response::getStatusCode(void) const {
     return _statusCode;
 }
-
-// std::string Response::getStatusText(void) const {
-//     return _statusText;
-// }
-
-// std::string Response::getRespBody(void) const {
-//     return _respBody;
-// }
 
 std::string Response::getResponse(void) const {
     return _response;

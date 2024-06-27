@@ -1,6 +1,5 @@
 #include "../Request/parseRequest.hpp"
 
-
 // this will also take an instance of the server part to be able to retreive _path if it was overwritten/updated
 parseRequest::parseRequest(std::string &info) : _methodType(""), _version(""), _returnValue(200),
                               _bodyMsg(""), _port(80), _path(""), _query(""), _infoStr(info) {
@@ -12,7 +11,7 @@ parseRequest::parseRequest(std::string &info) : _methodType(""), _version(""), _
 }
 
 parseRequest::~parseRequest() {
-    // SOMETHING TO DESTROY/CLEAN ??
+
 }
 
 parseRequest&	parseRequest::operator=(const parseRequest &cpy)
@@ -37,23 +36,16 @@ void parseRequest::parseStr(std::string &info) {
 
     parseFirstline(readLine(info, i)); // 400 RET?? -- BUT NEED TO HAVE A STACK RIGHT TO PUT ALL THIS STUFF ON
     while ((line = readLine(info, i)) != "\r" && line != "" && _returnValue != 400) {
-        key = setKey(line); // identifier of header
+        key = setKey(line);
         value = setValue(line);
         if (_headers.count(key)) {
             _headers[key] = value;
-            // std::cout << "[" << key << "] " << value << '\n'; // to rm
         }
     }
-//	if ((line = readLine(info, i)) != "" ) { // TO TEST STILL
-//		if ((line = readLine(info, i)) != "")
-//			bodyLine = readBody(info, i); // or + 1 here?
-//		setBody(bodyLine);
-//		break ;
-//	}
 	size_t startBody = info.find("\r\n\r\n") + 4;
 	_bodyMsg = info.substr(startBody, std::string::npos);
     setPort(_headers["Host"]);
-    setQuery(); // then to decode later right?? or something
+    setQuery();
     setLanguage();
 //    if (cgiInvolved(_headers["Path"]) == true)
         // SEND TO LAURA
@@ -62,22 +54,23 @@ void parseRequest::parseStr(std::string &info) {
 }
 
 
-std::string parseRequest::readLine(const std::string &str, size_t &i) { // FIX THIS
+std::string parseRequest::readLine(const std::string &str, size_t &i) {
     std::string res;
     size_t j;
 
     if (i == std::string::npos) 
         return "";
-    j = str.find_first_of('\n', i); // changed this to i instead of 1 WTF
+    j = str.find_first_of('\n', i);
     res = str.substr(i, j - i);
     if (res[res.size() - 1] == '\r')
-        res.pop_back(); // rm last char if \r
-    if (j == std::string::npos) // if we'r at the end
+        res.pop_back();
+    if (j == std::string::npos)
         i = j;
     else
         i = j + 1;
     return res;
 }
+
 
 /* SETS THE HEADER VALUES */
 
@@ -97,8 +90,8 @@ std::string parseRequest::setValue(const std::string &line) {
     std::string res;
 
     i = line.find_first_of(":", 1);
-    i = line.find_first_not_of(" ", i + 1); // so the search begings after :
-    endline = line.find_first_of("\r", i); // or /n??
+    i = line.find_first_not_of(" ", i + 1);
+    endline = line.find_first_of("\r", i);
     line.substr(i, endline - 1);
     if (i != std::string::npos)
         res.append(line, i, std::string::npos);
@@ -128,7 +121,7 @@ void parseRequest::setLanguage() {
                 language.resize(i);
 			_language.push_back(std::pair<std::string, float>(language, weight));
 		}
-        _language.sort(std::greater<std::pair<std::string, float>>()); // having the biggest on top
+        _language.sort(std::greater<std::pair<std::string, float>>());
     }
 }
 
@@ -137,7 +130,7 @@ std::string parseRequest::readBody(const std::string &str, size_t &i) {
 
     if (i == std::string::npos)
         return "";
-    for (size_t j = 0; str[i] != std::string::npos; i++) { // EOF or std::string::npos
+    for (size_t j = 0; str[i] != std::string::npos; i++) {
         res[j] = str[i];
         j++;
     }
@@ -161,7 +154,7 @@ void parseRequest::setQuery() {
     i = _path.find_first_of('?');
     if (i != std::string::npos) {
         _query.assign(_path, i + 1, std::string::npos);
-        _path = _path.substr(0, i); // why do we actually strip the _path ??
+        _path = _path.substr(0, i);
     }
 }
 
@@ -235,6 +228,10 @@ std::string parseRequest::getLanguageStr(void) const {
         }
     }
     return oss.str();
+}
+
+std::string parseRequest::getQuery(void) const {
+    return _query;
 }
 
 /* HEADERS */
