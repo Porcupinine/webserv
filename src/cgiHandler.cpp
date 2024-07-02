@@ -32,7 +32,7 @@ char **convertEnv(const std::map<std::string, std::string> &mapHeaders) {
 	env[count] = nullptr;
 	return env;
 }
-
+//TODO add headers to env, but formated
 char **getEnv(parseRequest& request) {
 	char **env = new char*[6];
 	std::string tmp = "REQUEST_METHOD=" + request.getMethod();
@@ -43,15 +43,15 @@ char **getEnv(parseRequest& request) {
 	std::cout<<"env: "<<tmp<<"\n";
 	env[1] = new char[tmp.size()];
 	std::strcpy(env[1], tmp.data());
-	tmp = "REMOTE_HOST=/upload.py";//TODO make a get host
+	tmp = "CONTENT_TYPE=" + request.getHeaders().find("Content-Type")->second;
 	std::cout<<"env: "<<tmp<<"\n";
 	env[2] = new char[tmp.size()];
 	std::strcpy(env[2], tmp.data());
-	tmp = "PATH_INFO=";//TODO make get path
+	tmp = "CONTENT_LENGTH=" + request.getHeaders().find("Content-Length")->second;
 	std::cout<<"env: "<<tmp<<"\n";
 	env[3] = new char[tmp.size()];
 	std::strcpy(env[3], tmp.data());
-	tmp = "UPLOAD_DIR=";//TODO make a get dir
+	tmp = "UPLOAD_DIR=/sam/Codam/webserv/cgi-bin/uploads";//TODO make a get dir
 	std::cout<<"env: "<<tmp<<"\n";
 	env[4] = new char[tmp.size()];
 	std::strcpy(env[4], tmp.data());
@@ -65,31 +65,18 @@ void freeEnv(char **env) {
 	}
 	delete[] env;
 }
-//TODO check if the file exist
-int runChild(parseRequest& request, int pipeRead, int pipeWrite) {
-//	size_t body_len = request.getBodyMsg().length() + 1;
-//	char *body = new char[body_len];
-//	std::strcpy(body, request.getBodyMsg().data()); //TODO, can I use this?
 
+int runChild(parseRequest& request, int pipeRead, int pipeWrite) {
 	char *argv[] = {"./../cgi-bin/test.py", nullptr}; //path and NULL
-	char **env = convertEnv(request.getHeaders());
+	char **env = getEnv(request);
 
 	std::cout<<"FROM INSIDE the kids\n"<<"body: "<<request.getBodyMsg()<<"\n";
 	if (dup2(pipeRead, STDIN_FILENO) == -1 || dup2(pipeWrite, STDOUT_FILENO) == -1) {
 		std::cerr<<"Leave the kids alone!\n";
-//		delete [] body;
 		close(pipeRead); // Close unused read end
 		close(pipeWrite); // Close the original pipe write end
 		return 1;
 	}
-//	int buffLen = 0;
-//	char bufferData[100];
-//	std::string response;
-//	while ((buffLen = ::read(pipeRead, bufferData, BUFFER_SIZE)) > 0) {
-////		std::cout << "Parent: " << buffer << "\nEND\n";
-//		response.append(bufferData, buffLen);
-//	}
-
 	if (execve(argv[0], argv, env) == -1) {
 		std::cerr<<"This is no middle age\n";
 		close(pipeRead); // Close unused read end
@@ -98,7 +85,6 @@ int runChild(parseRequest& request, int pipeRead, int pipeWrite) {
 		return 1;
 	}
 	return 0;
-	//TODO  where to free the env??
 }
 
 int cgiHandler(parseRequest& request) {
@@ -132,6 +118,7 @@ int cgiHandler(parseRequest& request) {
 		auto body = request.getBodyMsg();
 		write(pipeParentToChild[1], body.data(), body.size());
 		close(pipeParentToChild[1]);
+		std::cout<<"body done!\n";
 		int buffLen = 0;
 		std::string response;
 		std::string buffer(BUFFER_SIZE, '\0');
