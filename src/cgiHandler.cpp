@@ -9,18 +9,21 @@
 #include <string>
 #include <cstring>
 #include <filesystem>
+#include <cctype>
 
 #define BUFFER_SIZE 100
 
-char **convertEnv(const std::map<std::string, std::string> &mapHeaders) {
-	auto copy = mapHeaders;
-//	copy["REQUEST_METHOD"] = "POST";
-	char **env = new char*[copy.size()];
+char **convertEnv(parseRequest& request) {
+	auto copy = request.getHeaders();
+	char **env = new char*[copy.size() + 4];
 	size_t count = 0;
-	for (const auto & mapHeader : copy) {
-		std::string temp = mapHeader.first + '=' + mapHeader.second;
+	for (const auto & copy : copy) {
+		std::string reform = copy.first;
+		std::transform(reform.begin(), reform.end(), reform.begin(), ::toupper);
+		std::replace( reform.begin(), reform.end(), '-', '_');
+		std::string temp = reform + '=' + copy.second;
 		std::cout<<"env: "<<temp<<"\n";
-		env[count] = new char[mapHeader.first.size()+mapHeader.second.size()+2];
+		env[count] = new char[copy.first.size()+copy.second.size()+2];
 		size_t pos = 0;
 		for (char & x : temp) {
 			env[count][pos] = x;
@@ -29,35 +32,58 @@ char **convertEnv(const std::map<std::string, std::string> &mapHeaders) {
 		env[count][pos] = '\0';
 		count++;
 	}
+	std::string tmp = "REQUEST_METHOD=" + request.getMethod();
+	std::cout<<"env: "<<tmp<<"\n";
+	env[count++] = new char[tmp.size()];
+	std::strcpy(env[count], tmp.data());
+
+	tmp = "QUERRY_STRING=";//TODO make a getter for querry
+	std::cout<<"env: "<<tmp<<"\n";
+	env[count++] = new char[tmp.size()];
+	std::strcpy(env[count], tmp.data());
+
+	tmp = "UPLOAD_DIR=/sam/Codam/webserv/cgi-bin/uploads";//TODO make a get dir
+	std::cout<<"env: "<<tmp<<"\n";
+	env[count++] = new char[tmp.size()];
+	std::strcpy(env[count], tmp.data());
+
 	env[count] = nullptr;
 	return env;
 }
 //TODO add headers to env, but formated
-char **getEnv(parseRequest& request) {
-	char **env = new char*[6];
-	std::string tmp = "REQUEST_METHOD=" + request.getMethod();
-	std::cout<<"env: "<<tmp<<"\n";
-	env[0] = new char[tmp.size()];
-	std::strcpy(env[0], tmp.data());
-	tmp = "QUERRY_STRING=";//TODO make a getter for querry
-	std::cout<<"env: "<<tmp<<"\n";
-	env[1] = new char[tmp.size()];
-	std::strcpy(env[1], tmp.data());
-	tmp = "CONTENT_TYPE=" + request.getHeaders().find("Content-Type")->second;
-	std::cout<<"env: "<<tmp<<"\n";
-	env[2] = new char[tmp.size()];
-	std::strcpy(env[2], tmp.data());
-	tmp = "CONTENT_LENGTH=" + request.getHeaders().find("Content-Length")->second;
-	std::cout<<"env: "<<tmp<<"\n";
-	env[3] = new char[tmp.size()];
-	std::strcpy(env[3], tmp.data());
-	tmp = "UPLOAD_DIR=/sam/Codam/webserv/cgi-bin/uploads";//TODO make a get dir
-	std::cout<<"env: "<<tmp<<"\n";
-	env[4] = new char[tmp.size()];
-	std::strcpy(env[4], tmp.data());
-	env[5] = nullptr;
-	return env;
-}
+//add to env and then convert env ??
+
+//char **getEnv(parseRequest& request) {
+//	char **env = new char*[6];
+//
+//	std::string tmp = "REQUEST_METHOD=" + request.getMethod();
+//	std::cout<<"env: "<<tmp<<"\n";
+//	env[0] = new char[tmp.size()];
+//	std::strcpy(env[0], tmp.data());
+//
+//	tmp = "QUERRY_STRING=";//TODO make a getter for querry
+//	std::cout<<"env: "<<tmp<<"\n";
+//	env[1] = new char[tmp.size()];
+//	std::strcpy(env[1], tmp.data());
+//
+////	tmp = "CONTENT_TYPE=" + request.getHeaders().find("Content-Type")->second;
+////	std::cout<<"env: "<<tmp<<"\n";
+////	env[2] = new char[tmp.size()];
+////	std::strcpy(env[2], tmp.data());
+//
+////	tmp = "CONTENT_LENGTH=" + request.getHeaders().find("Content-Length")->second;
+////	std::cout<<"env: "<<tmp<<"\n";
+////	env[3] = new char[tmp.size()];
+////	std::strcpy(env[3], tmp.data());
+//
+//	tmp = "UPLOAD_DIR=/sam/Codam/webserv/cgi-bin/uploads";//TODO make a get dir
+//	std::cout<<"env: "<<tmp<<"\n";
+//	env[4] = new char[tmp.size()];
+//	std::strcpy(env[4], tmp.data());
+//
+//	env[5] = nullptr;
+//	return env;
+//}
 
 void freeEnv(char **env) {
 	for(int x = 0; env[x] != nullptr; x++) {
