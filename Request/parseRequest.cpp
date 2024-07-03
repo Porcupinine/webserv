@@ -23,18 +23,18 @@ parseRequest&	parseRequest::operator=(const parseRequest &cpy)
 	this->_bodyMsg = cpy.getBodyMsg();
 	this->_port = cpy.getPort();
 	this->_path = cpy.getPath();
-    // NOT QUERY??
+    this->_query = cpy._query;
 	return (*this);
 }
 
-void parseRequest::parseStr(std::string &info) {
+int parseRequest::parseStr(std::string &info) {
     size_t i = 0;
     std::string line;
     std::string bodyLine;
     std::string value;
     std::string key;
 
-    parseFirstline(readLine(info, i)); // 400 RET?? -- BUT NEED TO HAVE A STACK RIGHT TO PUT ALL THIS STUFF ON
+    parseFirstline(readLine(info, i));
     while ((line = readLine(info, i)) != "\r" && line != "" && _returnValue != 400) {
         key = setKey(line);
         value = setValue(line);
@@ -42,15 +42,16 @@ void parseRequest::parseStr(std::string &info) {
             _headers[key] = value;
         }
     }
+
 	size_t startBody = info.find("\r\n\r\n") + 4;
 	_bodyMsg = info.substr(startBody, std::string::npos);
+
     setPort(_headers["Host"]);
     setQuery();
     setLanguage();
 //    if (cgiInvolved(_headers["Path"]) == true)
-        // SEND TO LAURA
-    //setBody(); // if any as they body comes after the headers and a newline first THEN the body message
-    //return _returnValue; // DEPENDS IF VOID OR INT TO BE RETURNED
+        // _response = cgiHandler(request); // check with laura, she needs the config things tooo
+    return _returnValue;
 }
 
 
@@ -71,9 +72,7 @@ std::string parseRequest::readLine(const std::string &str, size_t &i) {
     return res;
 }
 
-
 /* SETS THE HEADER VALUES */
-
 std::string parseRequest::setKey(const std::string &line) {
     size_t i;
     std::string res;
@@ -137,17 +136,6 @@ std::string parseRequest::readBody(const std::string &str, size_t &i) {
     return res;
 }
 
-void	parseRequest::setBody(const std::string &str) {
-    _bodyMsg.assign(str);
-
-	for (int i = _bodyMsg.size() - 1; i >= 0; --i) {
-		if (_bodyMsg[i] == '\n' || _bodyMsg[i] == '\r')
-			_bodyMsg.erase(i);
-		else
-			break ;
-    }
-}
-
 void parseRequest::setQuery() {
     size_t i;
 
@@ -158,9 +146,7 @@ void parseRequest::setQuery() {
     }
 }
 
-
 /* ACCESSSORS SETTERS-GETTERS */
-
 void parseRequest::setMethod(std::string type) {
     _methodType = type;
 }
@@ -195,7 +181,7 @@ void parseRequest::setPort(std::string port) {
     if (port.size() < 5)
         _port = std::stoul(port);
     else
-        std::cout << "ERROR IN PORT\n"; // this will be checked later as well right
+        std::cout << "Error: in port\n"; // this will be checked later as well right
 }
 
 unsigned int parseRequest::getPort(void) const {
@@ -235,8 +221,7 @@ std::string parseRequest::getQuery(void) const {
 }
 
 /* HEADERS */
-
-void parseRequest::initHeaders() { // MORE NEEDED??
+void parseRequest::initHeaders() {
     _headers.clear();
     _headers["Accept-Charsets"] = "";
     _headers["Accept-Language"] = "";
@@ -259,16 +244,13 @@ void parseRequest::initHeaders() { // MORE NEEDED??
 	_headers["Transfer-Encoding"] = "";
 	_headers["User-Agent"] = "";
 	_headers["Www-Authenticate"] = "";
-    // If-Modified-Since ??
 }
 
 const std::map<std::string, std::string>&	parseRequest::getHeaders(void) const {
 	return _headers;
 }
 
-
 /* PARSING REQUEST */
-
 int parseRequest::parseFirstline(const std::string &info) {
     size_t i;
     std::string line;
@@ -320,9 +302,7 @@ int parseRequest::parseVersion(const std::string &line, size_t i) {
     return validateMethodType();
 }
 
-
 /* METHOD */
-
 std::string initMethodString(Method method)
 {
     switch(method)

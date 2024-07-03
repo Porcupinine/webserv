@@ -8,28 +8,24 @@ Response::~Response() {
 }
 
 Response&	Response::operator=(const Response &cpy) {
-	this->_version = cpy.getVersion(); // do i need to write all these functions tho??
+	this->_version = cpy.getVersion();
 	this->_statusCode = cpy.getStatusCode();
     this->_response = cpy._response;
     this->_type = cpy._type;
     this->_port = cpy._port; // NEEDED?
     this->_host = cpy._host; // NEEDED?
     this->_isAutoIndex = cpy._isAutoIndex;
-
-    // add more stuff here no
 	return (*this);
 }
 
-
 /* PROCESS RESPONSE */
-void Response::giveResponse(parseRequest& request) {
-    // _statusCode should inherit from the previous thing right?? or if it gets here we assume all is good already??
+std::string Response::giveResponse(parseRequest& request) {
     _statusCode = request.getRetVal();
     _type = "";
     _isAutoIndex = false; // WRONG NEEDS TO BE UPDATED BASED ON CONFIG FILE -- lou??
     // _path = ; // get it from config ?? Lou?
     initErrorCodes();
-    initMethods();// init method map or something?
+    initMethods();
 
     // do check with regards to return code 
         // have default responses with error pages (content type HTML, error code, error page)
@@ -39,16 +35,14 @@ void Response::giveResponse(parseRequest& request) {
 
 
     std::map<std::string, void (Response::*)(parseRequest&)>::iterator it = _method.find(request.getMethod());
-    if (it != _method.end()) {
+    if (it != _method.end())
         (this->*(it->second))(request);
-    }
     else {
         _statusCode = 405;
         _response = errorHtml(_statusCode);
-        _response = buildResponseHeader(request); // OVER HERE RIGHT??
+        _response = buildResponseHeader(request);
     }
-
-    // SEND END RESULT TO LOU
+    return _response; // to lou
 }
 
 /* STATIC INIT */
@@ -68,30 +62,29 @@ std::map<std::string, void (Response::*)(parseRequest &)> Response::_method = Re
 /* METHOD FUNCTIONS */
 void Response::getMethod(parseRequest& request) {
     if (cgiInvolved(request.getPath()) == true) {
-        // _response = cgi. ; // check with laura
-            // retreive response from cgi handler
-
+        //_response = cgiHandler(request); // check with laura SHOULD BE FILLED ALREADY DONT CALL CGI AGAIN
     }
-    else if (_statusCode == 200)
+    else if (_statusCode == 200) {
         readContent(request);
+        _response = buildResponseHeader(request);
+    }
     else
         _response = errorHtml(_statusCode); // but could it be 100/201/204 ?? as its not in the list
-    _response = buildResponseHeader(request); // TO WRITE -- ALSO NEED WHEN CGI INVOLVED?
 }
 
 void Response::postMethod(parseRequest& request) {
     if (cgiInvolved(request.getPath()) == true) {
-        // _response = cgi. ; // check with laura
-            // retreive response from cgi handler
-
+        // _response = cgiHandler(request); // check with laura SHOULD BE FILLED ALREADY DONT CALL CGI AGAIN
     }
     else {
         _statusCode = 204; // no content
         _response = "";
+        _response = buildResponseHeader(request);
     }
-    if (_statusCode == 500)
+    if (_statusCode == 500) {
         _response = errorHtml(_statusCode);
-    _response = buildResponseHeader(request); // TO WRITE -- ALSO NEED WHEN CGI INVOLVED?
+        _response = buildResponseHeader(request);
+    }
 }
 
 void Response::deleteMethod(parseRequest& request) {
@@ -119,6 +112,10 @@ void Response::initErrorCodes()
 	_errorCodes[200] = "OK";
 	_errorCodes[201] = "Created";
 	_errorCodes[204] = "No Content";
+    _errorCodes[301] = "Moved Permanently";
+    _errorCodes[302] = "Found";
+    _errorCodes[307] = "Temporary Redirect";
+    _errorCodes[308] = "Permanent Redirect";
 	_errorCodes[400] = "Bad Request";
 	_errorCodes[403] = "Forbidden";
 	_errorCodes[404] = "Not Found";
@@ -146,6 +143,9 @@ void Response::htmlErrorCodesMap() { // but this includes already the whole head
     // _errorCodesHtml[500] = "HTTP/1.1 500 Internal Server Error\r\n\n"
     // "Content-Type: text/html\r\n\nContent-Length: 146\r\n\r\n "
     // "<!DOCTYPE html><html><head><title>500</title></head><body><h1> 500 Internal Server Error! </h1><p>I probably should study more!</p></body></html>";
+
+
+    // SHOULD THE 301/302/307/308 ALSO HAVE ERROR PAGES??
 
     _errorCodesHtml[400] = "<!DOCTYPE html><html><head><title>400</title></head><body><h1> 400 Bad Request Error! </h1><p>We are not speaking the same language!</p></body></html>";
     _errorCodesHtml[403] = "<!DOCTYPE html><html><head><title>403</title></head><body><h1> 403 Forbiden! </h1><p>This is top secret, sorry!</p></body></html>";

@@ -3,7 +3,7 @@
 /* generate an HTML page that lists the contents of a specified directory. 
 This directory listing includes the names of files and subdirectories within the specified directory, 
 along with their sizes and last modified dates. */
-std::string Response::autoIndexPageListing(const std::string& path, const std::string& host, int port) { // look into this
+std::string Response::autoIndexPageListing(const std::string& path, const std::string& host, int port) {
     std::stringstream html;
 
     html << "<!DOCTYPE html>\n";
@@ -25,7 +25,7 @@ std::string Response::autoIndexPageListing(const std::string& path, const std::s
     for (const auto& entry : std::filesystem::directory_iterator(path)) {
         std::string name = entry.path().filename().string();
         std::string size = entry.is_directory() ? "-" : std::to_string(std::filesystem::file_size(entry.path()));
-        std::string lastModified = "-"; // Simplification; use actual timestamp conversion in a real case
+        std::string lastModified = "-";
 
         html << "<tr>";
         html << "<td><a href=\"" << name << "\">" << name << "</a></td>";

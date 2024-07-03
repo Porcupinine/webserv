@@ -12,14 +12,9 @@ void Response::initResponseHeaderFields() {
 	_allow = "";
 	_contentLanguage = "";
 	_contentLength = "";
-	_contentLocation = "";
 	_contentType = "";
 	_date = "";
-	// _lastModified = "";
-	// _location = "";
-	// _retryAfter = ""; // needed??
-	_server = "";
-	// _transferEncoding = ""; // needed??
+	_location = "";
 }
 
 /* HEADER SETTERS */
@@ -27,15 +22,9 @@ void Response::setHeaderValues(parseRequest& request) {
 	_allow = setAllow(request);
 	_contentLanguage = request.getLanguageStr();
 	_contentLength = _response.size(); // test if this needs to be converted to string
-	_contentLocation = request.getPath(); // could this have chnaged based on config file??
 	_contentType = _type; // but what if empty??
-	_date = setDate(request); // i am putting the date of response not request is that fine??
-	// _lastModified = ""; // check where to get this info
-	// _location = ""; // 
-	// _retryAfter = ""; // needed??
-	_server = ""; // needs to come from Lou
-	// _transferEncoding = ""; // needed??
-	// do we need to add connection (as closed)??
+	_date = setDate(request);
+	_location = ""; // only use in case redirection 301/302/307/308 -- get from Lou
 }
 
 std::string Response::setAllow(parseRequest& request) {
@@ -68,24 +57,11 @@ std::string Response::getHeaderValues(parseRequest& request, std::string header)
 		header += "Content-Language: " + _contentLanguage + "/r/n";
 	if (_contentLength != "")
 		header += "Content-Length: " + _contentLength + "/r/n";
-	if (_contentLocation != "")
-		header += "Content-Location: " + _contentLocation + "/r/n";
 	if (_date != "")
 		header += "Date: " + _date + "/r/n";
-	
-	// FIX THE SETTERS FOR THESE FIRST
-	// if (_lastModified != "")
-	// 	header += "Last-Modified: " + _lastModified + "/r/n";
-	// if (_location != "")
-	// 	header += "Location: " + _location + "/r/n";
-	// if (_retryAfter != "")
-	// 	header += "Retry-After: " + _retryAfter + "/r/n";
-	if (_server != "")
-		header += "Server: " + _server + "/r/n"; // FROM LOU??
-	// if (_transferEncoding != "")
-	// 	header += "Transfer-Encoding: " + _transferEncoding + "/r/n";
-	// if (_connection != "")
-	// 	header += "Connection: " + _connection + "/r/n"; // needed??
+	if (_statusCode == 301 || _statusCode == 302 || _statusCode == 307 || _statusCode == 308)
+		header += "Location: " + _location + "/r/n"; // GET FROM CONFIG FILE
+	header += "Connection: closed/r/n"; // am i the one supposed to wrtie this or lou??
 
 	if (_response != "")
 		header += "/r/n" + _response + "/r/n"; // is this right?? no clue
@@ -96,7 +72,13 @@ std::string Response::getMatchingCodeString(unsigned int code) {
     std::map<unsigned int, std::string>::iterator it = _errorCodes.find(code);
 
     if (it == _errorCodes.end())
-        return (""); // or something else??
+        return (""); // or something else?? OR 500
     else
         return (it->second);
+}
+
+server {
+	...-location {
+		return 301 google.com;
+	}
 }

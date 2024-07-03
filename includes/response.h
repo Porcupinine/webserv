@@ -21,8 +21,8 @@ class Response
 {
     private:
 	    std::string     _response{}; // response body string, storing the HTML
-        std::string     _version; // (like HTTP/1.1)
-        unsigned int    _statusCode; // (like 200) or could we use _returnValue from parseRequest??
+        std::string     _version;
+        unsigned int    _statusCode;
         // std::string     _setCookie; // do we want/need this??
         std::string     _type;
         int             _port; // needed??
@@ -35,21 +35,16 @@ class Response
         std::string					_allow;
         std::string					_contentLanguage;
         std::string					_contentLength;
-        std::string					_contentLocation;
         std::string					_contentType;
         std::string					_date;
-        std::string					_lastModified;
         std::string					_location;
-        std::string					_retryAfter;
-        std::string					_server;
-        std::string					_transferEncoding;
 
     public:
         Response(void);
         ~Response();
         Response& operator=(const Response &cpy);
 
-        void giveResponse(parseRequest& request);
+        std::string giveResponse(parseRequest& request);
 
         void getMethod(parseRequest& request); // arg needed?? yes from config file
         void postMethod(parseRequest& request); // arg needed?? yes from config file
@@ -81,8 +76,6 @@ class Response
         bool fileExists(const std::string& path);
 
         /* STATIC */
-        // using MethodHandler = std::function<void(Response*, parseRequest&, const std::string&)>;
-        // std::map<std::string, MethodHandler> _method;
         static std::map<std::string, void (Response::*)(parseRequest&)>	_method;
 	    static std::map<std::string, void (Response::*)(parseRequest&)>	initMethods();
 

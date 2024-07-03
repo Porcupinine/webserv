@@ -5,12 +5,10 @@
 #include <sstream>
 #include <string>
 #include <map>
-#include <unordered_map> // needed??
 #include <stack>
 #include <vector>
 #include <list>
 #include <utility>
-//#include <pair>
 #include <functional>
 
 class parseRequest
@@ -18,17 +16,17 @@ class parseRequest
     private:
         std::string _methodType;
         std::string _path;
-        std::string _version; // string or float?
+        std::string _version;
         std::string _bodyMsg; 
         unsigned int _port; // init to 80 by default or what??
-        unsigned int _returnValue; // to what do we init this?? 200
+        unsigned int _returnValue;
         std::string _query;
-        std::string _infoStr; // that we got from the server's buffer
-        std::map<std::string, std::string> _headers; // MAKE IT AN UNORERED MAP? NO why a map?
+        std::string _infoStr; // server's buffer
+        std::map<std::string, std::string> _headers;
 		std::list<std::pair<std::string, float>> _language;
 
 
-        void parseStr(std::string &info);
+        int parseStr(std::string &info);
 
         void initHeaders();
 
@@ -42,14 +40,13 @@ class parseRequest
         std::string setKey(const std::string &line);
         std::string setValue(const std::string &line);
 
-        std::string& capsOn(std::string &str); // maybe put this in utils
-        std::string rmSpaces(std::string &str); // UTILS??
-        std::vector<std::string> split(const std::string &str, char c); // UTILS??
-
         void setLanguage();
         void setQuery();
-        void setBody(const std::string &str);
         std::string readBody(const std::string &str, size_t &i);
+
+        std::string& capsOn(std::string &str);
+        std::string rmSpaces(std::string &str);
+        std::vector<std::string> split(const std::string &str, char c);
 
     public:
         parseRequest(std::string &info); // ++ server instance -- TO DO
@@ -75,9 +72,8 @@ class parseRequest
         void setRetVal(int value);
         void setBodyMsg(std::string b);
 
-
-
 };
+
 
 enum class Method
 {
@@ -86,7 +82,9 @@ enum class Method
     DELETE
 };
 
-std::string initMethodString(Method method);
-bool cgiInvolved(std::string path);
+
+std::string     initMethodString(Method method);
+bool            cgiInvolved(std::string path);
+
 
 #endif
