@@ -6,7 +6,7 @@
 /*   By: dmaessen <dmaessen@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2024/07/07 15:50:11 by dmaessen          #+#    #+#             */
-/*   Updated: 2024/07/07 15:50:12 by dmaessen         ###   ########.fr       */
+/*   Updated: 2024/07/07 16:58:16 by dmaessen         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -15,7 +15,7 @@
 /* generate an HTML page that lists the contents of a specified directory. 
 This directory listing includes the names of files and subdirectories within the specified directory, 
 along with their sizes and last modified dates. */
-std::string Response::autoIndexPageListing(const std::string& path, const std::string& host, int port) {
+std::string Response::autoIndexPageListing(const std::string& path) {
     std::stringstream html;
 
     html << "<!DOCTYPE html>\n";

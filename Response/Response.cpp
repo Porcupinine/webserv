@@ -6,7 +6,7 @@
 /*   By: dmaessen <dmaessen@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2024/07/07 15:49:40 by dmaessen          #+#    #+#             */
-/*   Updated: 2024/07/07 16:47:29 by dmaessen         ###   ########.fr       */
+/*   Updated: 2024/07/07 16:58:29 by dmaessen         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -36,18 +36,16 @@ std::string Response::giveResponse(parseRequest& request) {
     initErrorCodes();
     initMethods();
 
-    // do check with regards to return code 
-        // have default responses with error pages (content type HTML, error code, error page)
-        // make a map or pointer fucntions for the error pages// based on that send to work on the right method
-    if (_statusCode != 200 || _statusCode != 204) // en gros si ca commence pas par 2
-        std::cout << "BIG PROBLEME\n"; // of courase not, revise this
+    // if (buffersizemax < request.getBody().size()) // take from lou's struct
+        // _statusCode == 413;
 
 
     std::map<std::string, void (Response::*)(parseRequest&)>::iterator it = _method.find(request.getMethod());
     if (it != _method.end())
         (this->*(it->second))(request);
-    else {
+    else
         _statusCode = 405;
+    if (_statusCode == 405 || _statusCode == 413) {
         _response = errorHtml(_statusCode);
         _response = buildResponseHeader(request);
     }
@@ -166,9 +164,7 @@ std::string Response::errorHtml(unsigned int error) {
         return (it->second);
 }
 
-
-
-void Response::readContent(parseRequest& request) { // maybe use the above for it adding the autoIndex
+void Response::readContent(parseRequest& request) {
     std::ifstream file; // reading content from an infile
 
     if (fileExists(request.getPath()) == true) {
@@ -187,7 +183,7 @@ void Response::readContent(parseRequest& request) { // maybe use the above for i
     }
     else if (_isAutoIndex == true) { // but this needs to be set to true somewhere
         std::stringstream buffer;
-        buffer << autoIndexPageListing(request.getPath(), _host, _port); // need to get these from lou tho -- from config file
+        buffer << autoIndexPageListing(request.getPath());
         _response = buffer.str();
         _type = "text/html";
     }

@@ -6,7 +6,7 @@
 /*   By: dmaessen <dmaessen@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2024/07/07 15:50:05 by dmaessen          #+#    #+#             */
-/*   Updated: 2024/07/07 16:30:12 by dmaessen         ###   ########.fr       */
+/*   Updated: 2024/07/07 16:52:34 by dmaessen         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -67,7 +67,6 @@ std::string parseRequest::parseStr(std::string &info) {
     //CHECK IF SOMEONE FAILED ON LAURA'S SIDE??
     
     // DO I NEED/WANT TO CHECK IF THE ERROR CODE IS BAD ALREADY??
-
     Response res;
     return res.giveResponse(*this); // ++ an instance of the struct ++ is this really how we want to return??
 }

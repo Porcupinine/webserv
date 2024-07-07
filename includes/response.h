@@ -77,7 +77,7 @@ class Response
 	    static std::map<std::string, void (Response::*)(parseRequest&)>	initMethods();
 
         /* UTILS FOR AUTO INDEX */
-        std::string autoIndexPageListing(const std::string& path, const std::string& host, int port);
+        std::string autoIndexPageListing(const std::string& path);
 };
 
 
