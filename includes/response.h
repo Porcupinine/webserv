@@ -25,8 +25,6 @@ class Response
         unsigned int    _statusCode;
         // std::string     _setCookie; // do we want/need this??
         std::string     _type;
-        int             _port; // needed??
-        std::string     _host; // needed?
         bool            _isAutoIndex; // meaning autoIndex = true; means to respond with /path/index.html when /path/ is requested
         std::map<unsigned int, std::string> _errorCodes;
         std::map<unsigned int, std::string> _errorCodesHtml;
@@ -64,8 +62,7 @@ class Response
 
         /* HTML RELATED */
         std::string errorHtml(unsigned int error);
-        // std::string readHtmlFile(const std::string &path);
-        void readContent(parseRequest& request); // check if the above can be merged with this one
+        void readContent(parseRequest& request);
 
         /* GETTERS */
         std::string getResponse(void) const; 

@@ -11,6 +11,10 @@
 #include <utility>
 #include <functional>
 
+#include "../includes/response.h"
+
+class Response;
+
 class parseRequest
 {
     private:
@@ -21,12 +25,12 @@ class parseRequest
         unsigned int _port; // init to 80 by default or what??
         unsigned int _returnValue;
         std::string _query;
-        std::string _infoStr; // server's buffer
         std::map<std::string, std::string> _headers;
 		std::list<std::pair<std::string, float>> _language;
+        std::string _cgiresponse;
 
 
-        int parseStr(std::string &info);
+        std::string parseStr(std::string &info);
 
         void initHeaders();
 
@@ -63,6 +67,7 @@ class parseRequest
         const std::map<std::string, std::string>& getHeaders(void) const;
         std::string getLanguageStr(void) const;
         std::string getQuery(void) const;
+        std::string getCgiResponse(void) const;
 
         /* SETTERS */
         void setMethod(std::string type);

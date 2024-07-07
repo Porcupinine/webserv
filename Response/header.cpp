@@ -1,10 +1,22 @@
+/* ************************************************************************** */
+/*                                                                            */
+/*                                                        :::      ::::::::   */
+/*   header.cpp                                         :+:      :+:    :+:   */
+/*                                                    +:+ +:+         +:+     */
+/*   By: dmaessen <dmaessen@student.42.fr>          +#+  +:+       +#+        */
+/*                                                +#+#+#+#+#+   +#+           */
+/*   Created: 2024/07/07 15:50:08 by dmaessen          #+#    #+#             */
+/*   Updated: 2024/07/07 16:32:51 by dmaessen         ###   ########.fr       */
+/*                                                                            */
+/* ************************************************************************** */
+
 #include "../includes/response.h"
 
 std::string Response::buildResponseHeader(parseRequest& request) {
     std::string header = "";
 	initResponseHeaderFields();
 	setHeaderValues(request);
-	header = getHeaderValues(request, header); // FINALISE THIS
+	header = getHeaderValues(request, header);
 	return header;
 }
 
@@ -21,10 +33,10 @@ void Response::initResponseHeaderFields() {
 void Response::setHeaderValues(parseRequest& request) {
 	_allow = setAllow(request);
 	_contentLanguage = request.getLanguageStr();
-	_contentLength = _response.size(); // test if this needs to be converted to string
+	_contentLength = _response.size();
 	_contentType = _type; // but what if empty??
 	_date = setDate(request);
-	_location = ""; // only use in case redirection 301/302/307/308 -- get from Lou
+	_location = "";
 }
 
 std::string Response::setAllow(parseRequest& request) {
@@ -50,21 +62,23 @@ std::string Response::setDate(parseRequest& request) {
 
 /* HEADER GETTERS */
 std::string Response::getHeaderValues(parseRequest& request, std::string header) {
-	header += request.getVersion() + " " + std::to_string(_statusCode) + " " + getMatchingCodeString(_statusCode) + "/r/n"; // first line
+	header += request.getVersion() + " " + std::to_string(_statusCode) + " " + getMatchingCodeString(_statusCode) + "/r/n";
 	if (_allow != "")
 		header += "Allow: " + _allow + "/r/n";
 	if (_contentLanguage != "")
 		header += "Content-Language: " + _contentLanguage + "/r/n";
 	if (_contentLength != "")
 		header += "Content-Length: " + _contentLength + "/r/n";
+		if (_contentType != "")
+		header += "Content-Type: " + _contentType + "/r/n";
 	if (_date != "")
 		header += "Date: " + _date + "/r/n";
 	if (_statusCode == 301 || _statusCode == 302 || _statusCode == 307 || _statusCode == 308)
 		header += "Location: " + _location + "/r/n"; // GET FROM CONFIG FILE
-	header += "Connection: closed/r/n"; // am i the one supposed to wrtie this or lou??
+	header += "Connection: closed/r/n";
 
 	if (_response != "")
-		header += "/r/n" + _response + "/r/n"; // is this right?? no clue
+		header += "/r/n" + _response + "/r/n";
 	return header;
 }
 
@@ -72,13 +86,7 @@ std::string Response::getMatchingCodeString(unsigned int code) {
     std::map<unsigned int, std::string>::iterator it = _errorCodes.find(code);
 
     if (it == _errorCodes.end())
-        return (""); // or something else?? OR 500
+        return ("Error"); // or something else??
     else
         return (it->second);
-}
-
-server {
-	...-location {
-		return 301 google.com;
-	}
 }

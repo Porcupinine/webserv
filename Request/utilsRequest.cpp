@@ -1,10 +1,22 @@
+/* ************************************************************************** */
+/*                                                                            */
+/*                                                        :::      ::::::::   */
+/*   utilsRequest.cpp                                   :+:      :+:    :+:   */
+/*                                                    +:+ +:+         +:+     */
+/*   By: dmaessen <dmaessen@student.42.fr>          +#+  +:+       +#+        */
+/*                                                +#+#+#+#+#+   +#+           */
+/*   Created: 2024/07/07 15:50:31 by dmaessen          #+#    #+#             */
+/*   Updated: 2024/07/07 15:50:49 by dmaessen         ###   ########.fr       */
+/*                                                                            */
+/* ************************************************************************** */
+
 #include "../Request/parseRequest.hpp"
 
 std::string& parseRequest::capsOn(std::string &str) {
     for (size_t i = 0; i < str.size(); i++) {
         if (str[0])
             str[0] = toupper(str[0]);
-        if (str[i - 1] == '-' && isalpha(str[i])) // this correct or !=
+        if (str[i - 1] == '-' && isalpha(str[i]))
             str[i] = toupper(str[i]);
     }
     return str;
@@ -15,7 +27,7 @@ std::string parseRequest::rmSpaces(std::string &str) {
     len = str.size() - 1;
     while (len >= 0 && str[len] == ' ')
         --len;
-    return str.substr(0, len + 1); // to test
+    return str.substr(0, len + 1);
 }
 
 std::vector<std::string> parseRequest::split(const std::string &str, char c) {

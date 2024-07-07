@@ -1,8 +1,20 @@
+/* ************************************************************************** */
+/*                                                                            */
+/*                                                        :::      ::::::::   */
+/*   parseRequest.cpp                                   :+:      :+:    :+:   */
+/*                                                    +:+ +:+         +:+     */
+/*   By: dmaessen <dmaessen@student.42.fr>          +#+  +:+       +#+        */
+/*                                                +#+#+#+#+#+   +#+           */
+/*   Created: 2024/07/07 15:50:05 by dmaessen          #+#    #+#             */
+/*   Updated: 2024/07/07 16:30:12 by dmaessen         ###   ########.fr       */
+/*                                                                            */
+/* ************************************************************************** */
+
 #include "../Request/parseRequest.hpp"
 
 // this will also take an instance of the server part to be able to retreive _path if it was overwritten/updated
 parseRequest::parseRequest(std::string &info) : _methodType(""), _version(""), _returnValue(200),
-                              _bodyMsg(""), _port(80), _path(""), _query(""), _infoStr(info) {
+                              _bodyMsg(""), _port(80), _path(""), _query("") {
     initHeaders();
     // init _path to a certain default location but depends on the config file
     parseStr(info);
@@ -27,7 +39,7 @@ parseRequest&	parseRequest::operator=(const parseRequest &cpy)
 	return (*this);
 }
 
-int parseRequest::parseStr(std::string &info) {
+std::string parseRequest::parseStr(std::string &info) {
     size_t i = 0;
     std::string line;
     std::string bodyLine;
@@ -49,9 +61,15 @@ int parseRequest::parseStr(std::string &info) {
     setPort(_headers["Host"]);
     setQuery();
     setLanguage();
-//    if (cgiInvolved(_headers["Path"]) == true)
-        // _response = cgiHandler(request); // check with laura, she needs the config things tooo
-    return _returnValue;
+    _cgiresponse = "";
+    if (cgiInvolved(_headers["Path"]) == true)
+        _cgiresponse = cgiHandler(*this); // check with laura, she needs the config things tooo + store it in Lou's struct directly
+    //CHECK IF SOMEONE FAILED ON LAURA'S SIDE??
+    
+    // DO I NEED/WANT TO CHECK IF THE ERROR CODE IS BAD ALREADY??
+
+    Response res;
+    return res.giveResponse(*this); // ++ an instance of the struct ++ is this really how we want to return??
 }
 
 
@@ -220,6 +238,10 @@ std::string parseRequest::getQuery(void) const {
     return _query;
 }
 
+std::string parseRequest::getCgiResponse(void) const {
+    return _cgiresponse;
+}
+
 /* HEADERS */
 void parseRequest::initHeaders() {
     _headers.clear();
@@ -227,7 +249,7 @@ void parseRequest::initHeaders() {
     _headers["Accept-Language"] = "";
     _headers["Allow"] = "";
 	_headers["Auth-Scheme"] = "";
-	_headers["Authorization"] = ""; // 
+	_headers["Authorization"] = "";
 	_headers["Connection"] = "Keep-Alive";
     _headers["Cookie"] = ""; // will need to be stored somewhere for later
 	_headers["Content-Language"] = "";

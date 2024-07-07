@@ -1,10 +1,21 @@
+/* ************************************************************************** */
+/*                                                                            */
+/*                                                        :::      ::::::::   */
+/*   Response.cpp                                       :+:      :+:    :+:   */
+/*                                                    +:+ +:+         +:+     */
+/*   By: dmaessen <dmaessen@student.42.fr>          +#+  +:+       +#+        */
+/*                                                +#+#+#+#+#+   +#+           */
+/*   Created: 2024/07/07 15:49:40 by dmaessen          #+#    #+#             */
+/*   Updated: 2024/07/07 16:47:29 by dmaessen         ###   ########.fr       */
+/*                                                                            */
+/* ************************************************************************** */
+
 #include "../includes/response.h"
 
 Response::Response(void) {
 }
 
 Response::~Response() {
-
 }
 
 Response&	Response::operator=(const Response &cpy) {
@@ -12,8 +23,6 @@ Response&	Response::operator=(const Response &cpy) {
 	this->_statusCode = cpy.getStatusCode();
     this->_response = cpy._response;
     this->_type = cpy._type;
-    this->_port = cpy._port; // NEEDED?
-    this->_host = cpy._host; // NEEDED?
     this->_isAutoIndex = cpy._isAutoIndex;
 	return (*this);
 }
@@ -42,7 +51,7 @@ std::string Response::giveResponse(parseRequest& request) {
         _response = errorHtml(_statusCode);
         _response = buildResponseHeader(request);
     }
-    return _response; // to lou
+    return _response;
 }
 
 /* STATIC INIT */
@@ -62,19 +71,25 @@ std::map<std::string, void (Response::*)(parseRequest &)> Response::_method = Re
 /* METHOD FUNCTIONS */
 void Response::getMethod(parseRequest& request) {
     if (cgiInvolved(request.getPath()) == true) {
-        //_response = cgiHandler(request); // check with laura SHOULD BE FILLED ALREADY DONT CALL CGI AGAIN
+        if (request.getCgiResponse() != "")
+            _response = request.getCgiResponse();
+        // else
+        //     _statusCode = 500; // not sure we want this
     }
     else if (_statusCode == 200) {
         readContent(request);
         _response = buildResponseHeader(request);
     }
     else
-        _response = errorHtml(_statusCode); // but could it be 100/201/204 ?? as its not in the list
+        _response = errorHtml(_statusCode);
 }
 
 void Response::postMethod(parseRequest& request) {
     if (cgiInvolved(request.getPath()) == true) {
-        // _response = cgiHandler(request); // check with laura SHOULD BE FILLED ALREADY DONT CALL CGI AGAIN
+        if (request.getCgiResponse() != "")
+            _response = request.getCgiResponse(); 
+        // else
+        //     _statusCode = 500; // not sure we want this
     }
     else {
         _statusCode = 204; // no content
@@ -89,21 +104,20 @@ void Response::postMethod(parseRequest& request) {
 
 void Response::deleteMethod(parseRequest& request) {
     // think this is correct, as CGI/Laura rm it and so i just need to check its really removed
-    (void)request; // as we actually don't really need what came out of this
-    _response = ""; // as its not initalised
+    _response = "";
 
-    if (fileExists(request.getPath()) == true){ // see if rm or not
+    if (fileExists(request.getPath()) == true){
         if (remove(request.getPath().c_str()) == 0)
             _statusCode = 204; // meaning no content, returned to indicate success and there is no body message
         else
-            _statusCode = 403; // forbidden to rm, insufficient rights
+            _statusCode = 403;
     }
     else
-        _statusCode = 404; // not found
+        _statusCode = 404;
 
     if (_statusCode == 404 || _statusCode == 403)
         _response = errorHtml(_statusCode);
-    _response = buildResponseHeader(request); // TO WRITE
+    _response = buildResponseHeader(request);
 }
 
 void Response::initErrorCodes()
@@ -124,36 +138,19 @@ void Response::initErrorCodes()
 	_errorCodes[500] = "Internal Server Error";
 }
 
-void Response::htmlErrorCodesMap() { // but this includes already the whole header thing
-    // _errorCodesHtml[400] = "HTTP/1.1 400 Bad Request\r\n\n"
-    // "Content-Type: text/html\r\n\nContent-Length: 151\r\n\r\n "
-    // "<!DOCTYPE html><html><head><title>400</title></head><body><h1> 400 Bad Request Error! </h1><p>We are not speaking the same language!</p></body></html>";
-    // _errorCodesHtml[403] = "HTTP/1.1 403 Forbiden\r\n\n"
-    // "Content-Type: text/html\r\n\nContent-Length: 130\r\n\r\n "
-    // "<!DOCTYPE html><html><head><title>403</title></head><body><h1> 403 Forbiden! </h1><p>This is top secret, sorry!</p></body></html>";
-    // _errorCodesHtml[404] = "HTTP/1.1 404 Not Found\r\n\n"
-    // "Content-Type: text/html\r\n\nContent-Length: 115\r\n\r\n "
-    // "<!DOCTYPE html><html><head><title>404</title></head><body><h1> 404 Page not found! </h1><p>Puff!</p></body></html>";
-    // _errorCodesHtml[405] = "HTTP/1.1 405 Method Not Allowed\r\n\n"
-    // "Content-Type: text/html\r\n\nContent-Length: 139\r\n\r\n "
-    // "<!DOCTYPE html><html><head><title>405</title></head><body><h1> 405 Method Not Allowed! </h1><p>We forgot how to do that!</p></body></html>";
-    // _errorCodesHtml[413] = "HTTP/1.1 413 Payload Too Large\r\n\n"
-    // "Content-Type: text/html\r\n\nContent-Length: 163\r\n\r\n "
-    // "<!DOCTYPE html><html><head><title>413</title></head><body><h1> 413 Payload Too Large! </h1><p>We are too busy right now, please try again later!</p></body></html>";
-    // _errorCodesHtml[500] = "HTTP/1.1 500 Internal Server Error\r\n\n"
-    // "Content-Type: text/html\r\n\nContent-Length: 146\r\n\r\n "
-    // "<!DOCTYPE html><html><head><title>500</title></head><body><h1> 500 Internal Server Error! </h1><p>I probably should study more!</p></body></html>";
-
-
-    // SHOULD THE 301/302/307/308 ALSO HAVE ERROR PAGES??
-
+void Response::htmlErrorCodesMap() { // need an instance of the struct for the redirect thing
+    _errorCodesHtml[301] = "<!DOCTYPE html><html><head><title>301</title></head><body><h1> 301 Moved Permanently! </h1><p>This page has been moved permanently to <a href=" << _path << ">here</a>.</p></body></html>"; // take this from the server config info
+    _errorCodesHtml[302] = "<!DOCTYPE html><html><head><title>302</title></head><body><h1> 302 Found! </h1><p>This page has been temporarily moved to <a href=" << _path << ">here</a>.</p></body></html>"; // take this from the server config info
+    _errorCodesHtml[307] = "<!DOCTYPE html><html><head><title>307</title></head><body><h1> 307 Temporary Redirect! </h1><p>This page is temporarily located at <a href=" << _path << ">here</a>.</p></body></html>"; // take this from the server config info
+    _errorCodesHtml[308] = "<!DOCTYPE html><html><head><title>308</title></head><body><h1> 308 Permanent Redirect! </h1><p>This page has been permanently moved to <a href=" << _path << ">here</a>.</p></body></html>"; // take this from the server config info
     _errorCodesHtml[400] = "<!DOCTYPE html><html><head><title>400</title></head><body><h1> 400 Bad Request Error! </h1><p>We are not speaking the same language!</p></body></html>";
     _errorCodesHtml[403] = "<!DOCTYPE html><html><head><title>403</title></head><body><h1> 403 Forbiden! </h1><p>This is top secret, sorry!</p></body></html>";
     _errorCodesHtml[404] = "<!DOCTYPE html><html><head><title>404</title></head><body><h1> 404 Page not found! </h1><p>Puff!</p></body></html>";
     _errorCodesHtml[405] = "<!DOCTYPE html><html><head><title>405</title></head><body><h1> 405 Method Not Allowed! </h1><p>We forgot how to do that!</p></body></html>";
     _errorCodesHtml[413] = "<!DOCTYPE html><html><head><title>413</title></head><body><h1> 413 Payload Too Large! </h1><p>We are too busy right now, please try again later!</p></body></html>";
     _errorCodesHtml[500] = "<!DOCTYPE html><html><head><title>500</title></head><body><h1> 500 Internal Server Error! </h1><p>I probably should study more!</p></body></html>";
-    if (_statusCode == 400 || _statusCode == 403 || _statusCode == 404 ||
+    if (_statusCode == 301  || _statusCode == 302 || _statusCode == 307 || _statusCode == 308 ||
+    _statusCode == 400 || _statusCode == 403 || _statusCode == 404 ||
     _statusCode == 405 || _statusCode == 413 || _statusCode == 500)
         _type = "text/html";
 }
@@ -169,24 +166,7 @@ std::string Response::errorHtml(unsigned int error) {
         return (it->second);
 }
 
-// std::string Response::readHtmlFile(const std::string &path) { // this function needed actually??
-//     std::ofstream file; // allows to write to an outfile
 
-//     if (fileExists(path) == true){
-//         file.open(path.c_str(), std::ifstream::in); // flag opening it for reading purpose
-//         if (!file.is_open())
-//             return ("<!DOCTYPE html><body><h1> 404 </h1><p> Page Not Found </p></body></html>");
-        
-//         std::stringstream buffer;
-//         buffer << file.rdbuf();
-//         std::string content = buffer.str();
-//         file.close();
-//         _type = "text/html";
-//         return (content);
-//     }
-//     else
-//         return ("<!DOCTYPE html><body><h1> 404 </h1><p> Page Not Found </p></body></html>");
-// }
 
 void Response::readContent(parseRequest& request) { // maybe use the above for it adding the autoIndex
     std::ifstream file; // reading content from an infile
@@ -207,7 +187,7 @@ void Response::readContent(parseRequest& request) { // maybe use the above for i
     }
     else if (_isAutoIndex == true) { // but this needs to be set to true somewhere
         std::stringstream buffer;
-        buffer << autoIndexPageListing(request.getPath(), _host, _port); // need to get these from lou tho
+        buffer << autoIndexPageListing(request.getPath(), _host, _port); // need to get these from lou tho -- from config file
         _response = buffer.str();
         _type = "text/html";
     }
