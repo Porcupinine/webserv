@@ -6,7 +6,7 @@
 /*   By: dmaessen <dmaessen@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2024/07/07 15:50:08 by dmaessen          #+#    #+#             */
-/*   Updated: 2024/07/07 16:32:51 by dmaessen         ###   ########.fr       */
+/*   Updated: 2024/07/08 14:46:55 by dmaessen         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -37,6 +37,9 @@ void Response::setHeaderValues(parseRequest& request) {
 	_contentType = _type; // but what if empty??
 	_date = setDate(request);
 	_location = "";
+	_setcookies.clear();
+	if (request.getCookies().size() > 0)
+		_setcookies = createSetCookie(request.getCookies());
 }
 
 std::string Response::setAllow(parseRequest& request) {
@@ -65,6 +68,10 @@ std::string Response::getHeaderValues(parseRequest& request, std::string header)
 	header += request.getVersion() + " " + std::to_string(_statusCode) + " " + getMatchingCodeString(_statusCode) + "/r/n";
 	if (_allow != "")
 		header += "Allow: " + _allow + "/r/n";
+	if (request.getCookies().size() > 0) {
+		for (const auto& cookie : _setcookies)
+			header += cookie + "\r\n";
+	}
 	if (_contentLanguage != "")
 		header += "Content-Language: " + _contentLanguage + "/r/n";
 	if (_contentLength != "")

@@ -28,6 +28,7 @@ class parseRequest
         std::map<std::string, std::string> _headers;
 		std::list<std::pair<std::string, float>> _language;
         std::string _cgiresponse;
+        std::map<std::string, std::string> _cookies;
 
 
         std::string parseStr(std::string &info);
@@ -47,6 +48,8 @@ class parseRequest
         void setLanguage();
         void setQuery();
         std::string readBody(const std::string &str, size_t &i);
+
+        std::map<std::string, std::string> parseCookies(const std::string& cookies);
 
         std::string& capsOn(std::string &str);
         std::string rmSpaces(std::string &str);
@@ -68,6 +71,7 @@ class parseRequest
         std::string getLanguageStr(void) const;
         std::string getQuery(void) const;
         std::string getCgiResponse(void) const;
+        const std::map<std::string, std::string>& getCookies(void) const;
 
         /* SETTERS */
         void setMethod(std::string type);
@@ -90,6 +94,7 @@ enum class Method
 
 std::string     initMethodString(Method method);
 bool            cgiInvolved(std::string path);
+
 
 
 #endif

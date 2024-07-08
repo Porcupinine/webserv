@@ -36,6 +36,7 @@ class Response
         std::string					_contentType;
         std::string					_date;
         std::string					_location;
+        std::vector<std::string>    _setcookies;
 
     public:
         Response(void);
@@ -50,6 +51,10 @@ class Response
 
         void initErrorCodes();
         void htmlErrorCodesMap();
+
+        /* COOKIE RELATED */
+        std::vector<std::string> createSetCookie(const std::map<std::string, std::string> &cookieMap);
+        std::string getFormattedTime(time_t rawtime);
 
         /* RESPONSE HEADER BUIDLING RELATED */
         std::string buildResponseHeader(parseRequest& request); // check if args needed

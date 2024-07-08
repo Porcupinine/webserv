@@ -6,7 +6,7 @@
 /*   By: dmaessen <dmaessen@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2024/07/07 15:50:05 by dmaessen          #+#    #+#             */
-/*   Updated: 2024/07/07 16:52:34 by dmaessen         ###   ########.fr       */
+/*   Updated: 2024/07/08 14:19:18 by dmaessen         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -61,6 +61,10 @@ std::string parseRequest::parseStr(std::string &info) {
     setPort(_headers["Host"]);
     setQuery();
     setLanguage();
+
+    if (_headers["Cookie"] != "")
+        _cookies = parseCookies(_headers["Cookie"]);
+    
     _cgiresponse = "";
     if (cgiInvolved(_headers["Path"]) == true)
         _cgiresponse = cgiHandler(*this); // check with laura, she needs the config things tooo + store it in Lou's struct directly
@@ -269,6 +273,10 @@ void parseRequest::initHeaders() {
 
 const std::map<std::string, std::string>&	parseRequest::getHeaders(void) const {
 	return _headers;
+}
+
+const std::map<std::string, std::string>&	parseRequest::getCookies(void) const {
+	return _cookies;
 }
 
 /* PARSING REQUEST */
