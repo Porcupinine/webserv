@@ -12,15 +12,11 @@ cgitb.enable(display=0, logdir="logdir")  # for debugging
 def uploadFile() -> (int, str):
     if not os.path.isdir("logdir"):
         os.mkdir("logdir")
-
     form = cgi.FieldStorage()
-    fileData = form['filename']
-    upDir = os.environ["UPLOAD_DIR"]
+    fileData = form['filename'] #fileToUpload/filename
     path = upDir + "/" + fileData.filename
     name, extension = os.path.splitext(fileData.filename)
     x = 0
-    if not os.path.isdir(upDir):
-        os.mkdir(upDir)
     while os.path.isfile(path):
         x += 1
         path = upDir + "/" + name + "(" + str(x) + ")" + extension
@@ -31,10 +27,12 @@ def uploadFile() -> (int, str):
     except:
         return 500, "Ooopsie!!!\n"
 
-
 message = ""
 status = 0
-files = os.listdir(os.environ.get("UPLOAD_DIR"))
+upDir = os.environ["UPLOAD_DIR"]
+if not os.path.isdir(upDir):
+    os.mkdir(upDir)
+# files = os.listdir(os.environ.get("UPLOAD_DIR"))
 
 if os.environ.get("REQUEST_METHOD") == "POST":
     status, message = uploadFile()
@@ -60,7 +58,7 @@ body = f"""<!DOCTYPE html>
 
 header = f"""HTTP/1.1 {status}\r
     Content-Length: {len(body)}\r
-    Content-type: text/html; charset=utf-8\r
+    Content-type: text/html\r
     Connection: close\r
     Date: {date}\r
     Last-Modified: {date}\r

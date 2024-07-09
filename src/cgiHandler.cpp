@@ -13,7 +13,8 @@
 
 #define BUFFER_SIZE 100
 
-char **convertEnv(parseRequest& request) {
+//TODO need the server info
+char **getEnv(parseRequest& request) {
 	auto copy = request.getHeaders();
 	char **env = new char*[copy.size() + 4];
 	size_t count = 0;
@@ -22,7 +23,6 @@ char **convertEnv(parseRequest& request) {
 		std::transform(reform.begin(), reform.end(), reform.begin(), ::toupper);
 		std::replace( reform.begin(), reform.end(), '-', '_');
 		std::string temp = reform + '=' + copy.second;
-		std::cout<<"env: "<<temp<<"\n";
 		env[count] = new char[copy.first.size()+copy.second.size()+2];
 		size_t pos = 0;
 		for (char & x : temp) {
@@ -33,57 +33,24 @@ char **convertEnv(parseRequest& request) {
 		count++;
 	}
 	std::string tmp = "REQUEST_METHOD=" + request.getMethod();
-	std::cout<<"env: "<<tmp<<"\n";
-	env[count++] = new char[tmp.size()];
+	env[count] = new char[tmp.size()];
 	std::strcpy(env[count], tmp.data());
-
+	count++;
 	tmp = "QUERRY_STRING=";//TODO make a getter for querry
-	std::cout<<"env: "<<tmp<<"\n";
-	env[count++] = new char[tmp.size()];
+	env[count] = new char[tmp.size()];
 	std::strcpy(env[count], tmp.data());
-
+	count++;
 	tmp = "UPLOAD_DIR=/sam/Codam/webserv/cgi-bin/uploads";//TODO make a get dir
-	std::cout<<"env: "<<tmp<<"\n";
-	env[count++] = new char[tmp.size()];
+	env[count] = new char[tmp.size()];
 	std::strcpy(env[count], tmp.data());
-
+	count++;
+	tmp = "SERVER=";//TODO get SERVER from struct
+	env[count] = new char[tmp.size()];
+	std::strcpy(env[count], tmp.data());
+	count++;
 	env[count] = nullptr;
 	return env;
 }
-//TODO add headers to env, but formated
-//add to env and then convert env ??
-
-//char **getEnv(parseRequest& request) {
-//	char **env = new char*[6];
-//
-//	std::string tmp = "REQUEST_METHOD=" + request.getMethod();
-//	std::cout<<"env: "<<tmp<<"\n";
-//	env[0] = new char[tmp.size()];
-//	std::strcpy(env[0], tmp.data());
-//
-//	tmp = "QUERRY_STRING=";//TODO make a getter for querry
-//	std::cout<<"env: "<<tmp<<"\n";
-//	env[1] = new char[tmp.size()];
-//	std::strcpy(env[1], tmp.data());
-//
-////	tmp = "CONTENT_TYPE=" + request.getHeaders().find("Content-Type")->second;
-////	std::cout<<"env: "<<tmp<<"\n";
-////	env[2] = new char[tmp.size()];
-////	std::strcpy(env[2], tmp.data());
-//
-////	tmp = "CONTENT_LENGTH=" + request.getHeaders().find("Content-Length")->second;
-////	std::cout<<"env: "<<tmp<<"\n";
-////	env[3] = new char[tmp.size()];
-////	std::strcpy(env[3], tmp.data());
-//
-//	tmp = "UPLOAD_DIR=/sam/Codam/webserv/cgi-bin/uploads";//TODO make a get dir
-//	std::cout<<"env: "<<tmp<<"\n";
-//	env[4] = new char[tmp.size()];
-//	std::strcpy(env[4], tmp.data());
-//
-//	env[5] = nullptr;
-//	return env;
-//}
 
 void freeEnv(char **env) {
 	for(int x = 0; env[x] != nullptr; x++) {
@@ -93,14 +60,22 @@ void freeEnv(char **env) {
 }
 
 int runChild(parseRequest& request, int pipeRead, int pipeWrite) {
-	char *argv[] = {"./../cgi-bin/test.py", nullptr}; //path and NULL
+	char *argv[] = {"./../cgi-bin/upload.py", nullptr}; //path and NULL
 	char **env = getEnv(request);
+	int x = 0;
+	std::cout<<"------env----\n";
+	while(env[x] != nullptr){
+		std::cout<<env[x]<<"\n";
+		x++;
+	}
+	std::cout<<"------endv----\n";
 
 	std::cout<<"FROM INSIDE the kids\n"<<"body: "<<request.getBodyMsg()<<"\n";
 	if (dup2(pipeRead, STDIN_FILENO) == -1 || dup2(pipeWrite, STDOUT_FILENO) == -1) {
 		std::cerr<<"Leave the kids alone!\n";
 		close(pipeRead); // Close unused read end
 		close(pipeWrite); // Close the original pipe write end
+		freeEnv(env);
 		return 1;
 	}
 	if (execve(argv[0], argv, env) == -1) {
@@ -113,13 +88,14 @@ int runChild(parseRequest& request, int pipeRead, int pipeWrite) {
 	return 0;
 }
 
-int cgiHandler(parseRequest& request) {
+int cgiHandler(parseRequest& request, t_serverInfo serverInfo) {
 	if (std::filesystem::exists(request.getPath())) {
-		std::cout<<"Sorry, can't find this file\n";
+		std::cerr<<"Sorry, can't find this file! Stop wasting my time!\n";
 		return 1;
 	}
 	int pipeParentToChild[2]; // 0 - child parent read, 1 - parent write
 	int pipeChildToParent[2]; // 0 - parent read, 1 - child write
+
 	if (pipe(pipeParentToChild) == -1) {
 		std::cerr<<"Pipe failed, you gotta call Mario!\n";
 		return 1;
@@ -136,8 +112,7 @@ int cgiHandler(parseRequest& request) {
 	if (pid == 0) {
 		close(pipeParentToChild[1]);
 		close(pipeChildToParent[0]);
-		runChild(request, pipeParentToChild[0], pipeChildToParent[1]);//we got a kid, lets run shit here
-		//TODO Do we come back here?
+		runChild(request, pipeParentToChild[0], pipeChildToParent[1]);
 	} else {
 		close(pipeParentToChild[0]);
 		close(pipeChildToParent[1]);
@@ -145,20 +120,30 @@ int cgiHandler(parseRequest& request) {
 		write(pipeParentToChild[1], body.data(), body.size());
 		close(pipeParentToChild[1]);
 		std::cout<<"body done!\n";
+
 		int buffLen = 0;
 		std::string response;
 		std::string buffer(BUFFER_SIZE, '\0');
 		while ((buffLen = ::read(pipeChildToParent[0], buffer.data(), BUFFER_SIZE)) > 0) {
-			std::cout << "Parent: " << buffer << "\nEND\n";
+//			std::cout << "Parent: " << buffer.substr(0, buffLen) << "\nEND\n";
 			response.append(buffer.data(), buffer.length());
 		}
 		if (buffLen < 0) {
 			std::cerr<<"Failed to read!\n";
-		} //TODO why it will always be 0 ?
+		}
 		std::cout<<"------------response-------------\n"<<response<<"\n";
 		close(pipeParentToChild[0]); // Close the read end after reading
 		wait(nullptr); // Wait for child process to finish
 	}
 	return 0;
 }
+
+//TODO, adjust return to string ???
+
 //TODO, should I throw errors or use old approach
+
+//TODO make index page with cgi to show cookie after user fills the name and intra login?
+
+//TODO open pipes on Luś end
+/* getting a struct with server info and epolFD
+ * get the parameters needed for the env and add the pipe fds to the epoll*/

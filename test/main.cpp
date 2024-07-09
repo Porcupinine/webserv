@@ -6,7 +6,16 @@
 #include "../includes/cgiHandler.h"
 #include <unistd.h>
 
+typedef struct s_serverInfo {
+	int epolFd;
+	std::string SERVER;
+}t_serverInfo;
+
 int main() {
+	t_serverInfo *serverInfo;
+	serverInfo->SERVER = "";
+//	serverInfo->epolFd =
+
 //	webserv::webSocket serv = webserv::webSocket(127, SERV_PORT);
 //	serv.createSocket();
 //	serv.read();
@@ -71,7 +80,7 @@ int main() {
 //	std::cout << "path: " << request.getPath() << '\n';
 //	std::cout << "port: " << request.getPort() << "\n\n";
 	std::cout<< "calling cgi\n";
-	cgiHandler(request);
+	cgiHandler(request, );
 //	char *argv[] = {"./../cgi-bin/test.py", nullptr}; //path and NULL
 //	if (execve(argv[0], argv, nullptr) == -1) {
 //		std::cout<<"This is no middle age\n";

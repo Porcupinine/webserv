@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-
+import datetime
 import io
 import os
 import sys
@@ -16,7 +16,7 @@ class BytesIOWithBuffer(io.BytesIO):
     def buffer(self):
         return self
 
-def do_my_stuff():
+def uploadFile():
     if not os.path.isdir("logdir"):
         os.mkdir("logdir")
 
@@ -68,9 +68,45 @@ class TestCGIScript(unittest.TestCase):
         mock_stdin.write(input_data)
         mock_stdin.seek(0)
 
-        do_my_stuff()
+        uploadFile()
 
 
 if __name__ == '__main__':
     unittest.main()
+message = ""
+status = 0
+files = os.listdir(os.environ.get("UPLOAD_DIR"))
 
+if os.environ.get("REQUEST_METHOD") == "POST":
+    status, message = uploadFile()
+else:
+    message = "Sorry, can't do!\n"
+
+x = datetime.datetime.now()
+date = x.strftime("%a, %d %b %Y %H:%M:%S GMT")
+
+body = f"""<!DOCTYPE html>
+    <html>
+    <body>
+    
+    <h1>Welcome to the ______ webserv!!</h1>
+    
+    <p>Now give us your best picture!</p>
+    <p> {message}</p>
+       <p><a href="/upload.html">Upload another picture</a></p>
+    <p><a href="/index.html">Back</a></p>
+    
+    </body>
+    </html>"""
+
+header = f"""HTTP/1.1 {status}\r
+    Content-Length: {len(body)}\r
+    Content-type: text/html\r
+    Connection: close\r
+    Date: {date}\r
+    Last-Modified: {date}\r
+    Server: {os.environ.get("SERVER")}\r\n\r"""
+
+print(header)
+print(body)
+print("\0")
