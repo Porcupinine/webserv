@@ -80,7 +80,7 @@ int main() {
 //	std::cout << "path: " << request.getPath() << '\n';
 //	std::cout << "port: " << request.getPort() << "\n\n";
 	std::cout<< "calling cgi\n";
-	cgiHandler(request, );
+	cgiHandler(request);
 //	char *argv[] = {"./../cgi-bin/test.py", nullptr}; //path and NULL
 //	if (execve(argv[0], argv, nullptr) == -1) {
 //		std::cout<<"This is no middle age\n";

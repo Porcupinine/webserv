@@ -60,7 +60,7 @@ void freeEnv(char **env) {
 }
 
 int runChild(parseRequest& request, int pipeRead, int pipeWrite) {
-	char *argv[] = {"./../cgi-bin/upload.py", nullptr}; //path and NULL
+	char *argv[] = {"./../cgi-bin/test.py", nullptr}; //path and NULL
 	char **env = getEnv(request);
 	int x = 0;
 	std::cout<<"------env----\n";
@@ -88,7 +88,7 @@ int runChild(parseRequest& request, int pipeRead, int pipeWrite) {
 	return 0;
 }
 
-int cgiHandler(parseRequest& request, t_serverInfo serverInfo) {
+int cgiHandler(parseRequest& request) {
 	if (std::filesystem::exists(request.getPath())) {
 		std::cerr<<"Sorry, can't find this file! Stop wasting my time!\n";
 		return 1;

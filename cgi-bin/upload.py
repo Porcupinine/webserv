@@ -13,7 +13,7 @@ def uploadFile() -> (int, str):
     if not os.path.isdir("logdir"):
         os.mkdir("logdir")
     form = cgi.FieldStorage()
-    fileData = form['filename'] #fileToUpload/filename
+    fileData = form['fileToUpload'] #fileToUpload/filename
     path = upDir + "/" + fileData.filename
     name, extension = os.path.splitext(fileData.filename)
     x = 0
