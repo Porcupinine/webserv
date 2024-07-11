@@ -10,16 +10,23 @@ cgitb.enable(display=0, logdir="logdir")  # for debugging
 
 
 def uploadFile() -> (int, str):
+    # Set lodgir for debugging purposes
     if not os.path.isdir("logdir"):
         os.mkdir("logdir")
+
+    # Get data parsed from cgi mdule
     form = cgi.FieldStorage()
-    fileData = form['fileToUpload'] #fileToUpload/filename
+    fileData = form['filename'] #fileToUpload/filename
     path = upDir + "/" + fileData.filename
     name, extension = os.path.splitext(fileData.filename)
     x = 0
+
+    # Check if file already exists to set file name
     while os.path.isfile(path):
         x += 1
         path = upDir + "/" + name + "(" + str(x) + ")" + extension
+
+    # Write data into newly created file
     try:
         with open(os.path.join(path), 'wb') as f:
             f.write(fileData.file.read())
@@ -30,6 +37,8 @@ def uploadFile() -> (int, str):
 message = ""
 status = 0
 upDir = os.environ["UPLOAD_DIR"]
+
+#Check if folder ecxists, if not, create such folder
 if not os.path.isdir(upDir):
     os.mkdir(upDir)
 # files = os.listdir(os.environ.get("UPLOAD_DIR"))
@@ -39,9 +48,11 @@ if os.environ.get("REQUEST_METHOD") == "POST":
 else:
     message = "Sorry, can't do!\n"
 
+# Get time and date
 x = datetime.datetime.now()
 date = x.strftime("%a, %d %b %Y %H:%M:%S GMT")
 
+# Build body
 body = f"""<!DOCTYPE html>
     <html>
     <body>
@@ -56,6 +67,7 @@ body = f"""<!DOCTYPE html>
     </body>
     </html>"""
 
+# Build header
 header = f"""HTTP/1.1 {status}\r
     Content-Length: {len(body)}\r
     Content-type: text/html\r

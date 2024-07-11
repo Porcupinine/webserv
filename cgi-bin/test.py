@@ -21,7 +21,7 @@ def uploadFile():
         os.mkdir("logdir")
 
     form = cgi.FieldStorage()
-    fileData = form['fileToUpload']
+    fileData = form['filename']
     upDir = os.environ["UPLOAD_DIR"]
     path = upDir + "/" + fileData.filename
     name, extention = os.path.splitext(fileData.filename)
