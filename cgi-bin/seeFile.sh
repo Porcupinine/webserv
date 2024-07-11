@@ -24,9 +24,9 @@ get_mime_type() {
     esac
 }
 
-# Extract the filename from the query string
+# Extract the filename from the query strin
 FILE=$(echo "$QUERY_STRING" | sed 's/^.*file=//')
-FILE_PATH="/path/to/your/files/$FILE"
+FILE_PATH="$UPLOAD_DIR/$FILE"
 
 # Check if the file exists
 if [ ! -f "$FILE_PATH" ]; then
