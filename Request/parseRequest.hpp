@@ -31,7 +31,7 @@ class parseRequest
         std::map<std::string, std::string> _cookies;
 
 
-        std::string parseStr(std::string &info);
+        std::string parseStr(std::string &info, SharedData* shared);
 
         void initHeaders();
 
@@ -56,7 +56,7 @@ class parseRequest
         std::vector<std::string> split(const std::string &str, char c);
 
     public:
-        parseRequest(std::string &info); // ++ server instance -- TO DO
+        parseRequest(SharedData* shared); // ++ server instance -- TO DO
         ~parseRequest();
         parseRequest& operator=(const parseRequest &cpy);
 

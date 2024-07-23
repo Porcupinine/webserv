@@ -6,15 +6,15 @@
 /*   By: dmaessen <dmaessen@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2024/07/08 13:18:59 by dmaessen          #+#    #+#             */
-/*   Updated: 2024/07/08 14:44:04 by dmaessen         ###   ########.fr       */
+/*   Updated: 2024/07/23 12:55:29 by dmaessen         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
 #include "../Request/parseRequest.hpp"
 #include "../includes/response.h"
 
-// Set-Cookie: header is for when its a new one
-// if its just cookie: it just summerizes the content
+// Set-Cookie: header is for when its a new one (within response)
+// if its just Cookie: it just summerizes the content (within request)
 
 /* read from request header */
 std::map<std::string, std::string> parseRequest::parseCookies(const std::string& cookies) {

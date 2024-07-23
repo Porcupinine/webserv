@@ -43,7 +43,7 @@ class Response
         ~Response();
         Response& operator=(const Response &cpy);
 
-        std::string giveResponse(parseRequest& request);
+        std::string giveResponse(parseRequest& request, SharedData* shared);
 
         void getMethod(parseRequest& request); // arg needed?? yes from config file
         void postMethod(parseRequest& request); // arg needed?? yes from config file
