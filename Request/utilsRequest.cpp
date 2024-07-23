@@ -6,7 +6,7 @@
 /*   By: dmaessen <dmaessen@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2024/07/07 15:50:31 by dmaessen          #+#    #+#             */
-/*   Updated: 2024/07/07 15:50:49 by dmaessen         ###   ########.fr       */
+/*   Updated: 2024/07/23 15:12:35 by dmaessen         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -42,10 +42,13 @@ std::vector<std::string> parseRequest::split(const std::string &str, char c) {
 
 bool cgiInvolved(std::string path) {
     std::size_t found = path.find("cgi-bin");
-    std::size_t foundExtension = path.find(".py");
-    // take in a list of possible extension for CGI -- thus if not html then check extensions
+    // std::size_t foundExtPy = path.find(".py");
+    // std::size_t foundExtSh = path.find(".sh");
+    // std::size_t foundExtPl = path.find(".pl");
     
-    if (found != std::string::npos && foundExtension != std::string::npos) // or could it be only one of the two, check with Laura
+    // if (found != std::string::npos && (foundExtPy != std::string::npos
+    // || foundExtPl != std::string::npos && foundExtSh != std::string::npos))
+    if (found != std::string::npos)
         return true;
     return false;
 }

@@ -6,7 +6,7 @@
 /*   By: dmaessen <dmaessen@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2024/07/07 15:49:40 by dmaessen          #+#    #+#             */
-/*   Updated: 2024/07/23 12:51:27 by dmaessen         ###   ########.fr       */
+/*   Updated: 2024/07/23 15:07:26 by dmaessen         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -31,8 +31,8 @@ Response&	Response::operator=(const Response &cpy) {
 std::string Response::giveResponse(parseRequest& request, SharedData* shared) {
     _statusCode = request.getRetVal();
     _type = "";
-    _isAutoIndex = false; // WRONG NEEDS TO BE UPDATED BASED ON CONFIG FILE -- lou??
-    // _path = ; // get it from config ?? Lou?
+    _isAutoIndex = shared->server_config->auto_index;
+    // _path = shared->server_config->root_dir; // what is this again??
     initErrorCodes();
     initMethods();
 

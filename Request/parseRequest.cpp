@@ -6,14 +6,14 @@
 /*   By: dmaessen <dmaessen@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2024/07/07 15:50:05 by dmaessen          #+#    #+#             */
-/*   Updated: 2024/07/23 12:52:27 by dmaessen         ###   ########.fr       */
+/*   Updated: 2024/07/23 13:59:08 by dmaessen         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
 #include "../Request/parseRequest.hpp"
 
 parseRequest::parseRequest(SharedData* shared) : _methodType(""), _version(""), _returnValue(200),
-                              _bodyMsg(""), _port(80), _path(shared->server_config->root_dir), _query("") {
+                              _bodyMsg(""), _port(80), _path(""), _query("") {
     initHeaders();
     parseStr(shared->request, shared);
     if (_returnValue != 200)

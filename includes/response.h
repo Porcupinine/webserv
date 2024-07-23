@@ -23,7 +23,6 @@ class Response
 	    std::string     _response{}; // response body string, storing the HTML
         std::string     _version;
         unsigned int    _statusCode;
-        // std::string     _setCookie; // do we want/need this??
         std::string     _type;
         bool            _isAutoIndex; // meaning autoIndex = true; means to respond with /path/index.html when /path/ is requested
         std::map<unsigned int, std::string> _errorCodes;
