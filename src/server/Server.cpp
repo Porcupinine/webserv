@@ -18,9 +18,9 @@ int Server::initServer(ServerConfig *config, int epollFd, double timeout, int ma
 	_timeout = timeout;
 	_maxNrOfRequests = maxNrOfRequests;
 
-	// Assign server address from config
 	_serverAddr.sin_family = AF_INET;
-	_serverAddr.sin_addr.s_addr = inet_addr(config->host.c_str());
+	_serverAddr.sin_addr.s_addr = INADDR_ANY;
+	// _serverAddr.sin_addr.s_addr = inet_addr(config->host.c_str()); voor de echte host?
 	_serverAddr.sin_port = htons(config->port);
 
 	// Create and bind socket
@@ -165,30 +165,6 @@ ServerConfig* Server::_getHostConfigs(const std::string &host) const {
 	}
 	return nullptr;
 }
-
-void Server::handleRequest(int clientFd) {
-    char buffer[1024];
-    int bytesRead = read(clientFd, buffer, sizeof(buffer) - 1);
-    if (bytesRead > 0) {
-        buffer[bytesRead] = '\0'; // Null-terminate the buffer
-        std::cout << "Received request:\n" << buffer << std::endl;
-        sendMockResponse(clientFd);
-    } else {
-        std::cerr << "Failed to read from client: " << strerror(errno) << std::endl;
-    }
-    close(clientFd);
-}
-
-void Server::_sendMockResponse(int clientFd) {
-    const char *response =
-        "HTTP/1.1 200 OK\r\n"
-        "Content-Type: text/plain\r\n"
-        "Content-Length: 13\r\n"
-        "\r\n"
-        "Hello, world!";
-    write(clientFd, response, strlen(response));
-}
-
 
 // Methods to inherit settings from higher level if not specified
 

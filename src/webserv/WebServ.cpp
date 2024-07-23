@@ -48,6 +48,29 @@ void	WebServ::_closeConnections() {
 	}
 }
 
+void WebServ::handleRequest(int clientFd) {
+    char buffer[1024];
+    int bytesRead = read(clientFd, buffer, sizeof(buffer) - 1);
+    if (bytesRead > 0) {
+        buffer[bytesRead] = '\0';
+        std::cout << "Received request:\n" << buffer << std::endl;
+        sendMockResponse(clientFd);
+    } else {
+        std::cerr << "Failed to read from client: " << strerror(errno) << std::endl;
+    }
+    close(clientFd);
+}
+
+void WebServ::_sendMockResponse(int clientFd) {
+    const char *response =
+        "HTTP/1.1 200 OK\r\n"
+        "Content-Type: text/plain\r\n"
+        "Content-Length: 13\r\n"
+        "\r\n"
+        "Hello, world!";
+    write(clientFd, response, strlen(response));
+}
+
 void	WebServ::run() {
 	while (_serverShutdown == false) {
 		int numEvents = epoll_wait(_epollFd, _events, MAX_EVENTS, -1);
@@ -57,18 +80,18 @@ void	WebServ::run() {
 			_checkHanging();
 			if (_events[i].events & EPOLLIN && shared->status == Status::listening)
 				_newConnection(_epollFd, shared->server_fd, shared->server);
-			if (_events[i].events & EPOLLIN && shared->status == Status::reading)
-				_readData(shared);
+			// if (_events[i].events & EPOLLIN && shared->status == Status::reading)
+			// 	_readData(shared);
 			if (shared->status == HANDLING)
 				_handleRequest(_epollFd, shared);
-			if (_events[i].events & EPOLLHUP && shared->status == Status::in_cgi)
-				_readCGI(_epollFd, shared);
-			if (_events[i].events & EPOLLOUT && shared->status == Status::writing)
-				_writeData(shared);
-			if (_events[i].events & EPOLLERR || shared->status == Status::closing) {
-				_closeCGIfds(_epollFd, shared);
-				_closeConnection(_epollFd, shared);
-			}
+			// if (_events[i].events & EPOLLHUP && shared->status == Status::in_cgi)
+			// 	_readCGI(_epollFd, shared);
+			// if (_events[i].events & EPOLLOUT && shared->status == Status::writing)
+			// 	_writeData(shared);
+			// if (_events[i].events & EPOLLERR || shared->status == Status::closing) {
+			// 	_closeCGIfds(_epollFd, shared);
+			// 	_closeConnection(_epollFd, shared);
+			// }
 		}
 	}
 
