@@ -3,6 +3,7 @@
 #ifndef DEFINES_HPP
 # define DEFINES_HPP
 
+#include <unistd.h>
 #include <iostream>
 #include <string>
 #include <vector>
@@ -16,7 +17,11 @@
 #include <fstream>
 
 // MAGIC NUMBERS
-#define ONE_MB	1048576 // Default max body size (1MB)
+#define ONE_MB					1048576 // Default max body size (1MB)
+#define SERVER_TIMEOUT			2000
+#define MAX_EVENTS				20
+#define BACKLOG					20
+#define SERVER_MAX_NO_REQUEST	5
 
 // COLORS
 #define RESET	"\033[0m"
@@ -113,7 +118,7 @@ struct SharedData {
 	ServerConfig	server_config;
 	bool			connection_closed;
 
-	std::time_t		timestamp_last_request;
+	time_t			timestamp_last_request;
 };
 
 #endif

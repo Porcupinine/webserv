@@ -1,13 +1,17 @@
 #pragma once
 
-#include <string>
-#include <map>
-#include <list>
-#include <vector>
-#include <stdexcept>
-#include <netinet/in.h>
-#include "Config.hpp"
-#include "defines.hpp"
+#ifndef SERVER_HPP
+# define SERVER_HPP
+
+# include <string>
+# include <cstring>
+# include <map>
+# include <list>
+# include <vector>
+# include <stdexcept>
+# include <netinet/in.h>
+# include "Config.hpp"
+# include "defines.hpp"
 
 class Server {
 public:
@@ -69,3 +73,4 @@ private:
 		std::list<ServerConfig *>			_configs;
 		struct connection					*_conn;
 };
+#endif
