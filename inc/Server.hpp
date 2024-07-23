@@ -18,7 +18,7 @@ public:
 
 		int									initServer(ServerConfig *settings, int epollFd, double timeout, int maxNrOfRequests);
 		void								setConnection(struct connection *conn);
-		void								handleRequest(int clientFd);
+		// void								handleRequest(int clientFd);
 
 		// Getter methods
 		uint16_t							getPort() const;
@@ -53,7 +53,7 @@ private:
 		struct connection*					_getConnection() const;
 		ServerConfig*						_getHostConfigs(const std::string &host) const;
 
-		void								_sendMockResponse(int clientFd);
+		// void								_sendMockResponse(int clientFd);
 
 		std::string							_inheritRootFolder(ServerConfig *hostSettings, const std::string &location) const;
 		std::string							_inheritUploadDir(ServerConfig *hostSettings, const std::string &location) const;

@@ -22,6 +22,7 @@ class WebServ {
 
 		bool	getServerStatus() const;
 		void	setServerStatus(bool status);
+		void	handleRequest(int clientFd);
 
 		class InitException : public std::exception {
 			public:
@@ -40,6 +41,7 @@ class WebServ {
 		std::list<Server>			_servers;
 
 		static void					_handleSignal();
+		void						_sendMockResponse(int clientFd);
 
 		void						_setUpSigHandlers();
 		void						_initializeServers(Config& conf);
