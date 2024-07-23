@@ -64,23 +64,6 @@ enum class Status	{
 	listening, reading, in_cgi, writing, closing
 };
 
-struct SharedData {
-	int				cgi_fd;
-	pid_t			cgi_pid;
-
-	std::string		request;
-	std::string		response;
-
-	int				epoll_fd;
-	int				server_fd;
-
-	Status			status; // does this work like this?
-	ServerConfig	server_config;
-	bool			connection_closed;
-
-	std::time_t		timestamp_last_request;
-};
-
 struct Locations {
 	bool								dir_listing;
 
@@ -114,6 +97,23 @@ struct ServerConfig {
 struct ConfigError {
 	std::string			message;
 	unsigned int		fileNum;
+};
+
+struct SharedData {
+	int				cgi_fd;
+	pid_t			cgi_pid;
+
+	std::string		request;
+	std::string		response;
+
+	int				epoll_fd;
+	int				server_fd;
+
+	Status			status; // does this work like this?
+	ServerConfig	server_config;
+	bool			connection_closed;
+
+	std::time_t		timestamp_last_request;
 };
 
 #endif
