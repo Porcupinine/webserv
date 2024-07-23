@@ -1,0 +1,8 @@
+shared_info {
+	ServerConfig	serverConfig
+	std::string		request
+	std::string		response
+
+	something with Fd's (2?)
+	connection_closed
+}
