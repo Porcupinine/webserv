@@ -11,7 +11,7 @@ WebServ::WebServ(int argc, char **argv) : _serverShutdown(false) {
 		if (config.hasErrorOccurred())
 			throw	WebServ::InitException(config.buildErrorMessage(config.getError()));
 		config.printConfigs();
-		if ((_epollFd = epoll_create()) == -1) {
+		if ((_epollFd = epoll_create1()) == -1) { // Or should I use epoll_create(1)?
 			throw	std::runtime_error("epoll_create1: " + std::string(strerror(errno)));
 		}
 		_virtualHosts = _setUpHosts(config);
@@ -31,7 +31,7 @@ void	closeCGIfds(SharedData* shared) {
 }
 
 void	closeConnection(SharedData* shared) {
-	epoll_ctl(shared->epoll_fd, EPOLL_CTL_DEL, shared->server_fd, ); // Add some delete I believe?
+	epoll_ctl(shared->epoll_fd, EPOLL_CTL_DEL, shared->server_fd, nullptr); // Add some delete I believe?
 	if (close(shared->server_fd))
 	std::cout << RED << "failed to close fd " << shared->server_fd << ": " << std::string(strerror(errno)) << RESET << std::endl;
 	delete shared; // double check this.
@@ -49,27 +49,27 @@ void	WebServ::_closeConnections() {
 }
 
 void WebServ::handleRequest(SharedData* shared) {
-    char buffer[1024];
+	char buffer[1024];
 	int clientFd = shared->server_fd;
-    int bytesRead = read(clientFd, buffer, sizeof(buffer) - 1);
-    if (bytesRead > 0) {
-        buffer[bytesRead] = '\0';
-        std::cout << "Received request:\n" << buffer << std::endl;
-        _sendMockResponse(clientFd);
-    } else {
-        std::cerr << "Failed to read from client: " << strerror(errno) << std::endl;
-    }
-    close(clientFd);
+	int bytesRead = read(clientFd, buffer, sizeof(buffer) - 1);
+	if (bytesRead > 0) {
+		buffer[bytesRead] = '\0';
+		std::cout << "Received request:\n" << buffer << std::endl;
+		_sendMockResponse(clientFd);
+	} else {
+		std::cerr << "Failed to read from client: " << strerror(errno) << std::endl;
+	}
+	close(clientFd);
 }
 
 void WebServ::_sendMockResponse(int clientFd) {
-    const char *response =
-        "HTTP/1.1 200 OK\r\n"
-        "Content-Type: text/plain\r\n"
-        "Content-Length: 13\r\n"
-        "\r\n"
-        "Hello, world!";
-    send(clientFd, response, strlen(response), MSG_DONTWAIT);
+	const char *response =
+		"HTTP/1.1 200 OK\r\n"
+		"Content-Type: text/plain\r\n"
+		"Content-Length: 13\r\n"
+		"\r\n"
+		"Hello, world!";
+	send(clientFd, response, strlen(response), MSG_DONTWAIT);
 }
 
 void	WebServ::run() {
@@ -103,6 +103,51 @@ void	WebServ::stop() {
 
 }
 
+void	WebServ::setNonBlocking(int fd) {
+	int flags = fcntl(fd, F_GETFL, 0);
+	if (flags == -1) {
+		std::cerr << "Error getting flags: " << strerror(errno) << std::endl;
+		return;
+	}
+	if (fcntl(fd, F_SETFL, flags | O_NONBLOCK) == -1) {
+		std::cerr << "Error setting non-blocking: " << strerror(errno) << std::endl;
+	}
+}
+
+void	WebServ::newConnection(SharedData* shared) {
+	int clientFd = accept(shared->server_fd, nullptr, nullptr);
+	if (clientFd == -1) {
+		std::cerr << "Failed to accept new connection: " << strerror(errno) << std::endl;
+		return;
+	}
+
+	setNonBlocking(clientFd);
+
+	SharedData* clientShared = new SharedData();
+	clientShared->server_fd = clientFd;
+	clientShared->epoll_fd = shared->epoll_fd;
+	clientShared->cgi_fd = 0;
+	clientShared->cgi_pid = 0;
+	clientShared->status = Status::reading;
+	clientShared->request = "";
+	clientShared->response = "";
+	clientShared->server_config = shared->server_config;
+	clientShared->connection_closed = false;
+	clientShared->timestamp_last_request = std::time(nullptr);
+
+	epoll_event event;
+	event.events = EPOLLIN | EPOLLOUT; // Adjust according to your requirements
+	event.data.ptr = clientShared;
+
+	if (epoll_ctl(shared->epoll_fd, EPOLL_CTL_ADD, clientFd, &event) == -1) {
+		std::cerr << "Error registering new client on epoll: " << strerror(errno) << std::endl;
+		close(clientFd);
+		delete clientShared;
+		return;
+	}
+}
+
+
 void WebServ::_initializeServers(Config& conf) {
 	_virtualHosts = _setUpHosts(conf);
 	for (const auto& vhost : _virtualHosts) {
@@ -127,13 +172,14 @@ std::vector<VirtualHost> WebServ::_setUpHosts(Config& conf) {
 }
 
 
-sighandler_t WebServ::_handleSignal(int sig) {
+void WebServ::_handleSignal(int sig) {
 	if (sig == SIGINT)
 		_serverShutdown = true;
+	std::cout << RED << "Server Shutdown Started." << RESET << std::endl;
 }
 
 void WebServ::_setUpSigHandlers() {
-	signal(SIGINT, _handleSignal());
+	signal(SIGINT, _handleSignal);
 }
 
 WebServ::~WebServ() {

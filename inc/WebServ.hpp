@@ -42,7 +42,7 @@ class WebServ {
 		struct epoll_event			_events[MAX_EVENTS];
 		std::list<Server>			_servers;
 
-		sighandler_t				_handleSignal(int sig);
+		static void					_handleSignal(int sig);
 		void						_sendMockResponse(int clientFd);
 
 		void						_setUpSigHandlers();

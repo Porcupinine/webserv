@@ -1,6 +1,6 @@
 #include "Server.hpp"
 
-Server::Server() : _fd(-1), _timeout(0.0), _maxNrOfRequests(0), _conn(nullptr) {
+Server::Server(ServerConfig config) : _fd(-1), _timeout(0.0), _maxNrOfRequests(0), _conn(nullptr) {
 	// Initialize other necessary members
 }
 
