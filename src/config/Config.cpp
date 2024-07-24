@@ -1,4 +1,4 @@
-#include "../../inc/Config.hpp"
+#include "Config.hpp"
 
 Config::Config(const std::string& filePath) : _filePath(filePath), _lineNum(0), _confErrorOccurred(false) {
 	// check extension.
@@ -15,7 +15,7 @@ Config::Config(const std::string& filePath) : _filePath(filePath), _lineNum(0), 
 		if (line.empty() || line[0] == '#') continue;
 
 		if (line == "server {") {
-			currentConf = std::make_unique<ServerConfig>();
+			currentConf = std::make_unique_ptr<ServerConfig>();
 			continue;
 		}
 
@@ -55,7 +55,7 @@ void	Config::_parseLine(const std::string& line, ServerConfig& config, std::ifst
 	switch(key) {
 		case ConfigKey::host:
 			// std::cout << "Hoest" << std::endl;
-			iss >> config.host;	// Still need to pop the ';' at the end..
+			iss >> config.host;	// Still need to pop the ';' at the end.. I removed the ';'
 			break;
 		case ConfigKey::port:
 			// std::cout << "Poert" << std::endl;

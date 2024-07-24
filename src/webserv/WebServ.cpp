@@ -1,4 +1,6 @@
 #include "WebServ.hpp"
+#include <fcntl.h>
+#include <ctime>
 
 WebServ::WebServ(int argc, char **argv) : _serverShutdown(false) {
 	try {
@@ -50,26 +52,51 @@ void	WebServ::_closeConnections() {
 
 void WebServ::handleRequest(SharedData* shared) {
 	char buffer[1024];
-	int clientFd = shared->server_fd;
-	int bytesRead = read(clientFd, buffer, sizeof(buffer) - 1);
+	int clientFd = shared->server_fd; // am I reading from server or client..?
+	int bytesRead = recv(clientFd, buffer, sizeof(buffer) - 1, MSG_DONTWAIT);
 	if (bytesRead > 0) {
 		buffer[bytesRead] = '\0';
+		shared->request = buffer;
 		std::cout << "Received request:\n" << buffer << std::endl;
-		_sendMockResponse(clientFd);
-	} else {
-		std::cerr << "Failed to read from client: " << strerror(errno) << std::endl;
-	}
-	close(clientFd);
-}
-
-void WebServ::_sendMockResponse(int clientFd) {
-	const char *response =
-		"HTTP/1.1 200 OK\r\n"
+		// _sendMockResponse(clientFd);
+		shared->response = "HTTP/1.1 200 OK\r\n"
 		"Content-Type: text/plain\r\n"
 		"Content-Length: 13\r\n"
 		"\r\n"
 		"Hello, world!";
-	send(clientFd, response, strlen(response), MSG_DONTWAIT);
+		shared->status = Status::writing;
+	} else {
+		std::cerr << "Failed to read from client: " << strerror(errno) << std::endl;
+	}
+	// close(clientFd);
+}
+
+// void WebServ::_sendMockResponse(int clientFd) {
+// 	const char *response =
+// 		"HTTP/1.1 200 OK\r\n"
+// 		"Content-Type: text/plain\r\n"
+// 		"Content-Length: 13\r\n"
+// 		"\r\n"
+// 		"Hello, world!";
+// 	send(clientFd, response, strlen(response), MSG_DONTWAIT);
+// }
+
+
+// Figure out when to set your servers aswell. as in registering them.
+// Figure out what fd you should be writing to. Where it's set. and send to it.
+void	WebServ::writeData(SharedData* shared) {
+	int clientFd = shared->server_fd;
+	int len = std::min(static_cast<int>(shared->response.length()), BUFFER_SIZE);
+	len = send(clientFd, shared->response.c_str(), len, MSG_NOSIGNAL);
+	if (len == -1) {
+		std::cerr << "Some error occured trying to send." << std::endl;
+	} else if (len < static_cast<int>(shared->response.size())) {
+		shared->response = shared->response.substr(len, shared->response.npos);
+		shared->status = Status::writing;
+	} else {
+		shared->response.clear();
+		shared->status = shared->connection_closed ? Status::closing : Status::reading;
+	}
 }
 
 void	WebServ::run() {
@@ -78,17 +105,17 @@ void	WebServ::run() {
 		for (int idx = 0; idx < numEvents; idx++) {
 			SharedData* shared = static_cast<SharedData*>(_events[idx].data.ptr);
 
-			// _checkHanging(); Still need ot figure something here out.
+			// _checkHanging(); Still need to figure something out here.
 			if (_events[idx].events & EPOLLIN && shared->status == Status::listening)
 				newConnection(shared);
 			// if (_events[idx].events & EPOLLIN && shared->status == Status::reading)
 			// 	_readData(shared);
-			if (shared->status == Status::reading) // just for now, i think?
+			if (shared->status == Status::reading) // just for now, i think? Or do I need another status?
 				handleRequest(shared);
 			// if (_events[idx].events & EPOLLHUP && shared->status == Status::in_cgi)
 			// 	_readCGI(shared);
-			// if (_events[idx].events & EPOLLOUT && shared->status == Status::writing)
-			// 	_writeData(shared);
+			if (_events[idx].events & EPOLLOUT && shared->status == Status::writing)
+				writeData(shared);
 			// if (_events[idx].events & EPOLLERR || shared->status == Status::closing) {
 			// 	_closeCGIfds(shared);
 			// 	_closeConnections(shared);
@@ -103,7 +130,7 @@ void	WebServ::stop() {
 
 }
 
-void	WebServ::setNonBlocking(int fd) {
+void	WebServ::_setNonBlocking(int fd) {
 	int flags = fcntl(fd, F_GETFL, 0);
 	if (flags == -1) {
 		std::cerr << "Error getting flags: " << strerror(errno) << std::endl;
@@ -121,7 +148,7 @@ void	WebServ::newConnection(SharedData* shared) {
 		return;
 	}
 
-	setNonBlocking(clientFd);
+	_setNonBlocking(clientFd); // Add some errorhandling
 
 	SharedData* clientShared = new SharedData();
 	clientShared->server_fd = clientFd;
@@ -136,7 +163,7 @@ void	WebServ::newConnection(SharedData* shared) {
 	clientShared->timestamp_last_request = std::time(nullptr);
 
 	epoll_event event;
-	event.events = EPOLLIN | EPOLLOUT; // Adjust according to your requirements
+	event.events = EPOLLIN | EPOLLOUT;
 	event.data.ptr = clientShared;
 
 	if (epoll_ctl(shared->epoll_fd, EPOLL_CTL_ADD, clientFd, &event) == -1) {
