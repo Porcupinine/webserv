@@ -1,8 +1,8 @@
-shared_info {
-	ServerConfig	serverConfig
-	std::string		request
-	std::string		response
+Check extension in Config.cpp
+Write a config ==overload to check if ocnfig is already in there, before _addConfig is called.
 
-	something with Fd's (2?)
-	connection_closed
-}
+Figure out how to do the errorHandling.
+
+(?) Should I add a response_code var to struct? [Just did, just in case.]
+
+After _setNonblocking need to add more error handling. What needs to happen here?
