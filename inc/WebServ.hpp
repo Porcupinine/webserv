@@ -25,6 +25,7 @@ class WebServ {
 
 		void	newConnection(SharedData* shared);
 		void	handleRequest(SharedData* shared);
+		void	writeData(SharedData* shared);
 
 		class InitException : public std::exception {
 			public:
@@ -39,16 +40,18 @@ class WebServ {
 		int					_epollFd;
 		// int							_listenSocket;
 		bool						_serverShutdown;
-		struct epoll_event			_events[MAX_EVENTS];
+		epoll_event					_events[MAX_EVENTS];
 		std::list<Server>			_servers;
 
 		static void					_handleSignal(int sig);
-		void						_sendMockResponse(int clientFd);
+		// void						_sendMockResponse(int clientFd);
 
 		void						_setUpSigHandlers();
 		void						_initializeServers(Config& conf);
 		std::vector<VirtualHost>	&_setUpHosts(Config &conf);
 		
+		void						_setNonBlocking(int fd);
+
 		// void						_setUpListenSocket();
 		// void						_checkHanging(); Figure out some implementation for this. and an errorResponse.
 		void						_closeConnections();

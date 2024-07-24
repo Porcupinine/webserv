@@ -18,6 +18,7 @@
 
 // MAGIC NUMBERS
 #define ONE_MB					1048576 // Default max body size (1MB)
+#define BUFFER_SIZE				1024
 #define SERVER_TIMEOUT			2000
 #define MAX_EVENTS				20
 #define BACKLOG					20
@@ -110,6 +111,7 @@ struct SharedData {
 
 	std::string		request;
 	std::string		response;
+	int				response_code;
 
 	int				epoll_fd;
 	int				server_fd;
