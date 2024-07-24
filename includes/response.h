@@ -20,13 +20,14 @@ class parseRequest;
 class Response 
 {
     private:
-	    std::string     _response{}; // response body string, storing the HTML
+	    std::string     _response{};
         std::string     _version;
         unsigned int    _statusCode;
         std::string     _type;
-        bool            _isAutoIndex; // meaning autoIndex = true; means to respond with /path/index.html when /path/ is requested
+        bool            _isAutoIndex;
         std::map<unsigned int, std::string> _errorCodes;
         std::map<unsigned int, std::string> _errorCodesHtml;
+        std::string      _absrootpath;
 
         /*RESPONSE HEADER FIELDS*/
         std::string					_allow;
@@ -44,9 +45,9 @@ class Response
 
         std::string giveResponse(parseRequest& request, SharedData* shared);
 
-        void getMethod(parseRequest& request); // arg needed?? yes from config file
-        void postMethod(parseRequest& request); // arg needed?? yes from config file
-        void deleteMethod(parseRequest& request); // arg needed?? yes from config file
+        void getMethod(parseRequest& request, SharedData* shared);
+        void postMethod(parseRequest& request, SharedData* shared);
+        void deleteMethod(parseRequest& request, SharedData* shared);
 
         void initErrorCodes();
         void htmlErrorCodesMap();
@@ -56,12 +57,12 @@ class Response
         std::string getFormattedTime(time_t rawtime);
 
         /* RESPONSE HEADER BUIDLING RELATED */
-        std::string buildResponseHeader(parseRequest& request); // check if args needed
+        std::string buildResponseHeader(parseRequest& request, SharedData* shared); // check if args needed
         void initResponseHeaderFields();
         void setHeaderValues(parseRequest& request);
         std::string setAllow(parseRequest& request);
         std::string setDate(parseRequest& request);
-        std::string getHeaderValues(parseRequest& request, std::string header);
+        std::string getHeaderValues(parseRequest& request, std::string header, SharedData* shared);
         std::string getMatchingCodeString(unsigned int code);
 
         /* HTML RELATED */

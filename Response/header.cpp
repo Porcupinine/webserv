@@ -6,17 +6,17 @@
 /*   By: dmaessen <dmaessen@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2024/07/07 15:50:08 by dmaessen          #+#    #+#             */
-/*   Updated: 2024/07/08 14:46:55 by dmaessen         ###   ########.fr       */
+/*   Updated: 2024/07/24 14:24:26 by dmaessen         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
 #include "../includes/response.h"
 
-std::string Response::buildResponseHeader(parseRequest& request) {
+std::string Response::buildResponseHeader(parseRequest& request, SharedData* shared) {
     std::string header = "";
 	initResponseHeaderFields();
 	setHeaderValues(request);
-	header = getHeaderValues(request, header);
+	header = getHeaderValues(request, header, shared);
 	return header;
 }
 
@@ -64,7 +64,7 @@ std::string Response::setDate(parseRequest& request) {
 
 
 /* HEADER GETTERS */
-std::string Response::getHeaderValues(parseRequest& request, std::string header) {
+std::string Response::getHeaderValues(parseRequest& request, std::string header, SharedData* shared) {
 	header += request.getVersion() + " " + std::to_string(_statusCode) + " " + getMatchingCodeString(_statusCode) + "/r/n";
 	if (_allow != "")
 		header += "Allow: " + _allow + "/r/n";
@@ -81,7 +81,7 @@ std::string Response::getHeaderValues(parseRequest& request, std::string header)
 	if (_date != "")
 		header += "Date: " + _date + "/r/n";
 	if (_statusCode == 301 || _statusCode == 302 || _statusCode == 307 || _statusCode == 308)
-		header += "Location: " + _location + "/r/n"; // GET FROM CONFIG FILE
+		header += "Location: " + shared->server_config->locations->redirection.second + "/r/n";
 	header += "Connection: closed/r/n";
 
 	if (_response != "")

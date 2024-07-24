@@ -6,7 +6,7 @@
 /*   By: dmaessen <dmaessen@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2024/07/07 15:49:40 by dmaessen          #+#    #+#             */
-/*   Updated: 2024/07/23 15:07:26 by dmaessen         ###   ########.fr       */
+/*   Updated: 2024/07/24 14:32:30 by dmaessen         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -32,14 +32,13 @@ std::string Response::giveResponse(parseRequest& request, SharedData* shared) {
     _statusCode = request.getRetVal();
     _type = "";
     _isAutoIndex = shared->server_config->auto_index;
-    // _path = shared->server_config->root_dir; // what is this again??
+    _absrootpath = shared->server_config->root_dir;
     initErrorCodes();
     initMethods();
 
-    // if (buffersizemax < request.getBody().size()) // take from lou's struct
-        // _statusCode == 413;
-
-
+    if (shared->server_config->max_client_body_size < request.getBodyMsg().size())
+        _statusCode == 413;
+        
     std::map<std::string, void (Response::*)(parseRequest&)>::iterator it = _method.find(request.getMethod());
     if (it != _method.end())
         (this->*(it->second))(request);
@@ -47,15 +46,16 @@ std::string Response::giveResponse(parseRequest& request, SharedData* shared) {
         _statusCode = 405;
     if (_statusCode == 405 || _statusCode == 413) {
         _response = errorHtml(_statusCode);
-        _response = buildResponseHeader(request);
+        _response = buildResponseHeader(request, shared);
     }
+    
     return _response;
 }
 
 /* STATIC INIT */
-std::map<std::string, void (Response::*)(parseRequest&)> Response::initMethods()
+std::map<std::string, void (Response::*)(parseRequest&, SharedData* shared)> Response::initMethods()
 {
-	std::map<std::string, void (Response::*)(parseRequest&)> map;
+	std::map<std::string, void (Response::*)(parseRequest&, SharedData* shared)> map;
 
 	map["GET"] = &Response::getMethod;
 	map["POST"] = &Response::postMethod;
@@ -63,11 +63,11 @@ std::map<std::string, void (Response::*)(parseRequest&)> Response::initMethods()
 	return map;
 }
 
-std::map<std::string, void (Response::*)(parseRequest &)> Response::_method = Response::initMethods();
+std::map<std::string, void (Response::*)(parseRequest &, SharedData* shared)> Response::_method = Response::initMethods();
 
 
 /* METHOD FUNCTIONS */
-void Response::getMethod(parseRequest& request) {
+void Response::getMethod(parseRequest& request, SharedData* shared) {
     if (cgiInvolved(request.getPath()) == true) {
         if (request.getCgiResponse() != "")
             _response = request.getCgiResponse();
@@ -76,13 +76,13 @@ void Response::getMethod(parseRequest& request) {
     }
     else if (_statusCode == 200) {
         readContent(request);
-        _response = buildResponseHeader(request);
+        _response = buildResponseHeader(request, shared);
     }
     else
         _response = errorHtml(_statusCode);
 }
 
-void Response::postMethod(parseRequest& request) {
+void Response::postMethod(parseRequest& request, SharedData* shared) {
     if (cgiInvolved(request.getPath()) == true) {
         if (request.getCgiResponse() != "")
             _response = request.getCgiResponse(); 
@@ -92,16 +92,15 @@ void Response::postMethod(parseRequest& request) {
     else {
         _statusCode = 204; // no content
         _response = "";
-        _response = buildResponseHeader(request);
+        _response = buildResponseHeader(request, shared);
     }
     if (_statusCode == 500) {
         _response = errorHtml(_statusCode);
-        _response = buildResponseHeader(request);
+        _response = buildResponseHeader(request, shared);
     }
 }
 
-void Response::deleteMethod(parseRequest& request) {
-    // think this is correct, as CGI/Laura rm it and so i just need to check its really removed
+void Response::deleteMethod(parseRequest& request, SharedData* shared) {
     _response = "";
 
     if (fileExists(request.getPath()) == true){
@@ -115,7 +114,7 @@ void Response::deleteMethod(parseRequest& request) {
 
     if (_statusCode == 404 || _statusCode == 403)
         _response = errorHtml(_statusCode);
-    _response = buildResponseHeader(request);
+    _response = buildResponseHeader(request, shared);
 }
 
 void Response::initErrorCodes()
@@ -165,7 +164,7 @@ std::string Response::errorHtml(unsigned int error) {
 }
 
 void Response::readContent(parseRequest& request) {
-    std::ifstream file; // reading content from an infile
+    std::ifstream file;
 
     if (fileExists(request.getPath()) == true) {
         file.open((request.getPath().c_str()), std::ifstream::in);
@@ -181,7 +180,7 @@ void Response::readContent(parseRequest& request) {
         _response = content;
         file.close();
     }
-    else if (_isAutoIndex == true) { // but this needs to be set to true somewhere
+    else if (_isAutoIndex == true) {
         std::stringstream buffer;
         buffer << autoIndexPageListing(request.getPath());
         _response = buffer.str();
@@ -211,6 +210,7 @@ std::string Response::getResponse(void) const {
 /* UTILS */
 bool Response::fileExists(const std::string& path) {
     struct stat buffer;
+    std::string newpath = _absrootpath + path; // check if this is needed/correct
 
     if (stat(path.c_str(), &buffer) == 0)
         return false;
