@@ -2,7 +2,9 @@
 #include <fcntl.h>
 #include <ctime>
 
-WebServ::WebServ(int argc, char **argv) : _serverShutdown(false) {
+bool WebServ::_serverShutdown = false; 
+
+WebServ::WebServ(int argc, char **argv) {
 	try {
 		if (argc != 2) {
 			throw	WebServ::InitException("argcount: hey, please provide me with a file!");
@@ -82,7 +84,7 @@ void WebServ::handleRequest(SharedData* shared) {
 // }
 
 void	WebServ::writeData(SharedData* shared) {
-	int clientFd = shared->server_fd;
+	int clientFd = shared->fd;
 	int len = std::min(static_cast<int>(shared->response.length()), BUFFER_SIZE);
 	len = send(clientFd, shared->response.c_str(), len, MSG_NOSIGNAL);
 	if (len == -1) {
@@ -146,18 +148,19 @@ std::vector<VirtualHost> WebServ::_setUpHosts(Config& conf) {
 		VirtualHost vhost(configs.host, configs);
 		virtualHosts.push_back(vhost);
 	}
+	return virtualHosts;
 }
 
 void WebServ::_initializeServers(Config& conf) {
-	_virtualHosts = _setUpHosts(conf);
-	for (const auto& vhost : _virtualHosts) {
-		Server server;
-		ServerConfig& servConfig = vhost.getConfigs();
-		// if (server.initServer(&servConfig, _epollFd, servConfig.timeout, servConfig.maxNrOfRequests) != 0) {
-		if (server.initServer(&servConfig, _epollFd, SERVER_TIMEOUT, SERVER_MAX_NO_REQUEST) != 0) {
+	std::vector<VirtualHost>  virtualHosts = _setUpHosts(conf);
+	for (const auto& vhost : virtualHosts) {
+		auto server = std::make_unique<Server>();
+		const ServerConfig& servConfig = vhost.getConfig();
+
+		if (server->initServer(&servConfig, _epollFd, SERVER_TIMEOUT, SERVER_MAX_NO_REQUEST) != 0) {
 			throw InitException("Failed to initialize server for host: " + servConfig.host);
 		}
-		_servers.push_back(server);
+		_servers.push_back(std::move(server));
 	}
 }
 

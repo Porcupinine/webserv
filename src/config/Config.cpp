@@ -15,7 +15,7 @@ Config::Config(const std::string& filePath) : _filePath(filePath), _lineNum(0), 
 		if (line.empty() || line[0] == '#') continue;
 
 		if (line == "server {") {
-			currentConf = std::make_unique_ptr<ServerConfig>();
+			currentConf = std::make_unique<ServerConfig>();
 			continue;
 		}
 

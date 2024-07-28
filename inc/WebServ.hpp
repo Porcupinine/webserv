@@ -37,24 +37,22 @@ class WebServ {
 		};
 
 	private:
-		int							_epollFd;
-		// int							_listenSocket;
-		bool						_serverShutdown;
-		epoll_event					_events[MAX_EVENTS];
-		std::list<Server>			_servers;
+		int											_epollFd;
+		static bool									_serverShutdown;
+		epoll_event									_events[MAX_EVENTS];
+		std::vector<std::unique_ptr<Server>>		_servers;
 
-		static void					_handleSignal(int sig);
-		// void						_sendMockResponse(int clientFd);
+		static void									_handleSignal(int sig);
+		// void										_sendMockResponse(int clientFd);
 
-		void						_setUpSigHandlers();
-		void						_initializeServers(Config& conf);
-		std::vector<VirtualHost>	&_setUpHosts(Config &conf);
+		void										_setUpSigHandlers();
+		void										_initializeServers(Config& conf);
+		std::vector<VirtualHost>					_setUpHosts(Config &conf);
 		
-		void						_setNonBlocking(int fd);
+		void										_setNonBlocking(int fd);
 
-		// void						_setUpListenSocket();
-		// void						_checkHanging(); Figure out some implementation for this. and an errorResponse.
-		void						_closeConnections();
+		// void										_checkHanging(); Figure out some implementation for this. and an errorResponse.
+		void										_closeConnections();
 
 };
 #endif

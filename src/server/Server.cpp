@@ -1,8 +1,7 @@
 #include "Server.hpp"
+#include <sys/epoll.h>
 
-Server::Server(ServerConfig config) : _fd(-1), _timeout(0.0), _maxNrOfRequests(0), _conn(nullptr) {
-	// Initialize other necessary members
-}
+Server::Server() : _fd(-1), _timeout(0.0), _maxNrOfRequests(0), _shared(nullptr) {}
 
 // Server::Server(Server const & src) {
 //     // Copy constructor implementation if needed
@@ -14,7 +13,7 @@ Server::~Server() {
 	}
 }
 
-int Server::initServer(ServerConfig *config, int epollFd, double timeout, int maxNrOfRequests) {
+int Server::initServer(const ServerConfig *config, int epollFd, double timeout, int maxNrOfRequests) {
 	_timeout = timeout;
 	_maxNrOfRequests = maxNrOfRequests;
 
@@ -24,30 +23,55 @@ int Server::initServer(ServerConfig *config, int epollFd, double timeout, int ma
 	_serverAddr.sin_port = htons(config->port);
 
 	// Create and bind socket
-	_fd = socket(AF_INET, SOCK_STREAM, 0);
-	if (_fd < 0) {
+	_fd = socket(AF_INET, SOCK_STREAM | SOCK_NONBLOCK, 0);
+	if (_fd == -1) {
 		throw ServerException("Failed to create socket: ");
 	}
 	if (bind(_fd, (struct sockaddr*)&_serverAddr, sizeof(_serverAddr)) < 0) {
 		throw ServerException("Failed to bind socket: ");
 	}
 
-	// Set up epoll
-	struct epoll_event event;
-	event.events = EPOLLIN;
-	event.data.fd = _fd;
-	if (epoll_ctl(epollFd, EPOLL_CTL_ADD, _fd, &event) < 0) {
-		throw ServerException("Failed to add socket to epoll: ");
-	}
+	_setSocketOptions();
+    _bindSocket();
+    _listenSocket(BACKLOG);
 
+    registerWithEpoll(epollFd, _fd, EPOLLIN); // Should I use edge-triggered?
+    std::cout << GREEN << "Server initialized on port " << config->port << RESET << std::endl;
 	// Additional initialization
 	_configs.push_back(config);
 
 	return 0;
 }
 
-void Server::setConnection(struct connection *conn) {
-	_conn = conn;
+void Server::_setSocketOptions() {
+    int opt = 1;
+    if (setsockopt(_fd, SOL_SOCKET, SO_REUSEADDR, &opt, sizeof(opt)) < 0)
+        throw ServerException("Failed to set socket options");
+}
+
+void Server::_bindSocket() {
+    if (bind(_fd, reinterpret_cast<struct sockaddr*>(&_serverAddr), sizeof(_serverAddr)) == -1)
+        throw ServerException("Failed to bind socket");
+}
+
+void Server::_listenSocket(int backlog) {
+    if (listen(_fd, backlog) == -1)
+        throw ServerException("Failed to listen on socket");
+}
+
+void Server::_registerWithEpoll(int epollFd, int fd, uint32_t events) {
+    epoll_event	event;
+	SharedData*	shared;
+
+	
+    event.events = events;
+    event.data.fd = fd;
+    if (epoll_ctl(epollFd, EPOLL_CTL_ADD, fd, &event) < 0)
+        throw ServerException("Failed to register with epoll");
+}
+
+void Server::setConnection(SharedData *shared) {
+	_shared = shared;
 }
 
 uint16_t Server::getPort() const {
@@ -170,30 +194,30 @@ ServerConfig* Server::_getHostConfigs(const std::string &host) const {
 
 std::string Server::inheritRootFolder(ServerConfig *hostConfigs, const std::string &location) const {
 	if (hostConfigs) {
-		return hostConfigs->root; // Assuming root folder is set at the host level
+		return hostConfigs->root_dir;
 	}
 	return "/"; // Default root folder
 }
 
 std::string Server::inheritUploadDir(ServerConfig *hostConfigs, const std::string &location) const {
 	if (hostConfigs) {
-		return hostConfigs->uploadDir; // Assuming upload dir is set at the host level
+		return hostConfigs->locations.upload_dir;
 	}
 	return "/uploads"; // Default upload directory
 }
 
 std::set<std::string> Server::inheritAllowedMethods(ServerConfig *hostConfigs, const std::string &location) const {
 	if (hostConfigs) {
-		return hostConfigs->allowedMethods; // Assuming allowed methods are set at the host level
+		return hostConfigs->allowedMethods;
 	}
-	return {"GET", "POST"}; // Default allowed methods
+	return {"GET", "POST"}; // Domi ???
 }
 
 std::string Server::inheritIndex(ServerConfig *hostConfigs, const std::string &location) const {
 	if (hostConfigs) {
-		return hostConfigs->index; // Assuming index is set at the host level
+		return hostConfigs->index;
 	}
-	return "index.html"; // Default index file
+	return "index.html";
 }
 
 size_t Server::inheritMaxBodySize(ServerConfig *hostConfigs, const std::string &location) const {

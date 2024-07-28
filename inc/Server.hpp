@@ -20,7 +20,7 @@ public:
 		Server &operator=(Server const & rhs) = delete; // Might still want this.
 		~Server();
 
-		int									initServer(ServerConfig *settings, int epollFd, double timeout, int maxNrOfRequests);
+		int									initServer(const ServerConfig *settings, int epollFd, double timeout, int maxNrOfRequests);
 		void								setConnection(struct connection *conn);
 		// void								handleRequest(int clientFd);
 
@@ -57,13 +57,19 @@ private:
 		struct connection*					_getConnection() const;
 		ServerConfig*						_getHostConfigs(const std::string &host) const;
 
+
+		void								_bindSocket();
+    	void								_listenSocket(int backlog);
+		void								_setSocketOptions();
+		void								_setSharedData();
+		void								_registerWithEpoll(int epollFd, int fd, int flags);
 		// void								_sendMockResponse(int clientFd);
 
-		std::string							_inheritRootFolder(ServerConfig *hostSettings, const std::string &location) const;
-		std::string							_inheritUploadDir(ServerConfig *hostSettings, const std::string &location) const;
-		std::set<std::string>				_inheritAllowedMethods(ServerConfig *hostSettings, const std::string &location) const;
-		std::string							_inheritIndex(ServerConfig *hostSettings, const std::string &location) const;
-		size_t								_inheritMaxBodySize(ServerConfig *hostSettings, const std::string &location) const;
+		// std::string							_inheritRootFolder(ServerConfig *hostSettings, const std::string &location) const;
+		// std::string							_inheritUploadDir(ServerConfig *hostSettings, const std::string &location) const;
+		// std::set<std::string>				_inheritAllowedMethods(ServerConfig *hostSettings, const std::string &location) const;
+		// std::string							_inheritIndex(ServerConfig *hostSettings, const std::string &location) const;
+		// size_t								_inheritMaxBodySize(ServerConfig *hostSettings, const std::string &location) const;
 
 		int									_fd;
 		struct sockaddr_in					_serverAddr;
@@ -71,6 +77,8 @@ private:
 		double								_timeout;
 		int									_maxNrOfRequests;
 		std::list<ServerConfig *>			_configs;
-		struct connection					*_conn;
+		SharedData*							_shared;
 };
+
+// Should be in utils.cpp
 #endif
