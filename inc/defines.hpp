@@ -113,8 +113,8 @@ struct SharedData {
 	std::string		response;
 	int				response_code;
 
+	int				fd;
 	int				epoll_fd;
-	int				server_fd;
 
 	Status			status; // does this work like this?
 	ServerConfig	server_config;

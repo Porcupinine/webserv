@@ -13,10 +13,10 @@ WebServ::WebServ(int argc, char **argv) : _serverShutdown(false) {
 		if (config.hasErrorOccurred())
 			throw	WebServ::InitException(config.buildErrorMessage(config.getError()));
 		config.printConfigs();
-		if ((_epollFd = epoll_create1()) == -1) { // Or should I use epoll_create(1)?
+		if ((_epollFd = epoll_create1(1)) == -1) { // Or should I use epoll_create(1)?
 			throw	std::runtime_error("epoll_create1: " + std::string(strerror(errno)));
 		}
-		_virtualHosts = _setUpHosts(config);
+		_initializeServers(config);
 	} catch (std::exception &e){
 		std::cout << "Error: " << e.what() << std::endl;
 	}
@@ -26,16 +26,16 @@ WebServ::WebServ(int argc, char **argv) : _serverShutdown(false) {
 void	closeCGIfds(SharedData* shared) {
 	if (shared->cgi_fd != -1) {
 		epoll_ctl(shared->epoll_fd, EPOLL_CTL_DEL, shared->cgi_fd, nullptr);
-		if (close(shared->server_fd))
-			std::cout << RED << "failed to close fd " << shared->server_fd << ": " << std::string(strerror(errno)) << RESET << std::endl;
+		if (close(shared->fd))
+			std::cout << RED << "failed to close fd " << shared->fd << ": " << std::string(strerror(errno)) << RESET << std::endl;
 		shared->cgi_fd = -1;
 	}
 }
 
 void	closeConnection(SharedData* shared) {
-	epoll_ctl(shared->epoll_fd, EPOLL_CTL_DEL, shared->server_fd, nullptr); // Add some delete I believe?
-	if (close(shared->server_fd))
-	std::cout << RED << "failed to close fd " << shared->server_fd << ": " << std::string(strerror(errno)) << RESET << std::endl;
+	epoll_ctl(shared->epoll_fd, EPOLL_CTL_DEL, shared->fd, nullptr); // Add some delete I believe?
+	if (close(shared->fd))
+	std::cout << RED << "failed to close fd " << shared->fd << ": " << std::string(strerror(errno)) << RESET << std::endl;
 	delete shared; // double check this.
 }
 
@@ -52,7 +52,7 @@ void	WebServ::_closeConnections() {
 
 void WebServ::handleRequest(SharedData* shared) {
 	char buffer[1024];
-	int clientFd = shared->server_fd; // am I reading from server or client..?
+	int clientFd = shared->fd;
 	int bytesRead = recv(clientFd, buffer, sizeof(buffer) - 1, MSG_DONTWAIT);
 	if (bytesRead > 0) {
 		buffer[bytesRead] = '\0';
@@ -81,9 +81,6 @@ void WebServ::handleRequest(SharedData* shared) {
 // 	send(clientFd, response, strlen(response), MSG_DONTWAIT);
 // }
 
-
-// Figure out when to set your servers aswell. as in registering them.
-// Figure out what fd you should be writing to. Where it's set. and send to it.
 void	WebServ::writeData(SharedData* shared) {
 	int clientFd = shared->server_fd;
 	int len = std::min(static_cast<int>(shared->response.length()), BUFFER_SIZE);
@@ -141,17 +138,40 @@ void	WebServ::_setNonBlocking(int fd) {
 	}
 }
 
+std::vector<VirtualHost> WebServ::_setUpHosts(Config& conf) {
+	std::vector<VirtualHost> virtualHosts;
+
+	std::vector<ServerConfig> serverConfigs =  conf.getServerConfigs();
+	for (const auto& configs : serverConfigs) {
+		VirtualHost vhost(configs.host, configs);
+		virtualHosts.push_back(vhost);
+	}
+}
+
+void WebServ::_initializeServers(Config& conf) {
+	_virtualHosts = _setUpHosts(conf);
+	for (const auto& vhost : _virtualHosts) {
+		Server server;
+		ServerConfig& servConfig = vhost.getConfigs();
+		// if (server.initServer(&servConfig, _epollFd, servConfig.timeout, servConfig.maxNrOfRequests) != 0) {
+		if (server.initServer(&servConfig, _epollFd, SERVER_TIMEOUT, SERVER_MAX_NO_REQUEST) != 0) {
+			throw InitException("Failed to initialize server for host: " + servConfig.host);
+		}
+		_servers.push_back(server);
+	}
+}
+
 void	WebServ::newConnection(SharedData* shared) {
-	int clientFd = accept(shared->server_fd, nullptr, nullptr);
+	int clientFd = accept(shared->fd, nullptr, nullptr);
 	if (clientFd == -1) {
-		std::cerr << "Failed to accept new connection: " << strerror(errno) << std::endl;
+		std::cerr << "Failed to accept new connection: " << strerror(errno) << std::endl; //make this some exception
 		return;
 	}
 
 	_setNonBlocking(clientFd); // Add some errorhandling
 
 	SharedData* clientShared = new SharedData();
-	clientShared->server_fd = clientFd;
+	clientShared->fd = clientFd;
 	clientShared->epoll_fd = shared->epoll_fd;
 	clientShared->cgi_fd = 0;
 	clientShared->cgi_pid = 0;
@@ -173,31 +193,6 @@ void	WebServ::newConnection(SharedData* shared) {
 		return;
 	}
 }
-
-
-void WebServ::_initializeServers(Config& conf) {
-	_virtualHosts = _setUpHosts(conf);
-	for (const auto& vhost : _virtualHosts) {
-		Server server;
-		ServerConfig& servConfig = vhost.getConfigs();
-		// if (server.initServer(&servConfig, _epollFd, servConfig.timeout, servConfig.maxNrOfRequests) != 0) {
-		if (server.initServer(&servConfig, _epollFd, SERVER_TIMEOUT, SERVER_MAX_NO_REQUEST) != 0) {
-			throw InitException("Failed to initialize server for host: " + servConfig.host);
-		}
-		_servers.push_back(server);
-	}
-}
-
-std::vector<VirtualHost> WebServ::_setUpHosts(Config& conf) {
-	std::vector<VirtualHost> virtualHosts;
-
-	std::vector<ServerConfig> serverConfigs =  conf.getServerConfigs();
-	for (const auto& configs : serverConfigs) {
-		VirtualHost vhost(configs.host, configs);
-		virtualHosts.push_back(vhost);
-	}
-}
-
 
 void WebServ::_handleSignal(int sig) {
 	if (sig == SIGINT)
