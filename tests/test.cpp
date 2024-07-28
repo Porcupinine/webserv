@@ -29,11 +29,11 @@
 #include <netdb.h>
 #include <errno.h>
 
-int server_fd, epoll_fd;
+int fd, epoll_fd;
 
 void handle_sigint(int sig) {
     std::cout << "Terminating server" << std::endl;
-    close(server_fd);
+    close(fd);
     close(epoll_fd);
     exit(0);
 }
@@ -61,7 +61,7 @@ int main() {
     }
 
     // Create socket file descriptor
-    if ((server_fd = socket(res->ai_family, res->ai_socktype, res->ai_protocol)) == 0) {
+    if ((fd = socket(res->ai_family, res->ai_socktype, res->ai_protocol)) == 0) {
         perror("socket failed");
         freeaddrinfo(res);
         exit(EXIT_FAILURE);
@@ -69,27 +69,27 @@ int main() {
 
     // Set socket options
     int opt = 1;
-    if (setsockopt(server_fd, SOL_SOCKET, SO_REUSEADDR | SO_REUSEPORT, &opt, sizeof(opt))) {
+    if (setsockopt(fd, SOL_SOCKET, SO_REUSEADDR | SO_REUSEPORT, &opt, sizeof(opt))) {
         perror("setsockopt");
         freeaddrinfo(res);
-        close(server_fd);
+        close(fd);
         exit(EXIT_FAILURE);
     }
 
     // Bind the socket to the network address and port
-    if (bind(server_fd, res->ai_addr, res->ai_addrlen) < 0) {
+    if (bind(fd, res->ai_addr, res->ai_addrlen) < 0) {
         perror("bind failed");
         freeaddrinfo(res);
-        close(server_fd);
+        close(fd);
         exit(EXIT_FAILURE);
     }
 
     freeaddrinfo(res); // Free the address info structure
 
     // Start listening for incoming connections
-    if (listen(server_fd, 3) < 0) {
+    if (listen(fd, 3) < 0) {
         perror("listen");
-        close(server_fd);
+        close(fd);
         exit(EXIT_FAILURE);
     }
 
@@ -97,18 +97,18 @@ int main() {
     epoll_fd = epoll_create1(0);
     if (epoll_fd == -1) {
         perror("epoll_create1");
-        close(server_fd);
+        close(fd);
         exit(EXIT_FAILURE);
     }
 
-    // Add server_fd to epoll instance
+    // Add fd to epoll instance
     struct epoll_event event;
     event.events = EPOLLIN;
-    event.data.fd = server_fd;
+    event.data.fd = fd;
 
-    if (epoll_ctl(epoll_fd, EPOLL_CTL_ADD, server_fd, &event) == -1) {
+    if (epoll_ctl(epoll_fd, EPOLL_CTL_ADD, fd, &event) == -1) {
         perror("epoll_ctl");
-        close(server_fd);
+        close(fd);
         close(epoll_fd);
         exit(EXIT_FAILURE);
     }
@@ -120,14 +120,14 @@ int main() {
         int num_fds = epoll_wait(epoll_fd, events, MAX_EVENTS, -1);
         if (num_fds == -1) {
             perror("epoll_wait");
-            close(server_fd);
+            close(fd);
             close(epoll_fd);
             exit(EXIT_FAILURE);
         }
 
         for (int i = 0; i < num_fds; ++i) {
-            if (events[i].data.fd == server_fd) {
-                int new_socket = accept(server_fd, NULL, NULL);
+            if (events[i].data.fd == fd) {
+                int new_socket = accept(fd, NULL, NULL);
                 if (new_socket == -1) {
                     perror("accept");
                     continue;
@@ -160,7 +160,7 @@ int main() {
         }
     }
 
-    close(server_fd);
+    close(fd);
     close(epoll_fd);
     return 0;
 }

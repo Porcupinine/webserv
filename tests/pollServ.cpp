@@ -42,16 +42,16 @@ int setup_socket(int port) {
 
 int main() {
     int port = 8080;
-    int server_fd = setup_socket(port);
-    if (server_fd < 0) {
+    int fd = setup_socket(port);
+    if (fd < 0) {
         return 1;
     }
 
     std::vector<struct pollfd> fds;
-    struct pollfd server_fd_struct;
-    server_fd_struct.fd = server_fd;
-    server_fd_struct.events = POLLIN;
-    fds.push_back(server_fd_struct);
+    struct pollfd fd_struct;
+    fd_struct.fd = fd;
+    fd_struct.events = POLLIN;
+    fds.push_back(fd_struct);
 
     while (true) {
         int ret = poll(fds.data(), fds.size(), -1); // Geen timeout, wacht oneindig
@@ -62,11 +62,11 @@ int main() {
 
         for (size_t i = 0; i < fds.size(); i++) {
             if (fds[i].revents & POLLIN) {
-                if (fds[i].fd == server_fd) {
+                if (fds[i].fd == fd) {
                     // Nieuwe verbinding accepteren
                     struct sockaddr_in client_addr;
                     socklen_t addr_len = sizeof(client_addr);
-                    int client_fd = accept(server_fd, (struct sockaddr *)&client_addr, &addr_len);
+                    int client_fd = accept(fd, (struct sockaddr *)&client_addr, &addr_len);
                     if (client_fd < 0) {
                         std::cerr << "Accept failed: " << strerror(errno) << std::endl;
                         continue;
@@ -96,6 +96,6 @@ int main() {
         }
     }
 
-    close(server_fd);
+    close(fd);
     return 0;
 }
