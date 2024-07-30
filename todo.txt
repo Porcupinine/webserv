@@ -1,0 +1,16 @@
+Check extension in Config.cpp
+Write a config ==overload to check if ocnfig is already in there, before _addConfig is called.
+
+Figure out how to do the errorHandling.
+
+(?) Should I add a response_code var to struct? [Just did, just in case.]
+
+After _setNonblocking need to add more error handling. What needs to happen here?
+
+TimeOut stuff.
+
+Merge.
+
+Status handling.
+
+Implement domis ==overload.

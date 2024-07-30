@@ -1,10 +1,18 @@
-cmake_minimum_required(VERSION 3.23)
-project(webserv)
+cmake_minimum_required(VERSION 3.10)
 
-set(CMAKE_CXX_STANDARD 11)
+# Set the project name, I keep forgetting this.
+project(WebServer)
 
-set(SRC )
+set(CMAKE_CXX_STANDARD 17)
+set(CMAKE_CXX_STANDARD_REQUIRED True)
 
-set(TESTSRC )
+add_executable(webserver
+    src/main.cpp
+    src/webserv/WebServ.cpp
+    src/server/Server.cpp
+    src/config/Config.cpp
+    src/virtualHost/VirtualHost.cpp
+    src/utils.cpp
+)
 
-add_executable(webserv ${SRC})
+include_directories(inc)
