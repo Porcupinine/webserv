@@ -5,31 +5,33 @@
 #include <sstream>
 #include <string>
 #include <map>
-#include <unordered_map> // needed??
 #include <stack>
 #include <vector>
 #include <list>
 #include <utility>
-#include <pair>
 #include <functional>
+
+#include "../includes/response.h"
+
+class Response;
 
 class parseRequest
 {
     private:
         std::string _methodType;
         std::string _path;
-        std::string _version; // string or float?
+        std::string _version;
         std::string _bodyMsg; 
         unsigned int _port; // init to 80 by default or what??
-        unsigned int _returnValue; // to what do we init this?? 200
+        unsigned int _returnValue;
         std::string _query;
-        std::string _infoStr; // that we got from the server's buffer
-        std::map<std::string, std::string> _headers; // MAKE IT AN UNORERED MAP? NO
-        std::list<std::pair<std::string, float>> _language;
+        std::map<std::string, std::string> _headers;
+		std::list<std::pair<std::string, float>> _language;
+        std::string _cgiresponse;
+        std::map<std::string, std::string> _cookies;
 
 
-        void parseStr(std::string &info);
-        //bool validateStr();
+        std::string parseStr(std::string &info, SharedData* shared);
 
         void initHeaders();
 
@@ -43,20 +45,20 @@ class parseRequest
         std::string setKey(const std::string &line);
         std::string setValue(const std::string &line);
 
-        std::string& capsOn(std::string &str); // maybe put this in utils
-        std::string rmSpaces(std::string &str); // UTILS??
-        std::vector<std::string> split(const std::string &str, char c); // UTILS??
-
         void setLanguage();
         void setQuery();
-        void setBody(const std::string &str);
+        std::string readBody(const std::string &str, size_t &i);
+
+        std::map<std::string, std::string> parseCookies(const std::string& cookies);
+
+        std::string& capsOn(std::string &str);
+        std::string rmSpaces(std::string &str);
+        std::vector<std::string> split(const std::string &str, char c);
 
     public:
-        parseRequest(std::string &info);
+        parseRequest(SharedData* shared); // ++ server instance -- TO DO
         ~parseRequest();
         parseRequest& operator=(const parseRequest &cpy);
-
-        void initHeaders();
 
         /* GETTERS */
         std::string getMethod(void) const;
@@ -64,8 +66,12 @@ class parseRequest
         std::string getVersion(void) const;
         unsigned int getPort(void) const;
         int getRetVal(void) const;
-        std::string getBody(void) const;
+        std::string getBodyMsg(void) const;
         const std::map<std::string, std::string>& getHeaders(void) const;
+        std::string getLanguageStr(void) const;
+        std::string getQuery(void) const;
+        std::string getCgiResponse(void) const;
+        const std::map<std::string, std::string>& getCookies(void) const;
 
         /* SETTERS */
         void setMethod(std::string type);
@@ -73,10 +79,10 @@ class parseRequest
         void setVersion(std::string v);
         void setPort(std::string port);
         void setRetVal(int value);
-        void setBody(std::string b);
-
+        void setBodyMsg(std::string b);
 
 };
+
 
 enum class Method
 {
@@ -85,6 +91,10 @@ enum class Method
     DELETE
 };
 
-std::string initMethodString(Method method);
+
+std::string     initMethodString(Method method);
+bool            cgiInvolved(std::string path);
+
+
 
 #endif

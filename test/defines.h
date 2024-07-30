@@ -1,0 +1,8 @@
+#ifndef WEBTEST_DEFINES_H
+#define WEBTEST_DEFINES_H
+
+#define SERV_PORT 9999
+#define BUFFER_SIZE 100
+#define N_CLIENTS 10
+
+#endif //WEBTEST_DEFINES_H

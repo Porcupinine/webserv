@@ -1,15 +1,27 @@
+/* ************************************************************************** */
+/*                                                                            */
+/*                                                        :::      ::::::::   */
+/*   parseRequest.cpp                                   :+:      :+:    :+:   */
+/*                                                    +:+ +:+         +:+     */
+/*   By: dmaessen <dmaessen@student.42.fr>          +#+  +:+       +#+        */
+/*                                                +#+#+#+#+#+   +#+           */
+/*   Created: 2024/07/07 15:50:05 by dmaessen          #+#    #+#             */
+/*   Updated: 2024/07/30 12:30:39 by dmaessen         ###   ########.fr       */
+/*                                                                            */
+/* ************************************************************************** */
+
 #include "../Request/parseRequest.hpp"
 
-parseRequest::parseRequest(std::string &info) : _methodType(""), _version(""), _returnValue(200),
-                              _bodyMsg(""), _port(80), _path(""), _query(""), _infoStr(info) {
+parseRequest::parseRequest(SharedData* shared) : _methodType(""), _version(""), _returnValue(200),
+                              _bodyMsg(""), _port(80), _path(""), _query("") {
     initHeaders();
-    parseStr(info);
-    if (_returnValue != 200)
-        std::cout << "Parse error: " << _returnValue << '\n';
+    parseStr(shared->request, shared);
+    // if (_returnValue != 200) // needed
+    //     std::cout << "Parse error: " << _returnValue << '\n';
 }
 
 parseRequest::~parseRequest() {
-    // SOMETHING TO DESTROY/CLEAN ??
+
 }
 
 parseRequest&	parseRequest::operator=(const parseRequest &cpy)
@@ -18,73 +30,95 @@ parseRequest&	parseRequest::operator=(const parseRequest &cpy)
 	this->_methodType = cpy.getMethod();
 	this->_version = cpy.getVersion();
 	this->_returnValue = cpy.getRetVal();
-	this->_bodyMsg = cpy.getBody();
+	this->_bodyMsg = cpy.getBodyMsg();
 	this->_port = cpy.getPort();
 	this->_path = cpy.getPath();
-    // NOT QUERY??
+    this->_query = cpy._query;
 	return (*this);
 }
 
-void parseRequest::parseStr(std::string &info) {
+std::string parseRequest::parseStr(std::string &info, SharedData* shared) {
+    if (shared->response_code != 200) {
+        shared->response = "HTTP/1.1 500 Internal Server Error\r\n\n"
+        "Content-Type: text/html\r\n\nContent-Length: 146\r\n\r\n "
+        "<!DOCTYPE html><html><head><title>500</title></head><body><h1> 500 Internal Server Error! </h1><p>I probably should study more!</p></body></html>";
+        return shared->response;
+    }
+    
     size_t i = 0;
     std::string line;
+    std::string bodyLine;
     std::string value;
     std::string key;
 
-    parseFirstline(readLine(info, i)); // 400 RET?? -- BUT NEED TO HAVE A STACK RIGHT TO PUT ALL THIS STUFF ON
-    // CHECK IF IT RETURNS 400 OR NOT -- AS ITS A BAD REQUEST
+    parseFirstline(readLine(info, i));
     while ((line = readLine(info, i)) != "\r" && line != "" && _returnValue != 400) {
-        key = setKey(line); // identifier of header
+        key = setKey(line);
         value = setValue(line);
-        if (_headers.count(key))
+        if (_headers.count(key)) {
             _headers[key] = value;
+        }
     }
-    setQuery(); // then to decode later right?? or something
+
+	size_t startBody = info.find("\r\n\r\n") + 4;
+	_bodyMsg = info.substr(startBody, std::string::npos);
+
+    setPort(_headers["Host"]);
+    setQuery();
     setLanguage();
-    setBody(); // if any as they body comes after the headers and a newline first THEN the body message
-    //return _returnValue; // DEPENDS IF VOID OR INT TO BE RETURNED
+
+    if (_headers["Cookie"] != "")
+        _cookies = parseCookies(_headers["Cookie"]);
+    
+    _cgiresponse = "";
+    if (cgiInvolved(_headers["Path"]) == true)
+        _cgiresponse = cgiHandler(*this, shared);
+    //CHECK IF SOMETHING FAILED ON LAURA'S SIDE??
+    
+    Response res;
+    return res.giveResponse(*this, shared); // is this really how we want to return??
 }
+
 
 std::string parseRequest::readLine(const std::string &str, size_t &i) {
     std::string res;
     size_t j;
 
-    if (i == std::string::npos)
-        return ""; // empty sring
-    j = str.find_first_of('\n', 1);
+    if (i == std::string::npos) 
+        return "";
+    j = str.find_first_of('\n', i);
     res = str.substr(i, j - i);
     if (res[res.size() - 1] == '\r')
-        res.pop_back(); // rm last char if \r
-    if (j == std::string::npos) // if we'r at the end
+        res.pop_back();
+    if (j == std::string::npos)
         i = j;
     else
         i = j + 1;
     return res;
 }
 
-
 /* SETS THE HEADER VALUES */
-
 std::string parseRequest::setKey(const std::string &line) {
     size_t i;
     std::string res;
 
     i = line.find_first_of(":", 1);
     res.append(line, 0, i);
-    capsOn(res); // maybe this can go in a certain utils or something 
+    capsOn(res);
     return res;
 }
 
 std::string parseRequest::setValue(const std::string &line) {
     size_t i;
-    size_t len;
+    size_t endline;
     std::string res;
 
     i = line.find_first_of(":", 1);
-    i = line.find_first_not_of(" ", i + 1); // so the search begings after :
+    i = line.find_first_not_of(" ", i + 1);
+    endline = line.find_first_of("\r", i);
+    line.substr(i, endline - 1);
     if (i != std::string::npos)
         res.append(line, i, std::string::npos);
-    len = res.size();
     return rmSpaces(res);
 }
 
@@ -109,21 +143,22 @@ void parseRequest::setLanguage() {
                 language.resize(2);
             else
                 language.resize(i);
-			language.push_back(std::pair<std::string, float>(language, weight));
+			_language.push_back(std::pair<std::string, float>(language, weight));
 		}
-        _language.sort(std::greater<std::pair<std::string, float>>()); // having the biggest on top
+        _language.sort(std::greater<std::pair<std::string, float>>());
     }
 }
 
-void	parseRequest::setBody(const std::string &str) {
-    _bodyMsg.assign(str);
+std::string parseRequest::readBody(const std::string &str, size_t &i) {
+    std::string res;
 
-	for (int i = _bodyMsg.size() - 1; i >= 0; --i) {
-		if (_bodyMsg[i] == '\n' || _bodyMsg[i] == '\r')
-			_bodyMsg.erase(i);
-		else
-			break ;
+    if (i == std::string::npos)
+        return "";
+    for (size_t j = 0; str[i] != std::string::npos; i++) {
+        res[j] = str[i];
+        j++;
     }
+    return res;
 }
 
 void parseRequest::setQuery() {
@@ -132,13 +167,11 @@ void parseRequest::setQuery() {
     i = _path.find_first_of('?');
     if (i != std::string::npos) {
         _query.assign(_path, i + 1, std::string::npos);
-        _path = _path.substr(0, i); // why do we actually strip the _path ??
+        _path = _path.substr(0, i);
     }
 }
 
-
 /* ACCESSSORS SETTERS-GETTERS */
-
 void parseRequest::setMethod(std::string type) {
     _methodType = type;
 }
@@ -164,13 +197,16 @@ std::string parseRequest::getVersion(void) const {
 }
 
 void parseRequest::setPort(std::string port) {
-    port = port.std::string::substr(port.find("localhost:"));
-    // std::cout << "after trim: " << port << '\n'; // to rm
+    size_t start;
+
+    start = port.find_first_of(":");
+
+    if (start != 0 && port.find("localhost:") != std::string::npos)
+        port = port.substr(start + 1);
     if (port.size() < 5)
         _port = std::stoul(port);
     else
-        std::cout << "ERROR IN PORT\n"; // this will be checked later as well right
-    // std::cout << "after conversion: " << port << '\n'; // to rm
+        std::cerr << "Error: in port\n"; // this will be checked later as well right
 }
 
 unsigned int parseRequest::getPort(void) const {
@@ -185,25 +221,44 @@ int parseRequest::getRetVal(void) const {
     return _returnValue;
 }
 
-void parseRequest::setBody(std::string b) {
-    _body = b;
+void parseRequest::setBodyMsg(std::string b) {
+	_bodyMsg = b;
 }
 
-std::string parseRequest::getBody(void) const {
-    return _body;
+std::string parseRequest::getBodyMsg(void) const {
+    return _bodyMsg;
 }
 
+std::string parseRequest::getLanguageStr(void) const {
+    std::ostringstream oss;
+
+    for (auto it = _language.begin(); it != _language.end(); ++it) {
+        oss << it->first;
+        if (std::next(it) != _language.end()) {
+            oss << ", ";
+        }
+    }
+    return oss.str();
+}
+
+std::string parseRequest::getQuery(void) const {
+    return _query;
+}
+
+std::string parseRequest::getCgiResponse(void) const {
+    return _cgiresponse;
+}
 
 /* HEADERS */
-
-void parseRequest::initHeaders() { // DO WE REALLY NEED ALL OF THEM??
+void parseRequest::initHeaders() {
     _headers.clear();
     _headers["Accept-Charsets"] = "";
     _headers["Accept-Language"] = "";
     _headers["Allow"] = "";
 	_headers["Auth-Scheme"] = "";
-	_headers["Authorization"] = ""; // 
+	_headers["Authorization"] = "";
 	_headers["Connection"] = "Keep-Alive";
+    _headers["Cookie"] = "";
 	_headers["Content-Language"] = "";
 	_headers["Content-Length"] = "";
 	_headers["Content-Location"] = "";
@@ -218,24 +273,25 @@ void parseRequest::initHeaders() { // DO WE REALLY NEED ALL OF THEM??
 	_headers["Transfer-Encoding"] = "";
 	_headers["User-Agent"] = "";
 	_headers["Www-Authenticate"] = "";
-    // If-Modified-Since ??
 }
 
 const std::map<std::string, std::string>&	parseRequest::getHeaders(void) const {
 	return _headers;
 }
 
+const std::map<std::string, std::string>&	parseRequest::getCookies(void) const {
+	return _cookies;
+}
 
 /* PARSING REQUEST */
-
 int parseRequest::parseFirstline(const std::string &info) {
     size_t i;
     std::string line;
 
-    i = info.find_first_of('\n'); // pour avoir la premiere ligne
-    line = info.substr(0, i); // isole premiere ligne
+    i = info.find_first_of('\n');
+    line = info.substr(0, i);
     i = line.find_first_of(' ');
-
+    
     if (i == std::string::npos) {
         _returnValue = 400;
         std::cerr << "Error: wrong syntax of HTTP method\n"; // OR WHAT??
@@ -250,16 +306,16 @@ int parseRequest::parsePath(const std::string &line, size_t i) {
 
     if ((j = line.find_first_not_of(' ', i)) == std::string::npos) {
         _returnValue = 400;
-        std::cerr << "Error: no path\n";
+        std::cerr << "Error: no path\n"; // do we want this here, should go further not?
         return _returnValue;
     }
     if ((j = line.find_first_of(' ', j)) == std::string::npos) {
         _returnValue = 400;
-        std::cerr << "Error: no HTTP version\n";
+        std::cerr << "Error: no HTTP version\n"; // do we want this here, should go further not?
         return _returnValue;
     }
-    _path.assign(line, j, i - j);
-    return parseVersion(line, i);
+    _path.assign(line, i + 1, j - i);
+    return parseVersion(line, j);
 }
 
 int parseRequest::parseVersion(const std::string &line, size_t i) {
@@ -279,9 +335,7 @@ int parseRequest::parseVersion(const std::string &line, size_t i) {
     return validateMethodType();
 }
 
-
 /* METHOD */
-
 std::string initMethodString(Method method)
 {
     switch(method)
@@ -293,6 +347,7 @@ std::string initMethodString(Method method)
         case Method::DELETE:
             return "DELETE";
     }
+	return "DONE INITING METHOD STRING";
 }
 
 int parseRequest::validateMethodType() {
