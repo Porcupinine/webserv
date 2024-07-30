@@ -6,7 +6,7 @@
 /*   By: dmaessen <dmaessen@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2024/07/07 15:50:05 by dmaessen          #+#    #+#             */
-/*   Updated: 2024/07/30 12:28:13 by dmaessen         ###   ########.fr       */
+/*   Updated: 2024/07/30 12:30:39 by dmaessen         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -38,10 +38,12 @@ parseRequest&	parseRequest::operator=(const parseRequest &cpy)
 }
 
 std::string parseRequest::parseStr(std::string &info, SharedData* shared) {
-    if (shared->response_code != 200)
-        return ("HTTP/1.1 500 Internal Server Error\r\n\n"
+    if (shared->response_code != 200) {
+        shared->response = "HTTP/1.1 500 Internal Server Error\r\n\n"
         "Content-Type: text/html\r\n\nContent-Length: 146\r\n\r\n "
-        "<!DOCTYPE html><html><head><title>500</title></head><body><h1> 500 Internal Server Error! </h1><p>I probably should study more!</p></body></html>");
+        "<!DOCTYPE html><html><head><title>500</title></head><body><h1> 500 Internal Server Error! </h1><p>I probably should study more!</p></body></html>";
+        return shared->response;
+    }
     
     size_t i = 0;
     std::string line;
