@@ -1,21 +1,28 @@
 #include "WebServ.hpp"
+#include "VirtualHost.hpp"
 #include <fcntl.h>
 #include <ctime>
 
 bool WebServ::_serverShutdown = false; 
 
+WebServ::InitException::InitException(const std::string& msg) : _message(msg) {}
+
+const char* WebServ::InitException::what() const noexcept {
+    return _message.c_str();
+}
+
 WebServ::WebServ(int argc, char **argv) {
 	try {
 		if (argc != 2) {
-			throw	WebServ::InitException("argcount: hey, please provide me with a file!");
+			throw	InitException("argcount: hey, please provide me with a file!");
 		}
 		_setUpSigHandlers();
 
 		Config config(argv[1]);
 		if (config.hasErrorOccurred())
-			throw	WebServ::InitException(config.buildErrorMessage(config.getError()));
+			throw	InitException(config.buildErrorMessage(config.getError()));
 		config.printConfigs();
-		if ((_epollFd = epoll_create1(1)) == -1) { // Or should I use epoll_create(1)?
+		if ((_epollFd = epoll_create1(0)) == -1) {
 			throw	std::runtime_error("epoll_create1: " + std::string(strerror(errno)));
 		}
 		_initializeServers(config);
@@ -46,7 +53,7 @@ void	WebServ::_closeConnections() {
 	for (int idx = 0; idx < numEvents; idx++) {
 		SharedData *shared = static_cast<SharedData*>(_events[idx].data.ptr);
 		if (_events[idx].events && shared->status != Status::listening) {
-			closeCGIfds(shared); // still needs substance;
+			// closeCGIfds(shared); // still needs substance;
 			closeConnection(shared);
 		}
 	}
@@ -56,6 +63,7 @@ void WebServ::handleRequest(SharedData* shared) {
 	char buffer[1024];
 	int clientFd = shared->fd;
 	int bytesRead = recv(clientFd, buffer, sizeof(buffer) - 1, MSG_DONTWAIT);
+	std::cout << PURPLE << "Do I get here handleReq?" << RESET << std::endl;
 	if (bytesRead > 0) {
 		buffer[bytesRead] = '\0';
 		shared->request = buffer;
@@ -102,8 +110,10 @@ void	WebServ::run() {
 	while (_serverShutdown == false) {
 		int numEvents = epoll_wait(_epollFd, _events, MAX_EVENTS, -1);
 		for (int idx = 0; idx < numEvents; idx++) {
+			std::cout << PURPLE << "this works." << RESET << std::endl;
+			printf("--------------- %p ----------------\n", _events[idx].data.ptr);
 			SharedData* shared = static_cast<SharedData*>(_events[idx].data.ptr);
-
+    		printf("--------------- %p ----------------\n", shared);
 			// _checkHanging(); Still need to figure something out here.
 			if (_events[idx].events & EPOLLIN && shared->status == Status::listening)
 				newConnection(shared);
@@ -166,12 +176,14 @@ void WebServ::_initializeServers(Config& conf) {
 
 void	WebServ::newConnection(SharedData* shared) {
 	int clientFd = accept(shared->fd, nullptr, nullptr);
+	std::cout << PURPLE << "Do I get here newConnection?" << RESET << std::endl;
 	if (clientFd == -1) {
 		std::cerr << "Failed to accept new connection: " << strerror(errno) << std::endl; //make this some exception
 		return;
 	}
 
 	_setNonBlocking(clientFd); // Add some errorhandling
+	std::cout << PURPLE << "Do I get here newConnection?" << RESET << std::endl;
 
 	SharedData* clientShared = new SharedData();
 	clientShared->fd = clientFd;
@@ -195,6 +207,7 @@ void	WebServ::newConnection(SharedData* shared) {
 		delete clientShared;
 		return;
 	}
+	std::cout << CYAN << "Registered client fd =" << clientFd << RESET << std::endl;
 }
 
 void WebServ::_handleSignal(int sig) {
