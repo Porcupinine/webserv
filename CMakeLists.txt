@@ -11,6 +11,7 @@ add_executable(webserver
     src/webserv/WebServ.cpp
     src/server/Server.cpp
     src/config/Config.cpp
+    src/virtualHost/VirtualHost.cpp
     src/utils.cpp
 )
 
