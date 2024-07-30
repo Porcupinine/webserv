@@ -21,7 +21,7 @@ public:
 		~Server();
 
 		int									initServer(const ServerConfig *settings, int epollFd, double timeout, int maxNrOfRequests);
-		void								setConnection(struct connection *conn);
+		void								setConnection(SharedData *shared);
 		// void								handleRequest(int clientFd);
 
 		// Getter methods
@@ -54,30 +54,25 @@ public:
 private:
 		int									_getFD() const;
 		struct sockaddr_in					_getServerAddr() const;
-		struct connection*					_getConnection() const;
-		ServerConfig*						_getHostConfigs(const std::string &host) const;
+		std::shared_ptr<SharedData>			_getSharedData() const;
+		struct ServerConfig*				_getHostConfigs(const std::string &host) const;
 
 
 		void								_bindSocket();
     	void								_listenSocket(int backlog);
 		void								_setSocketOptions();
 		void								_setSharedData();
-		void								_registerWithEpoll(int epollFd, int fd, int flags);
+		void								_registerWithEpoll(int epollFd, int fd, uint32_t events);
 		// void								_sendMockResponse(int clientFd);
-
-		// std::string							_inheritRootFolder(ServerConfig *hostSettings, const std::string &location) const;
-		// std::string							_inheritUploadDir(ServerConfig *hostSettings, const std::string &location) const;
-		// std::set<std::string>				_inheritAllowedMethods(ServerConfig *hostSettings, const std::string &location) const;
-		// std::string							_inheritIndex(ServerConfig *hostSettings, const std::string &location) const;
-		// size_t								_inheritMaxBodySize(ServerConfig *hostSettings, const std::string &location) const;
 
 		int									_fd;
 		struct sockaddr_in					_serverAddr;
 		std::map<std::string, int>			_knownClientIds;
 		double								_timeout;
 		int									_maxNrOfRequests;
-		std::list<ServerConfig *>			_configs;
-		SharedData*							_shared;
+		const ServerConfig*					_configs;
+		// std::list<ServerConfig *>			_configs;
+		std::shared_ptr<SharedData>			_shared;
 };
 
 // Should be in utils.cpp
