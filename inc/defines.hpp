@@ -13,6 +13,8 @@
 #include <algorithm>
 #include <memory>
 
+#include <ctime>
+
 #include <sstream>
 #include <fstream>
 
@@ -80,7 +82,7 @@ struct Locations {
 	std::string							default_file;
 
 	std::set<std::string>				allowed_methods;
-	std::map<int, std::string>			redirect;
+	std::map<int, std::string>			redirect; // Domi had hier een vraag over, but I don't remember..
 	// std::map<std::string, std::string>	cgi_handlers; // ?? I think this is necessary?
 };
 
@@ -106,21 +108,22 @@ struct ConfigError {
 };
 
 struct SharedData {
-	int				cgi_fd;
-	pid_t			cgi_pid;
+	int								cgi_fd;
+	pid_t							cgi_pid;
 
-	std::string		request;
-	std::string		response;
-	int				response_code;
+	std::string						request;
+	std::string						response;
+	int								response_code;
 
-	int				fd;
-	int				epoll_fd;
+	int								fd;
+	int								epoll_fd;
 
-	Status			status; // does this work like this?
-	ServerConfig	server_config;
-	bool			connection_closed;
+	Status							status; // does this work like this? iT does :D
+	// std::list<ServerConfig *>		server_config;
+	const ServerConfig*				server_config;
+	bool							connection_closed;
 
-	time_t			timestamp_last_request;
+	time_t							timestamp_last_request;
 };
 
 #endif
