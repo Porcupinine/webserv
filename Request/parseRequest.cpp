@@ -6,7 +6,7 @@
 /*   By: dmaessen <dmaessen@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2024/07/07 15:50:05 by dmaessen          #+#    #+#             */
-/*   Updated: 2024/07/23 13:59:08 by dmaessen         ###   ########.fr       */
+/*   Updated: 2024/07/30 12:28:13 by dmaessen         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -16,8 +16,8 @@ parseRequest::parseRequest(SharedData* shared) : _methodType(""), _version(""), 
                               _bodyMsg(""), _port(80), _path(""), _query("") {
     initHeaders();
     parseStr(shared->request, shared);
-    if (_returnValue != 200)
-        std::cout << "Parse error: " << _returnValue << '\n';
+    // if (_returnValue != 200) // needed
+    //     std::cout << "Parse error: " << _returnValue << '\n';
 }
 
 parseRequest::~parseRequest() {
@@ -38,6 +38,11 @@ parseRequest&	parseRequest::operator=(const parseRequest &cpy)
 }
 
 std::string parseRequest::parseStr(std::string &info, SharedData* shared) {
+    if (shared->response_code != 200)
+        return ("HTTP/1.1 500 Internal Server Error\r\n\n"
+        "Content-Type: text/html\r\n\nContent-Length: 146\r\n\r\n "
+        "<!DOCTYPE html><html><head><title>500</title></head><body><h1> 500 Internal Server Error! </h1><p>I probably should study more!</p></body></html>");
+    
     size_t i = 0;
     std::string line;
     std::string bodyLine;
@@ -68,7 +73,6 @@ std::string parseRequest::parseStr(std::string &info, SharedData* shared) {
         _cgiresponse = cgiHandler(*this, shared);
     //CHECK IF SOMETHING FAILED ON LAURA'S SIDE??
     
-    // DO I NEED/WANT TO CHECK IF THE ERROR CODE IS BAD ALREADY??
     Response res;
     return res.giveResponse(*this, shared); // is this really how we want to return??
 }
@@ -200,7 +204,7 @@ void parseRequest::setPort(std::string port) {
     if (port.size() < 5)
         _port = std::stoul(port);
     else
-        std::cout << "Error: in port\n"; // this will be checked later as well right
+        std::cerr << "Error: in port\n"; // this will be checked later as well right
 }
 
 unsigned int parseRequest::getPort(void) const {
