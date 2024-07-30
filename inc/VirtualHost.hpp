@@ -1,6 +1,8 @@
 #pragma once
+#ifndef VIRTUAL_HOST_HPP
+# define VIRTUAL_HOST_HPP
 
-#include "defines.hpp"
+# include "defines.hpp"
 
 class VirtualHost {
 public:
@@ -13,3 +15,4 @@ private:
 	std::string		_name;
 	ServerConfig	_conf;
 };
+#endif
