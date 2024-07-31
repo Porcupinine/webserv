@@ -71,7 +71,7 @@ enum class ConfigKey {
 };
 
 enum class Status	{
-	listening, reading, in_cgi, writing, closing
+	listening, reading, handling_request, in_cgi, writing, closing
 };
 
 struct Locations {

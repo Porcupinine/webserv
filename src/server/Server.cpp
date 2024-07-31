@@ -86,7 +86,7 @@ void Server::_registerWithEpoll(int epollFd, int fd, uint32_t events) {
 	_shared->epoll_fd = epollFd;
 
 	_shared->status = Status::listening;
-	_shared->server_config = _configs; // Hier heb ik een lijst, maar dit moet denk ik iets anders zijn..
+	_shared->server_config = _configs;
 	_shared->connection_closed = false; // Should I set this..? No I think domi..
 
 	_shared->timestamp_last_request = std::time(nullptr);
@@ -94,8 +94,8 @@ void Server::_registerWithEpoll(int epollFd, int fd, uint32_t events) {
     event.data.fd = fd;
     event.events = events;
     event.data.ptr = _shared.get();
-    printf("--------------- %p ----------------\n", event.data.ptr);
-    printf("--------------- %p ----------------\n", _shared.get());
+    // printf("--------------- %p ----------------\n", event.data.ptr);
+    // printf("--------------- %p ----------------\n", _shared.get());
     if (epoll_ctl(epollFd, EPOLL_CTL_ADD, fd, &event) < 0) //might need to do sth about lifetime.
         throw ServerException("Failed to register with epoll");
 }
