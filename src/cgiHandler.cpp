@@ -1,6 +1,14 @@
-//
-// Created by laura on 21-4-24.
-//
+/* ************************************************************************** */
+/*                                                                            */
+/*                                                        ::::::::            */
+/*   cgiHandler.cpp                                     :+:    :+:            */
+/*                                                     +:+                    */
+/*   By: lpraca-l <lpraca-l@student.codam.nl>         +#+                     */
+/*                                                   +#+                      */
+/*   Created: 2024/07/31 15:50:10 by lpraca-l      #+#    #+#                 */
+/*   Updated: 2024/07/31 15:50:10 by lpraca-l      ########   odam.nl         */
+/*                                                                            */
+/* ************************************************************************** */
 
 #include "parseRequest.hpp"
 #include "cgiHandler.h"
@@ -12,81 +20,89 @@
 #include <cctype>
 #include "defines.hpp"
 
-// #define BUFFER_SIZE 100
 
 //TODO need the server info
-char **getEnv(parseRequest& request) {
-	auto copy = request.getHeaders();
-	char **env = new char*[copy.size() + 4];
-	size_t count = 0;
-	for (const auto & copy : copy) {
-		std::string reform = copy.first;
-		std::transform(reform.begin(), reform.end(), reform.begin(), ::toupper);
-		std::replace( reform.begin(), reform.end(), '-', '_');
-		std::string temp = reform + '=' + copy.second;
-		env[count] = new char[copy.first.size()+copy.second.size()+2];
-		size_t pos = 0;
-		for (char & x : temp) {
-			env[count][pos] = x;
-			pos++;
+
+namespace {
+	char **getEnv(parseRequest &request, SharedData* shared) {
+		auto copy = request.getHeaders();
+		char **env = new char *[copy.size() + 4];
+		size_t count = 0;
+		for (const auto &copy: copy) {
+			std::string reform = copy.first;
+			std::transform(reform.begin(), reform.end(), reform.begin(), ::toupper);
+			std::replace(reform.begin(), reform.end(), '-', '_');
+			std::string temp = reform + '=' + copy.second;
+			env[count] = new char[copy.first.size() + copy.second.size() + 2];
+			size_t pos = 0;
+			for (char &x: temp) {
+				env[count][pos] = x;
+				pos++;
+			}
+			env[count][pos] = '\0';
+			count++;
 		}
-		env[count][pos] = '\0';
+		std::string tmp = "REQUEST_METHOD=" + request.getMethod();
+		env[count] = new char[tmp.size()];
+		std::strcpy(env[count], tmp.data());
 		count++;
+		tmp = "QUERRY_STRING=" + request.getQuery();
+		env[count] = new char[tmp.size()];
+		std::strcpy(env[count], tmp.data());
+		count++;
+		tmp = "UPLOAD_DIR=" + shared->server_config->upload_dir;
+		env[count] = new char[tmp.size()];
+		std::strcpy(env[count], tmp.data());
+		count++;
+		tmp = "SERVER=" + shared->server_config->server_name;
+		env[count] = new char[tmp.size()];
+		std::strcpy(env[count], tmp.data());
+		count++;
+		env[count] = nullptr;
+		return env;
 	}
-	std::string tmp = "REQUEST_METHOD=" + request.getMethod();
-	env[count] = new char[tmp.size()];
-	std::strcpy(env[count], tmp.data());
-	count++;
-	tmp = "QUERRY_STRING=";//TODO make a getter for querry
-	env[count] = new char[tmp.size()];
-	std::strcpy(env[count], tmp.data());
-	count++;
-	tmp = "UPLOAD_DIR=/sam/Codam/webserv/cgi-bin/uploads";//TODO make a get dir
-	env[count] = new char[tmp.size()];
-	std::strcpy(env[count], tmp.data());
-	count++;
-	tmp = "SERVER=";//TODO get SERVER from struct
-	env[count] = new char[tmp.size()];
-	std::strcpy(env[count], tmp.data());
-	count++;
-	env[count] = nullptr;
-	return env;
-}
 
-void freeEnv(char **env) {
-	for(int x = 0; env[x] != nullptr; x++) {
-		delete env[x];
+	void freeEnv(char **env) {
+		for (int x = 0; env[x] != nullptr; x++) {
+			delete env[x];
+		}
+		delete[] env;
 	}
-	delete[] env;
-}
 
-int runChild(parseRequest& request, int pipeRead, int pipeWrite) {
-	char *argv[] = {"./../cgi-bin/test.py", nullptr}; //path and NULL
-	char **env = getEnv(request);
-	int x = 0;
-	std::cout<<"------env----\n";
-	while(env[x] != nullptr){
-		std::cout<<env[x]<<"\n";
-		x++;
+	std::string getCgiPath(parseRequest &request, SharedData *shared) {
+		if (shared->server_config->cgi_dir.empty())
+			return "/home/lpraca-l/Documents/webserv/cgi-bin/" + request.getPath();
+		return shared->server_config->cgi_dir + "/" + request.getPath();
 	}
-	std::cout<<"------endv----\n";
 
-	std::cout<<"FROM INSIDE the kids\n"<<"body: "<<request.getBodyMsg()<<"\n";
-	if (dup2(pipeRead, STDIN_FILENO) == -1 || dup2(pipeWrite, STDOUT_FILENO) == -1) {
-		std::cerr<<"Leave the kids alone!\n";
-		close(pipeRead); // Close unused read end
-		close(pipeWrite); // Close the original pipe write end
-		freeEnv(env);
-		return 1;
+	int runChild(parseRequest &request, int pipeRead, int pipeWrite, SharedData* shared) {
+		std::string cgiPath = getCgiPath(request, shared); //TODO test this
+		char *argv[] = {cgiPath.data(), nullptr}; //path and NULL
+		char **env = getEnv(request, shared);
+		int x = 0;
+		std::cout << "------env----\n";
+		while (env[x] != nullptr) {
+			std::cout << env[x] << "\n";
+			x++;
+		}
+		std::cout << "------endv----\n";
+		std::cout << "FROM INSIDE the kids\n" << "body: " << request.getBodyMsg() << "\n";
+		if (dup2(pipeRead, STDIN_FILENO) == -1 || dup2(pipeWrite, STDOUT_FILENO) == -1) {
+			std::cerr << "Leave the kids alone!\n";
+			close(pipeRead); // Close unused read end
+			close(pipeWrite); // Close the original pipe write end
+			freeEnv(env);
+			return 1;
+		}
+		if (execve(argv[0], argv, env) == -1) {
+			std::cerr << "This is no middle age\n";
+			close(pipeRead); // Close unused read end
+			close(pipeWrite); // Close the original pipe write end
+			freeEnv(env);
+			return 1;
+		}
+		return 0;
 	}
-	if (execve(argv[0], argv, env) == -1) {
-		std::cerr<<"This is no middle age\n";
-		close(pipeRead); // Close unused read end
-		close(pipeWrite); // Close the original pipe write end
-		freeEnv(env);
-		return 1;
-	}
-	return 0;
 }
 
 int cgiHandler(SharedData* shared, parseRequest& request) {
@@ -113,7 +129,7 @@ int cgiHandler(SharedData* shared, parseRequest& request) {
 	if (pid == 0) {
 		close(pipeParentToChild[1]);
 		close(pipeChildToParent[0]);
-		runChild(request, pipeParentToChild[0], pipeChildToParent[1]);
+		runChild(request, pipeParentToChild[0], pipeChildToParent[1], shared);
 	} else {
 		close(pipeParentToChild[0]);
 		close(pipeChildToParent[1]);
@@ -139,12 +155,10 @@ int cgiHandler(SharedData* shared, parseRequest& request) {
 	return 0;
 }
 
-//TODO, adjust return to string ???
-
-//TODO, should I throw errors or use old approach
-
 //TODO make index page with cgi to show cookie after user fills the name and intra login?
 
 //TODO open pipes on Luś end
 /* getting a struct with server info and epolFD
- * get the parameters needed for the env and add the pipe fds to the epoll*/
+ * get the parameters needed for the env and add the pipe fds to the epoll
+ * add pipes to poll, fix things that take server info*/
+

@@ -109,7 +109,7 @@ void	WebServ::writeData(SharedData* shared) {
 void	WebServ::run() {
 	while (_serverShutdown == false) {
 		int numEvents = epoll_wait(_epollFd, _events, MAX_EVENTS, -1);
-		parseRequest req = nullptr;
+		parseRequest req;
 		for (int idx = 0; idx < numEvents; idx++) {
 			std::cout << PURPLE << "this works." << RESET << std::endl;
 			printf("--------------- %p ----------------\n", _events[idx].data.ptr);

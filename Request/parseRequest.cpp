@@ -20,13 +20,13 @@ parseRequest::parseRequest(struct SharedData* shared) :  _methodType(""), _versi
     //     std::cout << "Parse error: " << _returnValue << '\n';
 }
 
-parseRequest::parseRequest() {
-
-}
-
-parseRequest::~parseRequest() {
-
-}
+//parseRequest::parseRequest() {
+//
+//}
+//
+//parseRequest::~parseRequest() {
+//
+//}
 
 parseRequest&	parseRequest::operator=(const parseRequest &cpy)
 {

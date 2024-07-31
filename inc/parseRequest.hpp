@@ -58,9 +58,9 @@ class parseRequest
         std::vector<std::string> split(const std::string &str, char c);
 
     public:
-		parseRequest(); // take the address of the struct 
-        parseRequest(struct SharedData* shared); // ++ server instance -- TO DO
-        ~parseRequest();
+		parseRequest() = default; // take the address of the struct
+        explicit parseRequest(struct SharedData* shared); // ++ server instance -- TO DO
+        ~parseRequest() = default;
         parseRequest& operator=(const parseRequest &cpy);
 
         /* GETTERS */
