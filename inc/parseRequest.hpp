@@ -18,17 +18,17 @@ class Response;
 class parseRequest
 {
     private:
-        std::string _methodType;
-        std::string _path;
-        std::string _version;
-        std::string _bodyMsg; 
-        unsigned int _port; // init to 80 by default or what??
-        unsigned int _returnValue;
-        std::string _query;
-        std::map<std::string, std::string> _headers;
-		std::list<std::pair<std::string, float>> _language;
-        std::string _cgiresponse;
-        std::map<std::string, std::string> _cookies;
+        // std::string _methodType;
+        // std::string _path;
+        // std::string _version;
+        // std::string _bodyMsg; 
+        // unsigned int _port; // init to 80 by default or what??
+        // unsigned int _returnValue;
+        // std::string _query;
+        // std::map<std::string, std::string> _headers;
+		// std::list<std::pair<std::string, float>> _language;
+        // std::string _cgiresponse;
+        // std::map<std::string, std::string> _cookies;
 
 
         std::string parseStr(std::string &info, struct SharedData* shared);

@@ -113,8 +113,8 @@ struct SharedData {
 	int								cgi_fd;
 	pid_t							cgi_pid;
 
+	ParsedData						parsedData;
 	std::string						request;
-	parseRequest					parsedRequest;
 	std::string						response;
 	int								response_code;
 
@@ -127,6 +127,20 @@ struct SharedData {
 	bool							connection_closed;
 
 	time_t							timestamp_last_request;
+};
+
+struct ParsedData {
+	std::string _methodType;
+    std::string _path;
+    std::string _version;
+    std::string _bodyMsg; 
+    unsigned int _port;
+    unsigned int _returnValue;
+    std::string _query;
+    std::map<std::string, std::string> _headers;
+	std::list<std::pair<std::string, float>> _language;
+    std::string _cgiresponse;
+    std::map<std::string, std::string> _cookies;
 };
 
 #endif

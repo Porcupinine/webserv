@@ -6,14 +6,16 @@
 /*   By: dmaessen <dmaessen@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2024/07/07 15:50:05 by dmaessen          #+#    #+#             */
-/*   Updated: 2024/07/30 12:30:39 by dmaessen         ###   ########.fr       */
+/*   Updated: 2024/07/31 12:12:18 by dmaessen         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
 #include "../inc/parseRequest.hpp"
 
-parseRequest::parseRequest(struct SharedData* shared) : _methodType(""), _version(""), _returnValue(200),
+parseRequest::parseRequest(struct SharedData* shared) : shared->parsedData->_methodType(""), _version(""), _returnValue(200),
                               _bodyMsg(""), _port(80), _path(""), _query("") {
+    
+    
     initHeaders();
     parseStr(shared->request, shared);
     // if (_returnValue != 200) // needed
