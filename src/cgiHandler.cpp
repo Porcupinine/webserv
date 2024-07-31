@@ -2,8 +2,8 @@
 // Created by laura on 21-4-24.
 //
 
-#include "../Request/parseRequest.hpp"
-#include "../includes/cgiHandler.h"
+#include "parseRequest.hpp"
+#include "cgiHandler.h"
 #include <unistd.h>
 #include <string>
 #define BUFFER_SIZE 100

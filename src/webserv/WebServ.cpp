@@ -185,7 +185,7 @@ void	WebServ::newConnection(SharedData* shared) {
 	_setNonBlocking(clientFd); // Add some errorhandling
 	std::cout << PURPLE << "Do I get here newConnection?" << RESET << std::endl;
 
-	SharedData* clientShared = new SharedData();
+	std::unique_ptr<SharedData> clientShared(new SharedData);
 	clientShared->fd = clientFd;
 	clientShared->epoll_fd = shared->epoll_fd;
 	clientShared->cgi_fd = 0;

@@ -10,7 +10,7 @@
 /*                                                                            */
 /* ************************************************************************** */
 
-#include "../includes/response.h"
+#include "response.h"
 
 Response::Response(void) {
 }
@@ -28,7 +28,7 @@ Response&	Response::operator=(const Response &cpy) {
 }
 
 /* PROCESS RESPONSE */
-std::string Response::giveResponse(parseRequest& request, SharedData* shared) {
+std::string Response::giveResponse(parseRequest& request, struct SharedData* shared) {
     _statusCode = request.getRetVal();
     _type = "";
     _isAutoIndex = shared->server_config->auto_index;
@@ -53,9 +53,9 @@ std::string Response::giveResponse(parseRequest& request, SharedData* shared) {
 }
 
 /* STATIC INIT */
-std::map<std::string, void (Response::*)(parseRequest&, SharedData* shared)> Response::initMethods()
+std::map<std::string, void (Response::*)(parseRequest&, struct SharedData* shared)> Response::initMethods()
 {
-	std::map<std::string, void (Response::*)(parseRequest&, SharedData* shared)> map;
+	std::map<std::string, void (Response::*)(parseRequest&, struct SharedData* shared)> map;
 
 	map["GET"] = &Response::getMethod;
 	map["POST"] = &Response::postMethod;
@@ -63,11 +63,11 @@ std::map<std::string, void (Response::*)(parseRequest&, SharedData* shared)> Res
 	return map;
 }
 
-std::map<std::string, void (Response::*)(parseRequest &, SharedData* shared)> Response::_method = Response::initMethods();
+std::map<std::string, void (Response::*)(parseRequest &, struct SharedData* shared)> Response::_method = Response::initMethods();
 
 
 /* METHOD FUNCTIONS */
-void Response::getMethod(parseRequest& request, SharedData* shared) {
+void Response::getMethod(parseRequest& request, struct SharedData* shared) {
     if (cgiInvolved(request.getPath()) == true) {
         if (request.getCgiResponse() != "")
             _response = request.getCgiResponse();
@@ -82,7 +82,7 @@ void Response::getMethod(parseRequest& request, SharedData* shared) {
         _response = errorHtml(_statusCode);
 }
 
-void Response::postMethod(parseRequest& request, SharedData* shared) {
+void Response::postMethod(parseRequest& request, struct SharedData* shared) {
     if (cgiInvolved(request.getPath()) == true) {
         if (request.getCgiResponse() != "")
             _response = request.getCgiResponse(); 
@@ -100,7 +100,7 @@ void Response::postMethod(parseRequest& request, SharedData* shared) {
     }
 }
 
-void Response::deleteMethod(parseRequest& request, SharedData* shared) {
+void Response::deleteMethod(parseRequest& request, struct SharedData* shared) {
     _response = "";
 
     if (fileExists(request.getPath()) == true){

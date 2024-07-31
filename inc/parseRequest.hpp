@@ -11,7 +11,7 @@
 #include <utility>
 #include <functional>
 
-#include "../includes/response.h"
+#include "response.h"
 
 class Response;
 
@@ -31,7 +31,7 @@ class parseRequest
         std::map<std::string, std::string> _cookies;
 
 
-        std::string parseStr(std::string &info, SharedData* shared);
+        std::string parseStr(std::string &info, struct SharedData* shared);
 
         void initHeaders();
 
@@ -56,7 +56,8 @@ class parseRequest
         std::vector<std::string> split(const std::string &str, char c);
 
     public:
-        parseRequest(SharedData* shared); // ++ server instance -- TO DO
+		parseRequest();
+        parseRequest(struct SharedData* shared); // ++ server instance -- TO DO
         ~parseRequest();
         parseRequest& operator=(const parseRequest &cpy);
 

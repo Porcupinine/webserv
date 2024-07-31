@@ -10,9 +10,9 @@
 /*                                                                            */
 /* ************************************************************************** */
 
-#include "../includes/response.h"
+#include "response.h"
 
-std::string Response::buildResponseHeader(parseRequest& request, SharedData* shared) {
+std::string Response::buildResponseHeader(parseRequest& request, struct SharedData* shared) {
     std::string header = "";
 	initResponseHeaderFields();
 	setHeaderValues(request);
@@ -64,7 +64,7 @@ std::string Response::setDate(parseRequest& request) {
 
 
 /* HEADER GETTERS */
-std::string Response::getHeaderValues(parseRequest& request, std::string header, SharedData* shared) {
+std::string Response::getHeaderValues(parseRequest& request, std::string header, struct SharedData* shared) {
 	header += request.getVersion() + " " + std::to_string(_statusCode) + " " + getMatchingCodeString(_statusCode) + "/r/n";
 	if (_allow != "")
 		header += "Allow: " + _allow + "/r/n";

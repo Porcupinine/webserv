@@ -10,7 +10,7 @@
 /*                                                                            */
 /* ************************************************************************** */
 
-#include "../includes/response.h"
+#include "response.h"
 
 /* generate an HTML page that lists the contents of a specified directory. 
 This directory listing includes the names of files and subdirectories within the specified directory, 

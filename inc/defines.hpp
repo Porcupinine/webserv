@@ -18,6 +18,8 @@
 #include <sstream>
 #include <fstream>
 
+#include "parseRequest.hpp"
+
 // MAGIC NUMBERS
 #define ONE_MB					1048576 // Default max body size (1MB)
 #define BUFFER_SIZE				1024
@@ -112,11 +114,12 @@ struct SharedData {
 	pid_t							cgi_pid;
 
 	std::string						request;
+	parseRequest					parsedRequest;
 	std::string						response;
 	int								response_code;
 
 	int								fd;
-	int								epoll_fd;
+	int								epoll_fd; // check new conection or initserver
 
 	Status							status; // does this work like this? iT does :D
 	// std::list<ServerConfig *>		server_config;

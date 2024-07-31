@@ -1,6 +1,6 @@
 #include "webSocket.h"
-#include "../Request/parseRequest.hpp"
-#include "../includes/cgiHandler.h"
+#include "parseRequest.hpp"
+#include "cgiHandler.h"
 #include <cstdlib>
 #include <iostream>
 #include "defines.h"

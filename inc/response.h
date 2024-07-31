@@ -12,9 +12,8 @@
 #include <iomanip>
 #include <ctime>
 #include <sstream>
-#include "../inc/defines.hpp"
-
-#include "../Request/parseRequest.hpp"
+#include "defines.hpp"
+#include "parseRequest.hpp"
 
 class parseRequest;
 
@@ -44,11 +43,11 @@ class Response
         ~Response();
         Response& operator=(const Response &cpy);
 
-        std::string giveResponse(parseRequest& request, SharedData* shared);
+        std::string giveResponse(parseRequest& request, struct SharedData* shared);
 
-        void getMethod(parseRequest& request, SharedData* shared);
-        void postMethod(parseRequest& request, SharedData* shared);
-        void deleteMethod(parseRequest& request, SharedData* shared);
+        void getMethod(parseRequest& request, struct SharedData* shared);
+        void postMethod(parseRequest& request, struct SharedData* shared);
+        void deleteMethod(parseRequest& request, struct SharedData* shared);
 
         void initErrorCodes();
         void htmlErrorCodesMap();
@@ -58,12 +57,12 @@ class Response
         std::string getFormattedTime(time_t rawtime);
 
         /* RESPONSE HEADER BUIDLING RELATED */
-        std::string buildResponseHeader(parseRequest& request, SharedData* shared); // check if args needed
+        std::string buildResponseHeader(parseRequest& request, struct SharedData* shared); // check if args needed
         void initResponseHeaderFields();
         void setHeaderValues(parseRequest& request);
         std::string setAllow(parseRequest& request);
         std::string setDate(parseRequest& request);
-        std::string getHeaderValues(parseRequest& request, std::string header, SharedData* shared);
+        std::string getHeaderValues(parseRequest& request, std::string header, struct SharedData* shared);
         std::string getMatchingCodeString(unsigned int code);
 
         /* HTML RELATED */

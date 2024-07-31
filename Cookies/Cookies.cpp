@@ -10,8 +10,8 @@
 /*                                                                            */
 /* ************************************************************************** */
 
-#include "../Request/parseRequest.hpp"
-#include "../includes/response.h"
+#include "parseRequest.hpp"
+#include "response.h"
 
 // Set-Cookie: header is for when its a new one (within response)
 // if its just Cookie: it just summerizes the content (within request)

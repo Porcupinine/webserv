@@ -10,9 +10,9 @@
 /*                                                                            */
 /* ************************************************************************** */
 
-#include "../Request/parseRequest.hpp"
+#include "../inc/parseRequest.hpp"
 
-parseRequest::parseRequest(SharedData* shared) : _methodType(""), _version(""), _returnValue(200),
+parseRequest::parseRequest(struct SharedData* shared) : _methodType(""), _version(""), _returnValue(200),
                               _bodyMsg(""), _port(80), _path(""), _query("") {
     initHeaders();
     parseStr(shared->request, shared);
@@ -37,7 +37,7 @@ parseRequest&	parseRequest::operator=(const parseRequest &cpy)
 	return (*this);
 }
 
-std::string parseRequest::parseStr(std::string &info, SharedData* shared) {
+std::string parseRequest::parseStr(std::string &info, struct SharedData* shared) {
     if (shared->response_code != 200) {
         shared->response = "HTTP/1.1 500 Internal Server Error\r\n\n"
         "Content-Type: text/html\r\n\nContent-Length: 146\r\n\r\n "

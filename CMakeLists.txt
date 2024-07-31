@@ -19,12 +19,13 @@ add_executable(webserver
     src/virtualHost/VirtualHost.cpp
     src/utils.cpp
 	src/cgiHandler.cpp
-	src/response.cpp
-	includes/response.h
 	src/Cgi.cpp
-	includes/Cgi.h
 	Request/parseRequest.cpp
 	Request/utilsRequest.cpp
+	Response/header.cpp 
+	Response/Response.cpp 
+	Response/utils.cpp
+	Cookies/Cookies.cpp
 )
 
 

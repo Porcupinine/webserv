@@ -10,7 +10,7 @@
 /*                                                                            */
 /* ************************************************************************** */
 
-#include "../Request/parseRequest.hpp"
+#include "parseRequest.hpp"
 
 std::string& parseRequest::capsOn(std::string &str) {
     for (size_t i = 0; i < str.size(); i++) {

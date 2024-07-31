@@ -2,8 +2,8 @@
 #include "webSocket.h"
 #include "defines.h"
 #include <poll.h>
-#include "../Request/parseRequest.hpp"
-#include "../includes/cgiHandler.h"
+#include "parseRequest.hpp"
+#include "cgiHandler.h"
 
 int main() {
 //	webserv::webSocket serv = webserv::webSocket(127, SERV_PORT);
