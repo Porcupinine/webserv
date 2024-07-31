@@ -5,7 +5,7 @@
 #ifndef WEBSERV_CGI_H
 #define WEBSERV_CGI_H
 
-int cgiHandler(parseRequest& request);
+int cgiHandler(SharedData* shared, parseRequest& request);
 //class CGI {
 //private:
 //public:

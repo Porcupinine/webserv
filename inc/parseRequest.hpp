@@ -12,23 +12,25 @@
 #include <functional>
 
 #include "response.h"
+#include "defines.hpp"
 
 class Response;
+struct SharedData;
 
 class parseRequest
 {
     private:
-        // std::string _methodType;
-        // std::string _path;
-        // std::string _version;
-        // std::string _bodyMsg; 
-        // unsigned int _port; // init to 80 by default or what??
-        // unsigned int _returnValue;
-        // std::string _query;
-        // std::map<std::string, std::string> _headers;
-		// std::list<std::pair<std::string, float>> _language;
-        // std::string _cgiresponse;
-        // std::map<std::string, std::string> _cookies;
+        std::string _methodType;
+        std::string _path;
+        std::string _version;
+        std::string _bodyMsg; 
+        unsigned int _port; // init to 80 by default or what??
+        unsigned int _returnValue;
+        std::string _query;
+        std::map<std::string, std::string> _headers;
+		std::list<std::pair<std::string, float>> _language;
+        std::string _cgiresponse;
+        std::map<std::string, std::string> _cookies;
 
 
         std::string parseStr(std::string &info, struct SharedData* shared);
@@ -56,7 +58,7 @@ class parseRequest
         std::vector<std::string> split(const std::string &str, char c);
 
     public:
-		parseRequest();
+		parseRequest(); // take the address of the struct 
         parseRequest(struct SharedData* shared); // ++ server instance -- TO DO
         ~parseRequest();
         parseRequest& operator=(const parseRequest &cpy);
@@ -83,6 +85,8 @@ class parseRequest
         void setBodyMsg(std::string b);
 
 };
+
+
 
 
 enum class Method

@@ -7,6 +7,8 @@
 # include "VirtualHost.hpp"
 # include <signal.h>
 # include <sys/epoll.h>
+# include "parseRequest.hpp"
+# include "cgiHandler.h"
 
 class WebServ {
 	public:

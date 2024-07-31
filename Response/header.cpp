@@ -6,7 +6,7 @@
 /*   By: dmaessen <dmaessen@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2024/07/07 15:50:08 by dmaessen          #+#    #+#             */
-/*   Updated: 2024/07/24 14:24:26 by dmaessen         ###   ########.fr       */
+/*   Updated: 2024/07/31 13:58:11 by dmaessen         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -80,8 +80,14 @@ std::string Response::getHeaderValues(parseRequest& request, std::string header,
 		header += "Content-Type: " + _contentType + "/r/n";
 	if (_date != "")
 		header += "Date: " + _date + "/r/n";
-	if (_statusCode == 301 || _statusCode == 302 || _statusCode == 307 || _statusCode == 308)
-		header += "Location: " + shared->server_config->locations->redirection.second + "/r/n";
+	if (_statusCode == 301 || _statusCode == 302 || _statusCode == 307 || _statusCode == 308){
+		int key = 1;
+		auto it = shared->server_config->locations[0].redirect.find(key);
+		if (it != shared->server_config->locations[0].redirect.end()) {
+			header += "Location: " + it->second + "\r\n";
+		// header += "Location: " + static_cast<std::string>(shared->server_config->locations->redirect.second) + "/r/n";
+	}
+	}
 	header += "Connection: closed/r/n";
 
 	if (_response != "")

@@ -78,8 +78,8 @@ class Response
         bool fileExists(const std::string& path);
 
         /* STATIC */
-        static std::map<std::string, void (Response::*)(parseRequest&)>	_method;
-	    static std::map<std::string, void (Response::*)(parseRequest&)>	initMethods();
+        static std::map<std::string, void (Response::*)(parseRequest&, struct SharedData* shared)>	_method;
+	    static std::map<std::string, void (Response::*)(parseRequest&, struct SharedData* shared)>	initMethods();
 
         /* UTILS FOR AUTO INDEX */
         std::string autoIndexPageListing(const std::string& path);

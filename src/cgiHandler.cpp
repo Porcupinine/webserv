@@ -10,8 +10,9 @@
 #include <cstring>
 #include <filesystem>
 #include <cctype>
+#include "defines.hpp"
 
-#define BUFFER_SIZE 100
+// #define BUFFER_SIZE 100
 
 //TODO need the server info
 char **getEnv(parseRequest& request) {
@@ -88,7 +89,7 @@ int runChild(parseRequest& request, int pipeRead, int pipeWrite) {
 	return 0;
 }
 
-int cgiHandler(parseRequest& request) {
+int cgiHandler(SharedData* shared, parseRequest& request) {
 	if (std::filesystem::exists(request.getPath())) {
 		std::cerr<<"Sorry, can't find this file! Stop wasting my time!\n";
 		return 1;

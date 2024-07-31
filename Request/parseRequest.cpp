@@ -6,20 +6,22 @@
 /*   By: dmaessen <dmaessen@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2024/07/07 15:50:05 by dmaessen          #+#    #+#             */
-/*   Updated: 2024/07/31 12:12:18 by dmaessen         ###   ########.fr       */
+/*   Updated: 2024/07/31 13:49:28 by dmaessen         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
-#include "../inc/parseRequest.hpp"
+#include "parseRequest.hpp"
 
-parseRequest::parseRequest(struct SharedData* shared) : shared->parsedData->_methodType(""), _version(""), _returnValue(200),
+parseRequest::parseRequest(struct SharedData* shared) :  _methodType(""), _version(""), _returnValue(200),
                               _bodyMsg(""), _port(80), _path(""), _query("") {
-    
-    
     initHeaders();
     parseStr(shared->request, shared);
     // if (_returnValue != 200) // needed
     //     std::cout << "Parse error: " << _returnValue << '\n';
+}
+
+parseRequest::parseRequest() {
+
 }
 
 parseRequest::~parseRequest() {
@@ -73,8 +75,8 @@ std::string parseRequest::parseStr(std::string &info, struct SharedData* shared)
         _cookies = parseCookies(_headers["Cookie"]);
     
     _cgiresponse = "";
-    if (cgiInvolved(_headers["Path"]) == true)
-        _cgiresponse = cgiHandler(*this, shared);
+    // if (cgiInvolved(_headers["Path"]) == true)
+    //     _cgiresponse = cgiHandler(*this, shared);
     //CHECK IF SOMETHING FAILED ON LAURA'S SIDE??
     
     Response res;

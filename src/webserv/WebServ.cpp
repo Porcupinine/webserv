@@ -109,6 +109,7 @@ void	WebServ::writeData(SharedData* shared) {
 void	WebServ::run() {
 	while (_serverShutdown == false) {
 		int numEvents = epoll_wait(_epollFd, _events, MAX_EVENTS, -1);
+		parseRequest req = nullptr;
 		for (int idx = 0; idx < numEvents; idx++) {
 			std::cout << PURPLE << "this works." << RESET << std::endl;
 			printf("--------------- %p ----------------\n", _events[idx].data.ptr);
@@ -118,11 +119,11 @@ void	WebServ::run() {
 			if (_events[idx].events & EPOLLIN && shared->status == Status::listening)
 				newConnection(shared);
 			// if (_events[idx].events & EPOLLIN && shared->status == Status::reading)
-			// 	_readData(shared);
-			if (shared->status == Status::reading) // just for now, i think? Or do I need another status?
-				handleRequest(shared);
-			// if (_events[idx].events & EPOLLHUP && shared->status == Status::in_cgi)
-			// 	_readCGI(shared);
+				// _readData(shared);
+			if (shared->status == Status::reading) // just for now, i think? Or do I need another status? 
+				req = parseRequest(shared);
+			if (_events[idx].events & EPOLLHUP && shared->status == Status::in_cgi)
+				cgiHandler(shared, req);
 			if (_events[idx].events & EPOLLOUT && shared->status == Status::writing)
 				writeData(shared);
 			// if (_events[idx].events & EPOLLERR || shared->status == Status::closing) {
@@ -134,6 +135,7 @@ void	WebServ::run() {
 
 	_closeConnections();
 }
+
 
 void	WebServ::stop() {
 
@@ -185,7 +187,7 @@ void	WebServ::newConnection(SharedData* shared) {
 	_setNonBlocking(clientFd); // Add some errorhandling
 	std::cout << PURPLE << "Do I get here newConnection?" << RESET << std::endl;
 
-	std::unique_ptr<SharedData> clientShared(new SharedData);
+	SharedData* clientShared(new SharedData);
 	clientShared->fd = clientFd;
 	clientShared->epoll_fd = shared->epoll_fd;
 	clientShared->cgi_fd = 0;

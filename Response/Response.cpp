@@ -6,7 +6,7 @@
 /*   By: dmaessen <dmaessen@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2024/07/07 15:49:40 by dmaessen          #+#    #+#             */
-/*   Updated: 2024/07/24 14:32:30 by dmaessen         ###   ########.fr       */
+/*   Updated: 2024/07/31 14:08:26 by dmaessen         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -37,11 +37,11 @@ std::string Response::giveResponse(parseRequest& request, struct SharedData* sha
     initMethods();
 
     if (shared->server_config->max_client_body_size < request.getBodyMsg().size())
-        _statusCode == 413;
+        _statusCode = 413;
         
-    std::map<std::string, void (Response::*)(parseRequest&)>::iterator it = _method.find(request.getMethod());
+    std::map<std::string, void (Response::*)(parseRequest&, struct SharedData* shared)>::iterator it = _method.find(request.getMethod());
     if (it != _method.end())
-        (this->*(it->second))(request);
+        (this->*(it->second))(request, shared);
     else
         _statusCode = 405;
     if (_statusCode == 405 || _statusCode == 413) {
@@ -53,7 +53,7 @@ std::string Response::giveResponse(parseRequest& request, struct SharedData* sha
 }
 
 /* STATIC INIT */
-std::map<std::string, void (Response::*)(parseRequest&, struct SharedData* shared)> Response::initMethods()
+std::map<std::string, void (Response::*)(parseRequest &, struct SharedData* shared)> Response::initMethods()
 {
 	std::map<std::string, void (Response::*)(parseRequest&, struct SharedData* shared)> map;
 
@@ -136,10 +136,10 @@ void Response::initErrorCodes()
 }
 
 void Response::htmlErrorCodesMap() { // need an instance of the struct for the redirect thing
-    _errorCodesHtml[301] = "<!DOCTYPE html><html><head><title>301</title></head><body><h1> 301 Moved Permanently! </h1><p>This page has been moved permanently to <a href=" << _path << ">here</a>.</p></body></html>"; // take this from the server config info
-    _errorCodesHtml[302] = "<!DOCTYPE html><html><head><title>302</title></head><body><h1> 302 Found! </h1><p>This page has been temporarily moved to <a href=" << _path << ">here</a>.</p></body></html>"; // take this from the server config info
-    _errorCodesHtml[307] = "<!DOCTYPE html><html><head><title>307</title></head><body><h1> 307 Temporary Redirect! </h1><p>This page is temporarily located at <a href=" << _path << ">here</a>.</p></body></html>"; // take this from the server config info
-    _errorCodesHtml[308] = "<!DOCTYPE html><html><head><title>308</title></head><body><h1> 308 Permanent Redirect! </h1><p>This page has been permanently moved to <a href=" << _path << ">here</a>.</p></body></html>"; // take this from the server config info
+    _errorCodesHtml[301] = "<!DOCTYPE html><html><head><title>301</title></head><body><h1> 301 Moved Permanently! </h1><p>This page has been moved permanently</p></body></html>";
+    _errorCodesHtml[302] = "<!DOCTYPE html><html><head><title>302</title></head><body><h1> 302 Found! </h1><p>This page has been temporarily moved</p></body></html>";
+    _errorCodesHtml[307] = "<!DOCTYPE html><html><head><title>307</title></head><body><h1> 307 Temporary Redirect! </h1><p>This page is temporary</p></body></html>";
+    _errorCodesHtml[308] = "<!DOCTYPE html><html><head><title>308</title></head><body><h1> 308 Permanent Redirect! </h1><p>This page has been permanently moved=</p></body></html>";
     _errorCodesHtml[400] = "<!DOCTYPE html><html><head><title>400</title></head><body><h1> 400 Bad Request Error! </h1><p>We are not speaking the same language!</p></body></html>";
     _errorCodesHtml[403] = "<!DOCTYPE html><html><head><title>403</title></head><body><h1> 403 Forbiden! </h1><p>This is top secret, sorry!</p></body></html>";
     _errorCodesHtml[404] = "<!DOCTYPE html><html><head><title>404</title></head><body><h1> 404 Page not found! </h1><p>Puff!</p></body></html>";
