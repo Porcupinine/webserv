@@ -35,64 +35,51 @@ WebServ::WebServ(int argc, char **argv) {
 void	closeCGIfds(SharedData* shared) {
 	if (shared->cgi_fd != -1) {
 		epoll_ctl(shared->epoll_fd, EPOLL_CTL_DEL, shared->cgi_fd, nullptr);
-		if (close(shared->fd))
-			std::cout << RED << "failed to close fd " << shared->fd << ": " << std::string(strerror(errno)) << RESET << std::endl;
+		if (close(shared->cgi_fd) == -1)
+			std::cout << RED << "failed to close cgi fd " << shared->fd << ": " << std::string(strerror(errno)) << RESET << std::endl;
 		shared->cgi_fd = -1;
 	}
 }
 
 void	closeConnection(SharedData* shared) {
-	epoll_ctl(shared->epoll_fd, EPOLL_CTL_DEL, shared->fd, nullptr); // Add some delete I believe?
-	if (close(shared->fd))
-	std::cout << RED << "failed to close fd " << shared->fd << ": " << std::string(strerror(errno)) << RESET << std::endl;
+	epoll_ctl(shared->epoll_fd, EPOLL_CTL_DEL, shared->fd, nullptr);
+	if (close(shared->fd) == -1)
+		std::cout << RED << "failed to close regular fd " << shared->fd << ": " << std::string(strerror(errno)) << RESET << std::endl;
 	delete shared; // double check this.
 }
 
+
+
+void readData(SharedData* shared) {
+	int bytesRead;
+	char buffer[BUFFER_SIZE];
+
+	// Write a way to receive whole request even if bigger then BUFFER_SIZE
+	if ((bytesRead = recv(shared->fd, buffer, sizeof(buffer) - 1, MSG_DONTWAIT)) == -1 || bytesRead > BUFFER_SIZE) {
+		// errorhandling, generate error page?
+		// shared->response_code = 0; // Do this instead? So Domi generates it?
+		shared->status = Status::writing;
+	} else {
+		std::time(&(shared->timestamp_last_request)); // how do I set to current time?
+		shared->request.append(buffer);
+		shared->status = Status::handling_request;
+	}
+}
+
 void	WebServ::_closeConnections() {
-	int numEvents =  epoll_wait(_epollFd, _events, MAX_EVENTS, 0); // what does this do?
+	int numEvents =  epoll_wait(_epollFd, _events, MAX_EVENTS, 0);
 	for (int idx = 0; idx < numEvents; idx++) {
 		SharedData *shared = static_cast<SharedData*>(_events[idx].data.ptr);
 		if (_events[idx].events && shared->status != Status::listening) {
-			// closeCGIfds(shared); // still needs substance;
+			closeCGIfds(shared);
 			closeConnection(shared);
 		}
 	}
 }
 
-void WebServ::handleRequest(SharedData* shared) {
-	char buffer[1024];
-	int clientFd = shared->fd;
-	int bytesRead = recv(clientFd, buffer, sizeof(buffer) - 1, MSG_DONTWAIT);
-	std::cout << PURPLE << "Do I get here handleReq?" << RESET << std::endl;
-	if (bytesRead > 0) {
-		buffer[bytesRead] = '\0';
-		shared->request = buffer;
-		std::cout << "Received request:\n" << buffer << std::endl;
-		// _sendMockResponse(clientFd);
-		shared->response = "HTTP/1.1 200 OK\r\n"
-		"Content-Type: text/plain\r\n"
-		"Content-Length: 13\r\n"
-		"\r\n"
-		"Hello, world!";
-		shared->status = Status::writing;
-	} else {
-		std::cerr << "Failed to read from client: " << strerror(errno) << std::endl;
-	}
-	// close(clientFd);
-}
-
-// void WebServ::_sendMockResponse(int clientFd) {
-// 	const char *response =
-// 		"HTTP/1.1 200 OK\r\n"
-// 		"Content-Type: text/plain\r\n"
-// 		"Content-Length: 13\r\n"
-// 		"\r\n"
-// 		"Hello, world!";
-// 	send(clientFd, response, strlen(response), MSG_DONTWAIT);
-// }
-
 void	WebServ::writeData(SharedData* shared) {
 	int clientFd = shared->fd;
+	std::cout << PURPLE << "Am I here?\n" << RESET << std::endl;
 	int len = std::min(static_cast<int>(shared->response.length()), BUFFER_SIZE);
 	len = send(clientFd, shared->response.c_str(), len, MSG_NOSIGNAL);
 	if (len == -1) {
@@ -109,30 +96,28 @@ void	WebServ::writeData(SharedData* shared) {
 void	WebServ::run() {
 	while (_serverShutdown == false) {
 		int numEvents = epoll_wait(_epollFd, _events, MAX_EVENTS, -1);
-		parseRequest req = nullptr;
+		parseRequest req;
 		for (int idx = 0; idx < numEvents; idx++) {
-			std::cout << PURPLE << "this works." << RESET << std::endl;
-			printf("--------------- %p ----------------\n", _events[idx].data.ptr);
 			SharedData* shared = static_cast<SharedData*>(_events[idx].data.ptr);
-    		printf("--------------- %p ----------------\n", shared);
 			// _checkHanging(); Still need to figure something out here.
 			if (_events[idx].events & EPOLLIN && shared->status == Status::listening)
 				newConnection(shared);
-			// if (_events[idx].events & EPOLLIN && shared->status == Status::reading)
-				// _readData(shared);
-			if (shared->status == Status::reading) // just for now, i think? Or do I need another status? 
+			if (_events[idx].events & EPOLLIN && shared->status == Status::reading) // just for now, i think? Or do I need another status? 
+				readData(shared);
+			if (shared->status == Status::handling_request)
 				req = parseRequest(shared);
 			if (_events[idx].events & EPOLLHUP && shared->status == Status::in_cgi)
 				cgiHandler(shared, req);
 			if (_events[idx].events & EPOLLOUT && shared->status == Status::writing)
 				writeData(shared);
-			// if (_events[idx].events & EPOLLERR || shared->status == Status::closing) {
-			// 	_closeCGIfds(shared);
-			// 	_closeConnections(shared);
-			// }
+			if (_events[idx].events & EPOLLERR || shared->status == Status::closing) {
+				std::cout << RED << "HERE" << std::endl;
+				closeCGIfds(shared);
+				closeConnection(shared);
+				// _closeConnections(shared);
+			}
 		}
 	}
-
 	_closeConnections();
 }
 
@@ -177,8 +162,8 @@ void WebServ::_initializeServers(Config& conf) {
 }
 
 void	WebServ::newConnection(SharedData* shared) {
-	int clientFd = accept(shared->fd, nullptr, nullptr);
 	std::cout << PURPLE << "Do I get here newConnection?" << RESET << std::endl;
+	int clientFd = accept(shared->fd, nullptr, nullptr);
 	if (clientFd == -1) {
 		std::cerr << "Failed to accept new connection: " << strerror(errno) << std::endl; //make this some exception
 		return;
