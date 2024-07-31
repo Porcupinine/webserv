@@ -6,7 +6,7 @@
 /*   By: dmaessen <dmaessen@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2024/07/07 15:49:40 by dmaessen          #+#    #+#             */
-/*   Updated: 2024/07/31 14:08:26 by dmaessen         ###   ########.fr       */
+/*   Updated: 2024/07/31 14:25:23 by dmaessen         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -68,13 +68,7 @@ std::map<std::string, void (Response::*)(parseRequest &, struct SharedData* shar
 
 /* METHOD FUNCTIONS */
 void Response::getMethod(parseRequest& request, struct SharedData* shared) {
-    if (cgiInvolved(request.getPath()) == true) {
-        if (request.getCgiResponse() != "")
-            _response = request.getCgiResponse();
-        // else
-        //     _statusCode = 500; // not sure we want this
-    }
-    else if (_statusCode == 200) {
+    if (_statusCode == 200) {
         readContent(request);
         _response = buildResponseHeader(request, shared);
     }
@@ -83,13 +77,7 @@ void Response::getMethod(parseRequest& request, struct SharedData* shared) {
 }
 
 void Response::postMethod(parseRequest& request, struct SharedData* shared) {
-    if (cgiInvolved(request.getPath()) == true) {
-        if (request.getCgiResponse() != "")
-            _response = request.getCgiResponse(); 
-        // else
-        //     _statusCode = 500; // not sure we want this
-    }
-    else {
+    if (cgiInvolved(request.getPath()) == false) {
         _statusCode = 204; // no content
         _response = "";
         _response = buildResponseHeader(request, shared);

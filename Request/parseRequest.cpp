@@ -6,7 +6,7 @@
 /*   By: dmaessen <dmaessen@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2024/07/07 15:50:05 by dmaessen          #+#    #+#             */
-/*   Updated: 2024/07/31 13:49:28 by dmaessen         ###   ########.fr       */
+/*   Updated: 2024/07/31 14:24:38 by dmaessen         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -41,12 +41,12 @@ parseRequest&	parseRequest::operator=(const parseRequest &cpy)
 	return (*this);
 }
 
-std::string parseRequest::parseStr(std::string &info, struct SharedData* shared) {
+void parseRequest::parseStr(std::string &info, struct SharedData* shared) {
     if (shared->response_code != 200) {
         shared->response = "HTTP/1.1 500 Internal Server Error\r\n\n"
         "Content-Type: text/html\r\n\nContent-Length: 146\r\n\r\n "
         "<!DOCTYPE html><html><head><title>500</title></head><body><h1> 500 Internal Server Error! </h1><p>I probably should study more!</p></body></html>";
-        return shared->response;
+        return ;
     }
     
     size_t i = 0;
@@ -75,12 +75,14 @@ std::string parseRequest::parseStr(std::string &info, struct SharedData* shared)
         _cookies = parseCookies(_headers["Cookie"]);
     
     _cgiresponse = "";
-    // if (cgiInvolved(_headers["Path"]) == true)
-    //     _cgiresponse = cgiHandler(*this, shared);
-    //CHECK IF SOMETHING FAILED ON LAURA'S SIDE??
+    if (cgiInvolved(_headers["Path"]) == true) {
+        shared->status = Status::in_cgi;
+        return ;
+    }
     
     Response res;
-    return res.giveResponse(*this, shared); // is this really how we want to return??
+    res.giveResponse(*this, shared);
+    return ;
 }
 
 
