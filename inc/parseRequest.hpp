@@ -33,7 +33,7 @@ class parseRequest
         std::map<std::string, std::string> _cookies;
 
 
-        std::string parseStr(std::string &info, struct SharedData* shared);
+        void parseStr(std::string &info, struct SharedData* shared);
 
         void initHeaders();
 
