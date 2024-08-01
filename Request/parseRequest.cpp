@@ -12,12 +12,14 @@
 
 #include "parseRequest.hpp"
 
-parseRequest::parseRequest(struct SharedData* shared) :  _methodType(""), _version(""), _returnValue(200),
-                              _bodyMsg(""), _port(80), _path(""), _query("") {
+parseRequest::parseRequest(struct SharedData* shared) :  _methodType(""), _version(""), _returnValue(shared->response_code),
+                              _bodyMsg(""), _port(shared->server_config->port), _path(""), _query("") {
     initHeaders();
+//	std::cout << "req is " << shared->request << "\n";
     parseStr(shared->request, shared);
     if (cgiInvolved(_headers["Path"]) == false)
         shared->status = Status::writing;
+	std::cout << "response is " << shared->response << "\n";
 }
 
 //parseRequest::parseRequest() {
@@ -278,7 +280,6 @@ void parseRequest::initHeaders() {
 	_headers["Transfer-Encoding"] = "";
 	_headers["User-Agent"] = "";
 	_headers["Www-Authenticate"] = "";
-    std::cout << "this done?? \n"; // to rm
 }
 
 const std::map<std::string, std::string>&	parseRequest::getHeaders(void) const {
@@ -321,6 +322,10 @@ int parseRequest::parsePath(const std::string &line, size_t i) {
         return _returnValue;
     }
     _path.assign(line, i + 1, j - i);
+	if (_path[0] == '/' && _path.size() == 2) {
+		_path = "/home/lpraca-l/Documents/webserv/htmls/index.html"; // check on this later to take from configfile/lou
+		//std::cout << "path HERE: " << _path << "\n"; // to rm
+	}
     return parseVersion(line, j);
 }
 

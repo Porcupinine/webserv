@@ -220,6 +220,10 @@ std::shared_ptr<SharedData> Server::_getSharedData() const {
 	return _shared;
 }
 
+const ServerConfig* Server::getConf() {
+	return _configs;
+}
+
 // ServerConfig* Server::_getHostConfigs(const std::string &host) const {
 // 	for (ServerConfig* _configs : _configs) {
 // 		if (_configs->host == host) {

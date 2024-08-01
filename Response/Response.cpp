@@ -32,10 +32,7 @@ std::string Response::giveResponse(parseRequest& request, struct SharedData* sha
     _statusCode = request.getRetVal();
     _type = "";
 
-	std::cout << "IN LOU " << shared->server_config->root_dir << " and " << shared->server_config->auto_index << "\n"; // to rm 
-    
     _isAutoIndex = shared->server_config->auto_index;
-    std::cout << "HERE WE ARE!!!!!!1\n";
     _absrootpath = shared->server_config->root_dir;
     initErrorCodes();
     initMethods();
@@ -201,9 +198,9 @@ std::string Response::getResponse(void) const {
 /* UTILS */
 bool Response::fileExists(const std::string& path) {
     struct stat buffer;
-    std::string newpath = _absrootpath + path; // check if this is needed/correct
+//    std::string newpath = _absrootpath + path; // check if this is needed/correct
 
     if (stat(path.c_str(), &buffer) == 0)
-        return false;
-    return true;
+        return true;
+    return false;
 }
