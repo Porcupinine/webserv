@@ -3,8 +3,8 @@ project(webserver)
 
 set(CMAKE_CXX_STANDARD 17)
 
-add_compile_options(-fstandalone-debug)
-#add_compile_options(-Wall -Werror -Wextra)
+# add_compile_options(-fstandalone-debug)
+# add_compile_options(-Wall -Werror -Wextra)
 
 set(SRCTEST
 		test/main.cpp
