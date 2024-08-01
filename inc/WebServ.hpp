@@ -28,6 +28,7 @@ class WebServ {
 		void	newConnection(SharedData* shared);
 		void	handleRequest(SharedData* shared);
 		void	writeData(SharedData* shared);
+		void	initErrorPages(SharedData* shared);
 
 		class InitException : public std::exception {
 			public:

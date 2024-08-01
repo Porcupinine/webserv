@@ -111,22 +111,23 @@ struct ConfigError {
 };
 
 struct SharedData {
-	int								cgi_fd;
-	pid_t							cgi_pid;
+	int									cgi_fd;
+	pid_t								cgi_pid;
 
-	std::string						request;
-	std::string						response;
-	int								response_code;
+	std::string							request;
+	std::string							response;
+	int									response_code;
+	std::map<unsigned int, std::string>	errorPages;
 
-	int								fd;
-	int								epoll_fd; // check new conection or initserver
+	int									fd;
+	int									epoll_fd; // check new conection or initserver
 
-	Status							status; // does this work like this? iT does :D
+	Status								status; // does this work like this? iT does :D
 	// std::list<ServerConfig *>		server_config;
-	const ServerConfig*				server_config;
-	bool							connection_closed;
+	const ServerConfig*					server_config;
+	bool								connection_closed;
 
-	time_t							timestamp_last_request;
+	time_t								timestamp_last_request;
 };
 
 
