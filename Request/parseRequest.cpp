@@ -6,7 +6,7 @@
 /*   By: dmaessen <dmaessen@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2024/07/07 15:50:05 by dmaessen          #+#    #+#             */
-/*   Updated: 2024/07/31 14:24:38 by dmaessen         ###   ########.fr       */
+/*   Updated: 2024/08/01 11:18:15 by dmaessen         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -16,8 +16,6 @@ parseRequest::parseRequest(struct SharedData* shared) :  _methodType(""), _versi
                               _bodyMsg(""), _port(80), _path(""), _query("") {
     initHeaders();
     parseStr(shared->request, shared);
-    // if (_returnValue != 200) // needed
-    //     std::cout << "Parse error: " << _returnValue << '\n';
 }
 
 //parseRequest::parseRequest() {
@@ -42,7 +40,7 @@ parseRequest&	parseRequest::operator=(const parseRequest &cpy)
 }
 
 void parseRequest::parseStr(std::string &info, struct SharedData* shared) {
-    if (shared->response_code != 200) {
+    if (shared->response_code != 200) { // OR 0??
         shared->response = "HTTP/1.1 500 Internal Server Error\r\n\n"
         "Content-Type: text/html\r\n\nContent-Length: 146\r\n\r\n "
         "<!DOCTYPE html><html><head><title>500</title></head><body><h1> 500 Internal Server Error! </h1><p>I probably should study more!</p></body></html>";
