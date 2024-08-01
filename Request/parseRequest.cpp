@@ -1,12 +1,12 @@
 /* ************************************************************************** */
 /*                                                                            */
-/*                                                        :::      ::::::::   */
-/*   parseRequest.cpp                                   :+:      :+:    :+:   */
-/*                                                    +:+ +:+         +:+     */
-/*   By: dmaessen <dmaessen@student.42.fr>          +#+  +:+       +#+        */
-/*                                                +#+#+#+#+#+   +#+           */
-/*   Created: 2024/07/07 15:50:05 by dmaessen          #+#    #+#             */
-/*   Updated: 2024/08/01 14:02:51 by dmaessen         ###   ########.fr       */
+/*                                                        ::::::::            */
+/*   parseRequest.cpp                                   :+:    :+:            */
+/*                                                     +:+                    */
+/*   By: dmaessen <dmaessen@student.42.fr>            +#+                     */
+/*                                                   +#+                      */
+/*   Created: 2024/07/07 15:50:05 by dmaessen      #+#    #+#                 */
+/*   Updated: 2024/08/02 00:15:42 by ewehl         ########   odam.nl         */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -72,6 +72,7 @@ void parseRequest::parseStr(std::string &info, struct SharedData* shared) {
     setQuery();
     setLanguage();
 
+    std::cout << RED << " Nope" << RESET << std::endl;
     if (_headers["Cookie"] != "")
         _cookies = parseCookies(_headers["Cookie"]);
     
