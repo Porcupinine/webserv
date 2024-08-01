@@ -3,7 +3,7 @@ FROM ubuntu:22.04
 WORKDIR /usr/src/app
 
 RUN apt-get update && \
-    apt-get install -y g++ make cmake
+    apt-get install -y g++ make cmake curl telnet vim
 
 COPY . .
 
