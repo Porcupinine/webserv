@@ -8,7 +8,7 @@ bool WebServ::_serverShutdown = false;
 WebServ::InitException::InitException(const std::string& msg) : _message(msg) {}
 
 const char* WebServ::InitException::what() const noexcept {
-    return _message.c_str();
+	return _message.c_str();
 }
 
 WebServ::WebServ(int argc, char **argv) {
@@ -27,6 +27,7 @@ WebServ::WebServ(int argc, char **argv) {
 			throw	std::runtime_error("epoll_create1: " + std::string(strerror(errno)));
 		}
 		_initializeServers(config);
+		printf("%sKOM IK HIER\n%s", CYAN, RESET);
 	} catch (std::exception &e){
 		std::cout << "Error: " << e.what() << std::endl;
 	}
@@ -49,50 +50,35 @@ void	closeConnection(SharedData* shared) {
 	delete shared; // double check this.
 }
 
-
-
 void readData(SharedData* shared) {
-	int bytesRead;
-	char buffer[BUFFER_SIZE];
+	int		bytesRead;
+	char	buffer[BUFFER_SIZE];
 
-	// // Write a way to receive whole request even if bigger then BUFFER_SIZE
-	// if ((bytesRead = recv(shared->fd, buffer, sizeof(buffer) - 1, MSG_DONTWAIT)) == -1 || bytesRead > BUFFER_SIZE) {
-	// 	if (bytesRead > BUFFER_SIZE)
-	// 		shared->response_code = 413;
-	// 	else
-	// 		shared->response_code = 500;
-	// 	auto pos = shared->errorPages.find(shared->response_code);
-	// 	if (pos != shared->errorPages.end())
-	// 		shared->response = pos->second;
-	// 	shared->status = Status::writing;
-	// } else {
-	// 	std::time(&(shared->timestamp_last_request)); // how do I set to current time?
-	// 	shared->request.append(buffer);
-	// 	shared->status = Status::handling_request;
-	// }
-
-	for (int bytesRead ; ; ) {
-    	bytesRead = recv(shared->fd, buffer, sizeof(buffer) - 1, MSG_DONTWAIT);
+	while (true) {
+		bytesRead = recv(shared->fd, buffer, sizeof(buffer) - 1, MSG_DONTWAIT);
+		// for errors and buff overflow
 		if (bytesRead == -1 || bytesRead > BUFFER_SIZE) {
-			if (bytesRead > BUFFER_SIZE)
-				shared->response_code = 413;
-			else
-				shared->response_code = 500;
+			shared->response_code = (bytesRead == -1) ? 500 : 413;
 			auto pos = shared->errorPages.find(shared->response_code);
-			if (pos != shared->errorPages.end())
+			if (pos != shared->errorPages.end()) {
 				shared->response = pos->second;
+			}
 			shared->status = Status::writing;
-			break ;
+			break;
 		}
-		std::time(&(shared->timestamp_last_request)); // how do I set to current time?
-		shared->request.append(buffer);
-    	if (bytesRead == 0 || bytesRead < BUFFER_SIZE) {
-        	shared->status = Status::handling_request;
-			shared->response_code = 200; // check on this
-			break ;
-    	}
+
+		std::time(&(shared->timestamp_last_request));
+		buffer[bytesRead] = '\0';
+		shared->request.append(buffer, bytesRead);
+
+		if (bytesRead == 0 || bytesRead < BUFFER_SIZE) {
+			shared->status = Status::handling_request;
+			shared->response_code = 200; // Check on this
+			break;
+		}
 	}
 }
+
 
 void	WebServ::_closeConnections() {
 	int numEvents =  epoll_wait(_epollFd, _events, MAX_EVENTS, 0);
@@ -107,10 +93,11 @@ void	WebServ::_closeConnections() {
 
 void	WebServ::writeData(SharedData* shared) {
 	int clientFd = shared->fd;
+	std::cout << PURPLE << "Am I here @start?\n" << RESET << std::endl;
 	int len = std::min(static_cast<int>(shared->response.length()), BUFFER_SIZE);
 	len = send(clientFd, shared->response.c_str(), len, MSG_NOSIGNAL);
 	if (len == -1) {
-		std::cerr << "Some error occured trying to send." << std::endl;
+		std::cerr << "Some error occured trying to send." << strerror(errno) << std::endl;
 	} else if (len < static_cast<int>(shared->response.size())) {
 		shared->response = shared->response.substr(len, shared->response.npos);
 		shared->status = Status::writing;
@@ -119,7 +106,7 @@ void	WebServ::writeData(SharedData* shared) {
 		shared->status = shared->connection_closed ? Status::closing : Status::reading;
 	}
 	std::cout << PURPLE << "Am I here?\n" << RESET << std::endl;
-	shared->status = Status::closing; // TODO TODOULOUUUU LOOK INTO THIS
+	// shared->status = Status::closing; // TODO TODOULOUUUU LOOK INTO THIS
 }
 
 void	WebServ::run() {
@@ -198,8 +185,9 @@ void	WebServ::newConnection(SharedData* shared) {
 		return;
 	}
 
+	printf("%sClientFd: %d\tSharedFd: %d%s\n", PURPLE, clientFd, shared->fd, RESET);
+	// std::cout << PURPLE << "ClientFd: " << clientFd << "SharedFd: " << shared->fd << RESET << std::endl;
 	_setNonBlocking(clientFd); // Add some errorhandling
-	std::cout << PURPLE << "Do I get here newConnection?" << RESET << std::endl;
 
 	SharedData* clientShared(new SharedData);
 	clientShared->fd = clientFd;
@@ -209,8 +197,8 @@ void	WebServ::newConnection(SharedData* shared) {
 	clientShared->status = Status::reading;
 	clientShared->request = "";
 	clientShared->response = "";
-	 clientShared->response_code = 200; // TODO check on this
-	clientShared->server_config = this->_servers[0]->getConf();
+	clientShared->response_code = 200; // TODO check on this
+	clientShared->server_config = this->_servers[0]->getConf(); // Kijk hier naar.
 //	std::cout << "IN LOU " << shared->server_config->root_dir << " and " << shared->server_config->auto_index << "\n";
 	clientShared->connection_closed = false;
 	clientShared->timestamp_last_request = std::time(nullptr);
@@ -230,36 +218,42 @@ void	WebServ::newConnection(SharedData* shared) {
 }
 
 void WebServ::initErrorPages(SharedData* shared) {
-    shared->errorPages[301] = "HTTP/1.1 301 Moved Permanently\r\n\n"
-    "Content-Type: text/html\r\n\nContent-Length: 150\r\n\r\n "
+	shared->errorPages[301] = "HTTP/1.1 301 Moved Permanently\r\n\n"
+	"Content-Type: text/html\r\n\nContent-Length: 150\r\n\r\n "
 	"<!DOCTYPE html><html><head><title>301</title></head><body><h1> 301 Moved Permanently! </h1><p>This page has been moved permanently.</p></body></html>";
-    shared->errorPages[302] = "HTTP/1.1 302 Found\r\n\n"
-    "Content-Type: text/html\r\n\nContent-Length: 138\r\n\r\n "
-    "<!DOCTYPE html><html><head><title>302</title></head><body><h1> 302 Found! </h1><p>This page has been temporarily moved.</p></body></html>";
+	shared->errorPages[302] = "HTTP/1.1 302 Found\r\n\n"
+	"Content-Type: text/html\r\n\nContent-Length: 138\r\n\r\n "
+	"<!DOCTYPE html><html><head><title>302</title></head><body><h1> 302 Found! </h1><p>This page has been temporarily moved.</p></body></html>";
 	shared->errorPages[307] = "HTTP/1.1 307 Temporary Redirect\r\n\n"
-    "Content-Type: text/html\r\n\nContent-Length: 137\r\n\r\n "
-    "<!DOCTYPE html><html><head><title>307</title></head><body><h1> 307 Temporary Redirect! </h1><p>This page is temporary.</p></body></html>";
-    shared->errorPages[308] = "HTTP/1.1 308 Permanent Redirect\r\n\n"
-    "Content-Type: text/html\r\n\nContent-Length: 151\r\n\r\n "
-    "<!DOCTYPE html><html><head><title>308</title></head><body><h1> 308 Permanent Redirect! </h1><p>This page has been permanently moved.</p></body></html>";
-    shared->errorPages[400] = "HTTP/1.1 400 Bad Request\r\n\n"
-    "Content-Type: text/html\r\n\nContent-Length: 151\r\n\r\n "
-    "<!DOCTYPE html><html><head><title>400</title></head><body><h1> 400 Bad Request Error! </h1><p>We are not speaking the same language!</p></body></html>";
-    shared->errorPages[403] = "HTTP/1.1 403 Forbiden\r\n\n"
-    "Content-Type: text/html\r\n\nContent-Length: 130\r\n\r\n "
-    "<!DOCTYPE html><html><head><title>403</title></head><body><h1> 403 Forbiden! </h1><p>This is top secret, sorry!</p></body></html>";
-    shared->errorPages[404] = "HTTP/1.1 404 Not Found\r\n\n"
-    "Content-Type: text/html\r\n\nContent-Length: 115\r\n\r\n "
-    "<!DOCTYPE html><html><head><title>404</title></head><body><h1> 404 Page not found! </h1><p>Puff!</p></body></html>";
-    shared->errorPages[405] = "HTTP/1.1 405 Method Not Allowed\r\n\n"
-    "Content-Type: text/html\r\n\nContent-Length: 139\r\n\r\n "
-    "<!DOCTYPE html><html><head><title>405</title></head><body><h1> 405 Method Not Allowed! </h1><p>We forgot how to do that!</p></body></html>";
-    shared->errorPages[413] = "HTTP/1.1 413 Payload Too Large\r\n\n"
-    "Content-Type: text/html\r\n\nContent-Length: 163\r\n\r\n "
-    "<!DOCTYPE html><html><head><title>413</title></head><body><h1> 413 Payload Too Large! </h1><p>We are too busy right now, please try again later!</p></body></html>";
-    shared->errorPages[500] = "HTTP/1.1 500 Internal Server Error\r\n\n"
-    "Content-Type: text/html\r\n\nContent-Length: 146\r\n\r\n "
-    "<!DOCTYPE html><html><head><title>500</title></head><body><h1> 500 Internal Server Error! </h1><p>I probably should study more!</p></body></html>";
+	"Content-Type: text/html\r\n\nContent-Length: 137\r\n\r\n "
+	"<!DOCTYPE html><html><head><title>307</title></head><body><h1> 307 Temporary Redirect! </h1><p>This page is temporary.</p></body></html>";
+	shared->errorPages[308] = "HTTP/1.1 308 Permanent Redirect\r\n\n"
+	"Content-Type: text/html\r\n\nContent-Length: 151\r\n\r\n "
+	"<!DOCTYPE html><html><head><title>308</title></head><body><h1> 308 Permanent Redirect! </h1><p>This page has been permanently moved.</p></body></html>";
+	shared->errorPages[400] = "HTTP/1.1 400 Bad Request\r\n\n"
+	"Content-Type: text/html\r\n\nContent-Length: 151\r\n\r\n "
+	"<!DOCTYPE html><html><head><title>400</title></head><body><h1> 400 Bad Request Error! </h1><p>We are not speaking the same language!</p></body></html>";
+	shared->errorPages[403] = "HTTP/1.1 403 Forbiden\r\n\n"
+	"Content-Type: text/html\r\n\nContent-Length: 130\r\n\r\n "
+	"<!DOCTYPE html><html><head><title>403</title></head><body><h1> 403 Forbiden! </h1><p>This is top secret, sorry!</p></body></html>";
+	shared->errorPages[404] = "HTTP/1.1 404 Not Found\r\n"
+							"Allow: DELETE, GET, POST\r\n"
+							"Content-Length: 119 \r\n"
+							"Date: Thu, 01 Aug 2024 20:53:05 GMT\r\n"
+							"Connection: closed\r\n\r\n"
+							"<!DOCTYPE html><html><body><h1>404 Not Found</h1><p>Page Not Found</p></body></html>\r\n";
+	// shared->errorPages[404] = "HTTP/1.1 404 Not Found\r\n\n"
+	// "Content-Type: text/html\r\n\nContent-Length: 115\r\n\r\n "
+	// "<!DOCTYPE html><html><head><title>404</title></head><body><h1> 404 Page not found! </h1><p>Puff!</p></body></html>";
+	shared->errorPages[405] = "HTTP/1.1 405 Method Not Allowed\r\n\n"
+	"Content-Type: text/html\r\n\nContent-Length: 139\r\n\r\n "
+	"<!DOCTYPE html><html><head><title>405</title></head><body><h1> 405 Method Not Allowed! </h1><p>We forgot how to do that!</p></body></html>";
+	shared->errorPages[413] = "HTTP/1.1 413 Payload Too Large\r\n\n"
+	"Content-Type: text/html\r\n\nContent-Length: 163\r\n\r\n "
+	"<!DOCTYPE html><html><head><title>413</title></head><body><h1> 413 Payload Too Large! </h1><p>We are too busy right now, please try again later!</p></body></html>";
+	shared->errorPages[500] = "HTTP/1.1 500 Internal Server Error\r\n\n"
+	"Content-Type: text/html\r\n\nContent-Length: 146\r\n\r\n "
+	"<!DOCTYPE html><html><head><title>500</title></head><body><h1> 500 Internal Server Error! </h1><p>I probably should study more!</p></body></html>";
 }
 
 

@@ -31,14 +31,14 @@ public:
 		std::map<std::string, int>			getKnownClientIds() const;
 
 		// Content getters
-		std::string							getIndex(const std::string &host, const std::string &location) const;
-		bool								getDirListing(const std::string &host, const std::string &location) const;
-		std::map<int, std::string>			getRedirect(const std::string &host, const std::string &location) const;
-		std::string							getRootFolder(const std::string &host, const std::string &location) const;
-		size_t								getMaxBodySize(const std::string &host, const std::string &location) const;
-		std::string							getUploadDir(const std::string &host, const std::string &location) const;
-		std::set<std::string>				getAllowedMethods(const std::string &host, const std::string &location) const;
-		const ServerConfig*						getConf();
+		std::string							getIndex(const std::string &location) const;
+		bool								getDirListing(const std::string &location) const;
+		std::map<int, std::string>			getRedirect(const std::string &location) const;
+		std::string							getRootFolder(const std::string &location) const;
+		size_t								getMaxBodySize() const;
+		std::string							getUploadDir(const std::string &location) const;
+		std::set<std::string>				getAllowedMethods(const std::string &location) const;
+		const ServerConfig*					getConf();
 
 		class ServerException : public std::exception {
 		public:

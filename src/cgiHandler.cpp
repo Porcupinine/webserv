@@ -90,6 +90,7 @@ int runChild(parseRequest& request, int pipeRead, int pipeWrite) {
 }
 
 int cgiHandler(SharedData* shared, parseRequest& request) {
+	(void) shared;
 	if (std::filesystem::exists(request.getPath())) {
 		std::cerr<<"Sorry, can't find this file! Stop wasting my time!\n";
 		return 1;
