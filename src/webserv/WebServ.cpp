@@ -18,7 +18,8 @@ WebServ::WebServ(int argc, char **argv) {
 		}
 		_setUpSigHandlers();
 
-		Config config(argv[1]);
+		std::string filePath = argv[1];
+		Config config(filePath);
 		if (config.hasErrorOccurred())
 			throw	InitException(config.buildErrorMessage(config.getError()));
 		// config.printConfigs();  Testing purposes.
@@ -106,7 +107,6 @@ void	WebServ::_closeConnections() {
 
 void	WebServ::writeData(SharedData* shared) {
 	int clientFd = shared->fd;
-	std::cout << PURPLE << "Am I here?\n" << RESET << std::endl;
 	int len = std::min(static_cast<int>(shared->response.length()), BUFFER_SIZE);
 	len = send(clientFd, shared->response.c_str(), len, MSG_NOSIGNAL);
 	if (len == -1) {
@@ -118,6 +118,8 @@ void	WebServ::writeData(SharedData* shared) {
 		shared->response.clear();
 		shared->status = shared->connection_closed ? Status::closing : Status::reading;
 	}
+	std::cout << PURPLE << "Am I here?\n" << RESET << std::endl;
+	shared->status = Status::closing; // TODO TODOULOUUUU LOOK INTO THIS
 }
 
 void	WebServ::run() {
@@ -207,9 +209,9 @@ void	WebServ::newConnection(SharedData* shared) {
 	clientShared->status = Status::reading;
 	clientShared->request = "";
 	clientShared->response = "";
-	// clientShared->response_code = 200; // TODO check on this
-	clientShared->server_config = shared->server_config;
-	std::cout << "IN LOU " << shared->server_config->root_dir << " and " << shared->server_config->auto_index << "\n";
+	 clientShared->response_code = 200; // TODO check on this
+	clientShared->server_config = this->_servers[0]->getConf();
+//	std::cout << "IN LOU " << shared->server_config->root_dir << " and " << shared->server_config->auto_index << "\n";
 	clientShared->connection_closed = false;
 	clientShared->timestamp_last_request = std::time(nullptr);
 	initErrorPages(shared);
