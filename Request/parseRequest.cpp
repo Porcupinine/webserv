@@ -6,7 +6,7 @@
 /*   By: dmaessen <dmaessen@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2024/07/07 15:50:05 by dmaessen          #+#    #+#             */
-/*   Updated: 2024/08/01 11:18:15 by dmaessen         ###   ########.fr       */
+/*   Updated: 2024/08/01 14:02:51 by dmaessen         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -16,6 +16,8 @@ parseRequest::parseRequest(struct SharedData* shared) :  _methodType(""), _versi
                               _bodyMsg(""), _port(80), _path(""), _query("") {
     initHeaders();
     parseStr(shared->request, shared);
+    if (cgiInvolved(_headers["Path"]) == false)
+        shared->status = Status::writing;
 }
 
 parseRequest::parseRequest() {
@@ -61,7 +63,6 @@ void parseRequest::parseStr(std::string &info, struct SharedData* shared) {
             _headers[key] = value;
         }
     }
-
 	size_t startBody = info.find("\r\n\r\n") + 4;
 	_bodyMsg = info.substr(startBody, std::string::npos);
 
@@ -77,9 +78,9 @@ void parseRequest::parseStr(std::string &info, struct SharedData* shared) {
         shared->status = Status::in_cgi;
         return ;
     }
-    
     Response res;
-    res.giveResponse(*this, shared);
+    shared->response = res.giveResponse(*this, shared);
+    shared->status = Status::writing;
     return ;
 }
 
@@ -277,6 +278,7 @@ void parseRequest::initHeaders() {
 	_headers["Transfer-Encoding"] = "";
 	_headers["User-Agent"] = "";
 	_headers["Www-Authenticate"] = "";
+    std::cout << "this done?? \n"; // to rm
 }
 
 const std::map<std::string, std::string>&	parseRequest::getHeaders(void) const {

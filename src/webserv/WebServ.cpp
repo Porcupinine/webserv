@@ -54,20 +54,42 @@ void readData(SharedData* shared) {
 	int bytesRead;
 	char buffer[BUFFER_SIZE];
 
-	// Write a way to receive whole request even if bigger then BUFFER_SIZE
-	if ((bytesRead = recv(shared->fd, buffer, sizeof(buffer) - 1, MSG_DONTWAIT)) == -1 || bytesRead > BUFFER_SIZE) {
-		if (bytesRead > BUFFER_SIZE)
-			shared->response_code = 413;
-		else
-			shared->response_code = 500;
-		auto pos = shared->errorPages.find(shared->response_code);
-		if (pos != shared->errorPages.end())
-			shared->response = pos->second;
-		shared->status = Status::writing;
-	} else {
+	// // Write a way to receive whole request even if bigger then BUFFER_SIZE
+	// if ((bytesRead = recv(shared->fd, buffer, sizeof(buffer) - 1, MSG_DONTWAIT)) == -1 || bytesRead > BUFFER_SIZE) {
+	// 	if (bytesRead > BUFFER_SIZE)
+	// 		shared->response_code = 413;
+	// 	else
+	// 		shared->response_code = 500;
+	// 	auto pos = shared->errorPages.find(shared->response_code);
+	// 	if (pos != shared->errorPages.end())
+	// 		shared->response = pos->second;
+	// 	shared->status = Status::writing;
+	// } else {
+	// 	std::time(&(shared->timestamp_last_request)); // how do I set to current time?
+	// 	shared->request.append(buffer);
+	// 	shared->status = Status::handling_request;
+	// }
+
+	for (int bytesRead ; ; ) {
+    	bytesRead = recv(shared->fd, buffer, sizeof(buffer) - 1, MSG_DONTWAIT);
+		if (bytesRead == -1 || bytesRead > BUFFER_SIZE) {
+			if (bytesRead > BUFFER_SIZE)
+				shared->response_code = 413;
+			else
+				shared->response_code = 500;
+			auto pos = shared->errorPages.find(shared->response_code);
+			if (pos != shared->errorPages.end())
+				shared->response = pos->second;
+			shared->status = Status::writing;
+			break ;
+		}
 		std::time(&(shared->timestamp_last_request)); // how do I set to current time?
 		shared->request.append(buffer);
-		shared->status = Status::handling_request;
+    	if (bytesRead == 0 || bytesRead < BUFFER_SIZE) {
+        	shared->status = Status::handling_request;
+			shared->response_code = 200; // check on this
+			break ;
+    	}
 	}
 }
 
@@ -185,7 +207,9 @@ void	WebServ::newConnection(SharedData* shared) {
 	clientShared->status = Status::reading;
 	clientShared->request = "";
 	clientShared->response = "";
+	// clientShared->response_code = 200; // TODO check on this
 	clientShared->server_config = shared->server_config;
+	std::cout << "IN LOU " << shared->server_config->root_dir << " and " << shared->server_config->auto_index << "\n";
 	clientShared->connection_closed = false;
 	clientShared->timestamp_last_request = std::time(nullptr);
 	initErrorPages(shared);

@@ -6,7 +6,7 @@
 /*   By: dmaessen <dmaessen@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2024/07/07 15:49:40 by dmaessen          #+#    #+#             */
-/*   Updated: 2024/08/01 11:23:16 by dmaessen         ###   ########.fr       */
+/*   Updated: 2024/08/01 14:07:34 by dmaessen         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -31,11 +31,14 @@ Response&	Response::operator=(const Response &cpy) {
 std::string Response::giveResponse(parseRequest& request, struct SharedData* shared) {
     _statusCode = request.getRetVal();
     _type = "";
+
+	std::cout << "IN LOU " << shared->server_config->root_dir << " and " << shared->server_config->auto_index << "\n"; // to rm 
+    
     _isAutoIndex = shared->server_config->auto_index;
+    std::cout << "HERE WE ARE!!!!!!1\n";
     _absrootpath = shared->server_config->root_dir;
     initErrorCodes();
     initMethods();
-
     if (shared->server_config->max_client_body_size < request.getBodyMsg().size())
         _statusCode = 413;
         
