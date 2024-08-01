@@ -90,7 +90,7 @@ struct Locations {
 
 struct ServerConfig {
 	std::string						host;
-	uint16_t						port;
+	int								port;
 	std::string						server_name;
 
 	std::string						index;
