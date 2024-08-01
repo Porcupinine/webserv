@@ -56,8 +56,13 @@ void readData(SharedData* shared) {
 
 	// Write a way to receive whole request even if bigger then BUFFER_SIZE
 	if ((bytesRead = recv(shared->fd, buffer, sizeof(buffer) - 1, MSG_DONTWAIT)) == -1 || bytesRead > BUFFER_SIZE) {
-		// errorhandling, generate error page?
-		// shared->response_code = 0; // Do this instead? So Domi generates it?
+		if (bytesRead > BUFFER_SIZE)
+			shared->response_code = 413;
+		else
+			shared->response_code = 500;
+		auto pos = shared->errorPages.find(shared->response_code);
+		if (pos != shared->errorPages.end())
+			shared->response = pos->second;
 		shared->status = Status::writing;
 	} else {
 		std::time(&(shared->timestamp_last_request)); // how do I set to current time?
