@@ -6,7 +6,7 @@
 /*   By: dmaessen <dmaessen@student.42.fr>            +#+                     */
 /*                                                   +#+                      */
 /*   Created: 2024/07/07 15:50:05 by dmaessen      #+#    #+#                 */
-/*   Updated: 2024/08/02 00:15:42 by ewehl         ########   odam.nl         */
+/*   Updated: 2024/08/03 20:00:18 by ewehl         ########   odam.nl         */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -15,7 +15,8 @@
 parseRequest::parseRequest(struct SharedData* shared) :  _methodType(""), _version(""), _returnValue(shared->response_code),
                               _bodyMsg(""), _port(shared->server_config->port), _path(""), _query("") {
     initHeaders();
-//	std::cout << "req is " << shared->request << "\n";
+	// std::cout << "req is " << shared->request << "\n";
+    // std::cout << GREEN << "ServerConfig = " << shared->server_config->host << RESET << std::endl; // something up here.
     parseStr(shared->request, shared);
     if (cgiInvolved(_headers["Path"]) == false)
         shared->status = Status::writing;
@@ -68,11 +69,12 @@ void parseRequest::parseStr(std::string &info, struct SharedData* shared) {
 	size_t startBody = info.find("\r\n\r\n") + 4;
 	_bodyMsg = info.substr(startBody, std::string::npos);
 
-    setPort(_headers["Host"]);
+    std::cout << RED << " Nope 1" << RESET << std::endl;
+    setPort(_headers["Host"]); // Hier de Fuck#2's TODOMI
+    std::cout << RED << " Nope 2" << RESET << std::endl;
     setQuery();
     setLanguage();
 
-    std::cout << RED << " Nope" << RESET << std::endl;
     if (_headers["Cookie"] != "")
         _cookies = parseCookies(_headers["Cookie"]);
     
@@ -324,7 +326,7 @@ int parseRequest::parsePath(const std::string &line, size_t i) {
     }
     _path.assign(line, i + 1, j - i);
 	if (_path[0] == '/' && _path.size() == 2) {
-		_path = "/home/lpraca-l/Documents/webserv/htmls/index.html"; // check on this later to take from configfile/lou
+		_path = "/Users/ewehl/Documents/Core/GroupServ/index.html"; // check on this later to take from configfile/lou
 		//std::cout << "path HERE: " << _path << "\n"; // to rm
 	}
     return parseVersion(line, j);
