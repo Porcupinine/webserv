@@ -47,7 +47,7 @@ void	closeConnection(SharedData* shared) {
 	epoll_ctl(shared->epoll_fd, EPOLL_CTL_DEL, shared->fd, nullptr);
 	if (close(shared->fd) == -1)
 		std::cout << RED << "failed to close regular fd " << shared->fd << ": " << std::string(strerror(errno)) << RESET << std::endl;
-	delete shared; // double check this.
+	// delete shared; // double check this.
 }
 
 void readData(SharedData* shared) {
@@ -77,6 +77,8 @@ void readData(SharedData* shared) {
 			break;
 		}
 	}
+	std::cerr << "fd = "<<  shared->fd << std::endl;
+	std::cerr << "request = " << shared->request << std::endl;
 }
 
 
@@ -97,11 +99,14 @@ void	WebServ::writeData(SharedData* shared) {
 	int len = std::min(static_cast<int>(shared->response.length()), BUFFER_SIZE);
 	len = send(clientFd, shared->response.c_str(), len, MSG_NOSIGNAL);
 	if (len == -1) {
-		std::cerr << "Some error occured trying to send." << strerror(errno) << std::endl;
+		std::cerr << "Some error occured trying to send. Reason " << RED << strerror(errno) << RESET << std::endl;
+		printf("\t\t%s%d%s", CYAN, clientFd, RESET);
+		shared->status = Status::closing;
 	} else if (len < static_cast<int>(shared->response.size())) {
 		shared->response = shared->response.substr(len, shared->response.npos);
 		shared->status = Status::writing;
 	} else {
+		std::cerr << "Does this ever happen?" << std::endl;
 		shared->response.clear();
 		shared->status = shared->connection_closed ? Status::closing : Status::reading;
 	}
@@ -237,10 +242,8 @@ void WebServ::initErrorPages(SharedData* shared) {
 	"Content-Type: text/html\r\n\nContent-Length: 130\r\n\r\n "
 	"<!DOCTYPE html><html><head><title>403</title></head><body><h1> 403 Forbiden! </h1><p>This is top secret, sorry!</p></body></html>";
 	shared->errorPages[404] = "HTTP/1.1 404 Not Found\r\n"
-							"Allow: DELETE, GET, POST\r\n"
 							"Content-Length: 119 \r\n"
 							"Date: Thu, 01 Aug 2024 20:53:05 GMT\r\n"
-							"Connection: closed\r\n\r\n"
 							"<!DOCTYPE html><html><body><h1>404 Not Found</h1><p>Page Not Found</p></body></html>\r\n";
 	// shared->errorPages[404] = "HTTP/1.1 404 Not Found\r\n\n"
 	// "Content-Type: text/html\r\n\nContent-Length: 115\r\n\r\n "
@@ -255,7 +258,6 @@ void WebServ::initErrorPages(SharedData* shared) {
 	"Content-Type: text/html\r\n\nContent-Length: 146\r\n\r\n "
 	"<!DOCTYPE html><html><head><title>500</title></head><body><h1> 500 Internal Server Error! </h1><p>I probably should study more!</p></body></html>";
 }
-
 
 void WebServ::_handleSignal(int sig) {
 	if (sig == SIGINT)

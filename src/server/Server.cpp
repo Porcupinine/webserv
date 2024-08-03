@@ -86,7 +86,7 @@ void Server::_registerWithEpoll(int epollFd, int fd, uint32_t events) {
 	_shared->epoll_fd = epollFd;
 
 	_shared->status = Status::listening;
-	_shared->server_config = _configs;
+	_shared->server_config = _configs; // Dit fixen.
 	_shared->connection_closed = false; // Should I set this..? No I think domi..
 
 	_shared->timestamp_last_request = std::time(nullptr);
