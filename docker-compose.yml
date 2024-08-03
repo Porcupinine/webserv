@@ -1,0 +1,10 @@
+# version: '2.27'
+services:
+  webserver:
+    build: .
+    ports:
+      - "8080:8080"
+    volumes:
+      - .:/usr/src/app/
+    # command: ["tail", "-f", "/dev/null"]
+    command: ["bash"]
