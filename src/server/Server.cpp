@@ -44,7 +44,6 @@ int Server::initServer(const ServerConfig *config, int epollFd, double timeout, 
 	} catch (std::exception & e) {
 		throw e.what();
 	}
-	_configs = config;
 	
 	std::cout << GREEN << "Server initialized on port " << config->port << RESET << std::endl;
 	return 0;
@@ -87,6 +86,7 @@ void Server::_registerWithEpoll(int epollFd, int fd, uint32_t events) {
 	_shared->epoll_fd = epollFd;
 
 	_shared->status = Status::listening;
+	// _shared->server = this;
 	_shared->server_config = _configs;
 	_shared->connection_closed = false; // Should I set this..? No I think domi..
 
@@ -97,7 +97,7 @@ void Server::_registerWithEpoll(int epollFd, int fd, uint32_t events) {
 	event.data.ptr = _shared.get();
 	// printf("--------------- %p ----------------\n", event.data.ptr);
 	// printf("--------------- %p ----------------\n", _shared.get());
-	if (epoll_ctl(epollFd, EPOLL_CTL_ADD, fd, &event) < 0) //might need to do sth about lifetime.
+	if (epoll_ctl(epollFd, EPOLL_CTL_ADD, fd, &event) < 0)
 		throw ServerException("Failed to register with epoll");
 }
 
