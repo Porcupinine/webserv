@@ -6,7 +6,7 @@
 /*   By: dmaessen <dmaessen@student.42.fr>            +#+                     */
 /*                                                   +#+                      */
 /*   Created: 2024/07/07 15:50:05 by dmaessen      #+#    #+#                 */
-/*   Updated: 2024/08/03 20:00:18 by ewehl         ########   odam.nl         */
+/*   Updated: 2024/08/04 19:55:30 by ewehl         ########   odam.nl         */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -16,7 +16,9 @@ parseRequest::parseRequest(struct SharedData* shared) :  _methodType(""), _versi
                               _bodyMsg(""), _port(shared->server_config->port), _path(""), _query("") {
     initHeaders();
 	// std::cout << "req is " << shared->request << "\n";
-    // std::cout << GREEN << "ServerConfig = " << shared->server_config->host << RESET << std::endl; // something up here.
+    if (shared->request.empty())
+        shared->status = Status::closing;
+    std::cout << GREEN << "ServerConfig = " << shared->server_config->host << RESET << std::endl; // something up here.
     parseStr(shared->request, shared);
     if (cgiInvolved(_headers["Path"]) == false)
         shared->status = Status::writing;
@@ -70,7 +72,7 @@ void parseRequest::parseStr(std::string &info, struct SharedData* shared) {
 	_bodyMsg = info.substr(startBody, std::string::npos);
 
     std::cout << RED << " Nope 1" << RESET << std::endl;
-    setPort(_headers["Host"]); // Hier de Fuck#2's TODOMI
+    setPort(_headers["Host"]); // Hier de Fuck#2's TODOMI - Should be fixed.
     std::cout << RED << " Nope 2" << RESET << std::endl;
     setQuery();
     setLanguage();
@@ -326,8 +328,8 @@ int parseRequest::parsePath(const std::string &line, size_t i) {
     }
     _path.assign(line, i + 1, j - i);
 	if (_path[0] == '/' && _path.size() == 2) {
-		_path = "/Users/ewehl/Documents/Core/GroupServ/index.html"; // check on this later to take from configfile/lou
-		//std::cout << "path HERE: " << _path << "\n"; // to rm
+		// _path = "/Users/ewehl/Documents/Core/GroupServ/index.html"; // check on this later to take from configfile/lou
+		std::cout << "path HERE: " << _path << "\n"; // to rm
 	}
     return parseVersion(line, j);
 }
