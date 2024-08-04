@@ -160,7 +160,6 @@ void	WebServ::run() {
 				std::cout << RED << "HERE" << std::endl;
 				closeCGIfds(shared);
 				closeConnection(shared);
-				// _closeConnections(shared);
 			}
 		}
 	}
@@ -222,8 +221,8 @@ void	WebServ::newConnection(SharedData* shared) {
 	auto clientShared = std::make_shared<SharedData>();
 	clientShared->fd = clientFd;
 	clientShared->epoll_fd = shared->epoll_fd;
-	clientShared->cgi_fd = 0;
-	clientShared->cgi_pid = 0;
+	clientShared->cgi_fd = -1;
+	clientShared->cgi_pid = -1;
 	clientShared->status = Status::reading;
 	clientShared->request = "";
 	clientShared->response = "";
