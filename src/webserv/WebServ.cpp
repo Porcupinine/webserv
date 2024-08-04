@@ -47,53 +47,64 @@ void	closeConnection(SharedData* shared) {
 	epoll_ctl(shared->epoll_fd, EPOLL_CTL_DEL, shared->fd, nullptr);
 	if (close(shared->fd) == -1)
 		std::cout << RED << "failed to close regular fd " << shared->fd << ": " << std::string(strerror(errno)) << RESET << std::endl;
-	// delete shared; // double check this.
+	delete shared; // double check this.
 }
 
-void readData(SharedData* shared) {
-	int		bytesRead;
-	char	buffer[BUFFER_SIZE];
+void WebServ::handleRequest(SharedData* shared) {
+	int clientFd = shared->fd;
+	std::cout << PURPLE << "Do I get here handleReq?" << RESET << std::endl;
+	std::cout << "Received request:\n" << shared->request << std::endl;
+	shared->response = "HTTP/1.1 200 OK\r\n"
+	"Content-Type: text/plain\r\n"
+	"Content-Length: 13\r\n"
+	"\r\n"
+	"Hello, world!";
+	shared->status = Status::writing;
+}
+
+void WebServ::readData(SharedData* shared) {
+	char buffer[BUFFER_SIZE];
+	int bytesRead;
 
 	while (true) {
-		bytesRead = recv(shared->fd, buffer, sizeof(buffer) - 1, MSG_DONTWAIT);
-		// for errors and buff overflow
-		if (bytesRead == -1 || bytesRead > BUFFER_SIZE) {
-			shared->response_code = (bytesRead == -1) ? 500 : 413;
-			auto pos = shared->errorPages.find(shared->response_code);
-			if (pos != shared->errorPages.end()) {
-				shared->response = pos->second;
+		bytesRead = recv(shared->fd, buffer, BUFFER_SIZE - 1, MSG_DONTWAIT);
+
+		if (bytesRead > 0) {
+			buffer[bytesRead] = '\0';
+			shared->request.append(buffer);
+			std::time(&(shared->timestamp_last_request));
+		} else if (bytesRead == 0) {
+			// Connection closed by client
+			shared->status = Status::closing;
+			break;
+		} else {
+			if (shared->fd != -1) {
+				shared->status = Status::handling_request;
+				break;
+			} else {
+				// Assuming an error that we need to handle as a critical failure
+				std::cerr << "Critical error reading from socket.\n";
+				shared->response_code = 500;
+				shared->status = Status::writing;
+				auto pos = shared->errorPages.find(shared->response_code);
+				if (pos != shared->errorPages.end()) {
+					shared->response = pos->second;
+				}
+				break;
 			}
-			shared->status = Status::writing;
-			break;
-		}
-
-		std::time(&(shared->timestamp_last_request));
-		buffer[bytesRead] = '\0';
-		shared->request.append(buffer, bytesRead);
-
-		if (bytesRead == 0 || bytesRead < BUFFER_SIZE) {
-			shared->status = Status::handling_request;
-			shared->response_code = 200; // Check on this
-			break;
 		}
 	}
-	std::cerr << "fd = "<<  shared->fd << std::endl;
-	std::cerr << "request = " << shared->request << std::endl;
-}
 
-
-void	WebServ::_closeConnections() {
-	int numEvents =  epoll_wait(_epollFd, _events, MAX_EVENTS, 0);
-	for (int idx = 0; idx < numEvents; idx++) {
-		SharedData *shared = static_cast<SharedData*>(_events[idx].data.ptr);
-		if (_events[idx].events && shared->status != Status::listening) {
-			closeCGIfds(shared);
-			closeConnection(shared);
-		}
+	if (shared->status == Status::handling_request) {
+		std::cerr << "fd = " << shared->fd << std::endl;
+		std::cerr << "Request = " << shared->request << std::endl;
 	}
 }
+
 
 void	WebServ::writeData(SharedData* shared) {
+	if (shared->status == Status::closing) return;
+	static int count;
 	int clientFd = shared->fd;
 	std::cout << PURPLE << "Am I here @start?\n" << RESET << std::endl;
 	int len = std::min(static_cast<int>(shared->response.length()), BUFFER_SIZE);
@@ -106,12 +117,24 @@ void	WebServ::writeData(SharedData* shared) {
 		shared->response = shared->response.substr(len, shared->response.npos);
 		shared->status = Status::writing;
 	} else {
-		std::cerr << "Does this ever happen?" << std::endl;
+		std::cerr << "Does this ever happen? count " << RED << count++ << RESET << std::endl;
 		shared->response.clear();
 		shared->status = shared->connection_closed ? Status::closing : Status::reading;
+		//Here I think I keep reading the message I recv before, but it was already handled.
 	}
 	std::cout << PURPLE << "Am I here?\n" << RESET << std::endl;
 	// shared->status = Status::closing; // TODO TODOULOUUUU LOOK INTO THIS
+}
+
+void	WebServ::_closeConnections() {
+	int numEvents =  epoll_wait(_epollFd, _events, MAX_EVENTS, 0);
+	for (int idx = 0; idx < numEvents; idx++) {
+		SharedData *shared = static_cast<SharedData*>(_events[idx].data.ptr);
+		if (_events[idx].events && shared->status != Status::listening) {
+			closeCGIfds(shared);
+			closeConnection(shared);
+		}
+	}
 }
 
 void	WebServ::run() {
@@ -125,13 +148,15 @@ void	WebServ::run() {
 				newConnection(shared);
 			if (_events[idx].events & EPOLLIN && shared->status == Status::reading) // just for now, i think? Or do I need another status? 
 				readData(shared);
-			if (shared->status == Status::handling_request)
-				req = parseRequest(shared);
-			if (_events[idx].events & EPOLLHUP && shared->status == Status::in_cgi)
+			if (shared->status == Status::handling_request){
+				handleRequest(shared);
+				// req = parseRequest(shared);
+			}
+			if ((_events[idx].events & EPOLLHUP) && shared->status == Status::in_cgi)
 				cgiHandler(shared, req);
-			if (_events[idx].events & EPOLLOUT && shared->status == Status::writing)
+			if ((_events[idx].events & EPOLLOUT) && shared->status == Status::writing)
 				writeData(shared);
-			if (_events[idx].events & EPOLLERR || shared->status == Status::closing) {
+			if ((_events[idx].events & EPOLLERR) || shared->status == Status::closing) {
 				std::cout << RED << "HERE" << std::endl;
 				closeCGIfds(shared);
 				closeConnection(shared);
@@ -242,9 +267,8 @@ void WebServ::initErrorPages(SharedData* shared) {
 	"Content-Type: text/html\r\n\nContent-Length: 130\r\n\r\n "
 	"<!DOCTYPE html><html><head><title>403</title></head><body><h1> 403 Forbiden! </h1><p>This is top secret, sorry!</p></body></html>";
 	shared->errorPages[404] = "HTTP/1.1 404 Not Found\r\n"
-							"Content-Length: 119 \r\n"
-							"Date: Thu, 01 Aug 2024 20:53:05 GMT\r\n"
-							"<!DOCTYPE html><html><body><h1>404 Not Found</h1><p>Page Not Found</p></body></html>\r\n";
+							"Content-Type: text/html\r\n\nContent-Length: 115\r\n\r\n "
+							"<!DOCTYPE html><html><head><title>404</title></head><body><h1> 404 Page not found! </h1><p>Puff!</p></body></html>";
 	// shared->errorPages[404] = "HTTP/1.1 404 Not Found\r\n\n"
 	// "Content-Type: text/html\r\n\nContent-Length: 115\r\n\r\n "
 	// "<!DOCTYPE html><html><head><title>404</title></head><body><h1> 404 Page not found! </h1><p>Puff!</p></body></html>";

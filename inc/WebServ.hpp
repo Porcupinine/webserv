@@ -27,6 +27,7 @@ class WebServ {
 
 		void	newConnection(SharedData* shared);
 		void	handleRequest(SharedData* shared);
+		void	readData(SharedData* shared);
 		void	writeData(SharedData* shared);
 		void	initErrorPages(SharedData* shared);
 
