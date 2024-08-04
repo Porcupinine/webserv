@@ -46,6 +46,8 @@ class WebServ {
 		epoll_event									_events[MAX_EVENTS];
 		std::vector<std::unique_ptr<Server>>		_servers;
 
+		std::vector<std::shared_ptr<SharedData>>	_sharedPtrs;
+
 		static void									_handleSignal(int sig);
 		// void										_sendMockResponse(int clientFd);
 
