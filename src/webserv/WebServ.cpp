@@ -27,7 +27,6 @@ WebServ::WebServ(int argc, char **argv) {
 			throw	std::runtime_error("epoll_create1: " + std::string(strerror(errno)));
 		}
 		_initializeServers(config);
-		printf("%sKOM IK HIER\n%s", CYAN, RESET);
 	} catch (std::exception &e){
 		std::cout << "Error: " << e.what() << std::endl;
 	}
@@ -106,6 +105,7 @@ void	WebServ::writeData(SharedData* shared) {
 	static int count;
 	int clientFd = shared->fd;
 	std::cout << PURPLE << "Am I here @start?\n" << RESET << std::endl;
+	// std::cout << "resp = " << shared->response << std::endl;
 	int len = std::min(static_cast<int>(shared->response.length()), BUFFER_SIZE);
 	len = send(clientFd, shared->response.c_str(), len, MSG_NOSIGNAL);
 	if (len == -1) {
@@ -119,10 +119,8 @@ void	WebServ::writeData(SharedData* shared) {
 		std::cerr << "Does this ever happen? count " << RED << count++ << RESET << std::endl;
 		shared->response.clear();
 		shared->status = shared->connection_closed ? Status::closing : Status::reading;
-		//Here I think I keep reading the message I recv before, but it was already handled.
 	}
 	std::cout << PURPLE << "Am I here?\n" << RESET << std::endl;
-	// shared->status = Status::closing; // TODO TODOULOUUUU LOOK INTO THIS
 }
 
 void	WebServ::_closeConnections() {
@@ -145,7 +143,7 @@ void	WebServ::run() {
 			// _checkHanging(); Still need to figure something out here.
 			if (_events[idx].events & EPOLLIN && shared->status == Status::listening)
 				newConnection(shared);
-			if (_events[idx].events & EPOLLIN && shared->status == Status::reading) // just for now, i think? Or do I need another status? 
+			if (_events[idx].events & EPOLLIN && shared->status == Status::reading)
 				readData(shared);
 			if (shared->status == Status::handling_request){
 				handleRequest(shared);
@@ -172,12 +170,14 @@ void	WebServ::stop() {
 
 void	WebServ::_setNonBlocking(int fd) {
 	int flags = fcntl(fd, F_GETFL, 0);
+
 	if (flags == -1) {
-		std::cerr << "Error getting flags: " << strerror(errno) << std::endl;
-		return;
+		std::string err_msg = "error getting flags: " + std::string(strerror(errno));
+		throw InitException(err_msg);
 	}
 	if (fcntl(fd, F_SETFL, flags | O_NONBLOCK) == -1) {
-		std::cerr << "Error setting non-blocking: " << strerror(errno) << std::endl;
+		std::string err_msg = "error setting flags: " + std::string(strerror(errno));
+		throw InitException(err_msg);
 	}
 }
 
@@ -226,6 +226,7 @@ void	WebServ::newConnection(SharedData* shared) {
 	clientShared->request = "";
 	clientShared->response = "";
 	clientShared->response_code = 200; // TODO check on this
+	// clientShared->server = shared->server;
 	clientShared->server_config = shared->server_config;
 	// std::cout << "IN LOU " << shared->server_config->root_dir << " and " << shared->server_config->auto_index << "\n";
 	clientShared->connection_closed = false;
