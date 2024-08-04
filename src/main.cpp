@@ -1,5 +1,4 @@
-// #include "../inc/Config.hpp"
-#include "../inc/WebServ.hpp"
+#include "WebServ.hpp"
 
 int main(int argc, char **argv){
 	try {
