@@ -47,7 +47,6 @@ void	closeConnection(SharedData* shared) {
 	epoll_ctl(shared->epoll_fd, EPOLL_CTL_DEL, shared->fd, nullptr);
 	if (close(shared->fd) == -1)
 		std::cout << RED << "failed to close regular fd " << shared->fd << ": " << std::string(strerror(errno)) << RESET << std::endl;
-	// delete shared; // double check this. // Or this??
 }
 
 void WebServ::handleRequest(SharedData* shared) {
@@ -214,8 +213,8 @@ void	WebServ::newConnection(SharedData* shared) {
 		return;
 	}
 
-	printf("%sClientFd: %d\tSharedFd: %d%s\n", PURPLE, clientFd, shared->fd, RESET);
-	// std::cout << PURPLE << "ClientFd: " << clientFd << "SharedFd: " << shared->fd << RESET << std::endl;
+	// printf("%sClientFd: %d\tSharedFd: %d%s\n", PURPLE, clientFd, shared->fd, RESET);
+	std::cout << PURPLE << "ClientFd: " << clientFd << "\tSharedFd: " << shared->fd << RESET << std::endl;
 	_setNonBlocking(clientFd); // Add some errorhandling
 
 	auto clientShared = std::make_shared<SharedData>();
@@ -240,7 +239,6 @@ void	WebServ::newConnection(SharedData* shared) {
 	if (epoll_ctl(shared->epoll_fd, EPOLL_CTL_ADD, clientFd, &event) == -1) {
 		std::cerr << "Error registering new client on epoll: " << strerror(errno) << std::endl;
 		close(clientFd);
-		// delete clientShared; // Then I don't need this?
 		return;
 	}
 
