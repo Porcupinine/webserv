@@ -1,7 +1,12 @@
 #include "Config.hpp"
 
 Config::Config(const std::string& filePath) : _filePath(filePath), _lineNum(0), _confErrorOccurred(false) {
-	// check extension.
+	
+	size_t findExt = filePath.find_last_of(".");
+    std::string ext = filePath.substr(findExt, sizeof("conf"));
+    if ((findExt + 4) == filePath.size() && ext != "conf")
+		throw FileException(WRONG_EXT);
+
 	std::ifstream configFile(filePath);
 	if (!configFile)
 		throw FileException(OPEN_FILE_ERR);
@@ -33,7 +38,7 @@ Config::Config(const std::string& filePath) : _filePath(filePath), _lineNum(0), 
 					_parseLine(line, *currentConf, configFile);
 			} catch (const ParseException& e) {
 				_confErrorOccurred = true;
-				_error = {e.what(), static_cast<unsigned int>(_lineNum)}; // this should just work..?
+				_error = {e.what(), static_cast<unsigned int>(_lineNum)};
 			}
 		}
 	}
@@ -55,7 +60,7 @@ void	Config::_parseLine(const std::string& line, ServerConfig& config, std::ifst
 	switch(key) {
 		case ConfigKey::host:
 			// std::cout << "Hoest" << std::endl;
-			iss >> config.host;	// Still need to pop the ';' at the end.. I removed the ';'
+			iss >> config.host;
 			break;
 		case ConfigKey::port:
 			// std::cout << "Poert" << std::endl;
