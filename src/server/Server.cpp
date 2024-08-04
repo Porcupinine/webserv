@@ -26,6 +26,7 @@ int Server::initServer(const ServerConfig *config, int epollFd, double timeout, 
 	// _serverAddr.sin_addr.s_addr = inet_addr(config->host.c_str()); voor de echte host?
 	_serverAddr.sin_port = htons(config->port);
 
+	_configs = config;
 	if (config->port == 0 || config->port > 65535) {
 		throw ServerException("Port number out of range: " + std::to_string(config->port));
 	}
@@ -86,7 +87,7 @@ void Server::_registerWithEpoll(int epollFd, int fd, uint32_t events) {
 	_shared->epoll_fd = epollFd;
 
 	_shared->status = Status::listening;
-	_shared->server_config = _configs; // Dit fixen.
+	_shared->server_config = _configs;
 	_shared->connection_closed = false; // Should I set this..? No I think domi..
 
 	_shared->timestamp_last_request = std::time(nullptr);
