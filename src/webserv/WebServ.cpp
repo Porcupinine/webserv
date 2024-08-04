@@ -47,7 +47,7 @@ void	closeConnection(SharedData* shared) {
 	epoll_ctl(shared->epoll_fd, EPOLL_CTL_DEL, shared->fd, nullptr);
 	if (close(shared->fd) == -1)
 		std::cout << RED << "failed to close regular fd " << shared->fd << ": " << std::string(strerror(errno)) << RESET << std::endl;
-	delete shared; // double check this.
+	// delete shared; // double check this. // Or this??
 }
 
 void WebServ::handleRequest(SharedData* shared) {
@@ -219,7 +219,7 @@ void	WebServ::newConnection(SharedData* shared) {
 	// std::cout << PURPLE << "ClientFd: " << clientFd << "SharedFd: " << shared->fd << RESET << std::endl;
 	_setNonBlocking(clientFd); // Add some errorhandling
 
-	SharedData* clientShared(new SharedData);
+	auto clientShared = std::make_shared<SharedData>();
 	clientShared->fd = clientFd;
 	clientShared->epoll_fd = shared->epoll_fd;
 	clientShared->cgi_fd = 0;
@@ -228,22 +228,24 @@ void	WebServ::newConnection(SharedData* shared) {
 	clientShared->request = "";
 	clientShared->response = "";
 	clientShared->response_code = 200; // TODO check on this
-	clientShared->server_config = this->_servers[0]->getConf(); // Kijk hier naar.
-//	std::cout << "IN LOU " << shared->server_config->root_dir << " and " << shared->server_config->auto_index << "\n";
+	clientShared->server_config = shared->server_config;
+	// std::cout << "IN LOU " << shared->server_config->root_dir << " and " << shared->server_config->auto_index << "\n";
 	clientShared->connection_closed = false;
 	clientShared->timestamp_last_request = std::time(nullptr);
 	initErrorPages(shared);
 
 	epoll_event event;
 	event.events = EPOLLIN | EPOLLOUT;
-	event.data.ptr = clientShared;
+	event.data.ptr = clientShared.get();
 
 	if (epoll_ctl(shared->epoll_fd, EPOLL_CTL_ADD, clientFd, &event) == -1) {
 		std::cerr << "Error registering new client on epoll: " << strerror(errno) << std::endl;
 		close(clientFd);
-		delete clientShared;
+		// delete clientShared; // Then I don't need this?
 		return;
 	}
+
+	_sharedPtrs.push_back(clientShared);
 	std::cout << CYAN << "Registered client fd =" << clientFd << RESET << std::endl;
 }
 
