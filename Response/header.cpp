@@ -1,12 +1,12 @@
 /* ************************************************************************** */
 /*                                                                            */
-/*                                                        :::      ::::::::   */
-/*   header.cpp                                         :+:      :+:    :+:   */
-/*                                                    +:+ +:+         +:+     */
-/*   By: dmaessen <dmaessen@student.42.fr>          +#+  +:+       +#+        */
-/*                                                +#+#+#+#+#+   +#+           */
-/*   Created: 2024/07/07 15:50:08 by dmaessen          #+#    #+#             */
-/*   Updated: 2024/08/01 11:23:40 by dmaessen         ###   ########.fr       */
+/*                                                        ::::::::            */
+/*   header.cpp                                         :+:    :+:            */
+/*                                                     +:+                    */
+/*   By: dmaessen <dmaessen@student.42.fr>            +#+                     */
+/*                                                   +#+                      */
+/*   Created: 2024/07/07 15:50:08 by dmaessen      #+#    #+#                 */
+/*   Updated: 2024/08/04 20:10:52 by ewehl         ########   odam.nl         */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -65,7 +65,7 @@ std::string Response::setDate(parseRequest& request) {
 
 /* HEADER GETTERS */
 std::string Response::getHeaderValues(parseRequest& request, std::string header, struct SharedData* shared) {
-	header += request.getVersion() + " " + std::to_string(_statusCode) + " " + getMatchingCodeString(_statusCode) + "/r/n";
+	header += "HTTP/" + request.getVersion() + " " + std::to_string(_statusCode) + " " + getMatchingCodeString(_statusCode) + "/r/n";
 	if (_allow != "")
 		header += "Allow: " + _allow + "/r/n";
 	if (request.getCookies().size() > 0) {
@@ -82,6 +82,12 @@ std::string Response::getHeaderValues(parseRequest& request, std::string header,
 		header += "Date: " + _date + "/r/n";
 	if (_statusCode == 301 || _statusCode == 302 || _statusCode == 307 || _statusCode == 308){
 		int key = 1;
+		
+		// auto redirectMap = shared->server->getRedirect();
+		// auto it = redirectMap.find(key);
+		// if (it != redirectMap.end()) {
+       	// 	header += "Location: " + it->second + "\r\n";
+    	// }
 		auto it = shared->server_config->locations[0].redirect.find(key);
 		if (it != shared->server_config->locations[0].redirect.end()) {
 			header += "Location: " + it->second + "\r\n";
@@ -91,6 +97,7 @@ std::string Response::getHeaderValues(parseRequest& request, std::string header,
 
 	if (_response != "")
 		header += "/r/n" + _response + "/r/n";
+	// std::cout << "header = " << header << std::endl; 
 	return header;
 }
 
