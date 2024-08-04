@@ -3,7 +3,7 @@ FROM ubuntu:22.04
 WORKDIR /usr/src/app
 
 RUN apt-get update && \
-    apt-get install -y build-essential cmake curl telnet vim
+    apt-get install -y build-essential cmake curl telnet vim valgrind
 
 # COPY . .
 COPY CMakeLists.txt .
