@@ -1,5 +1,6 @@
 #include "WebServ.hpp"
 #include "VirtualHost.hpp"
+#include "utils.hpp"
 #include <fcntl.h>
 #include <ctime>
 
@@ -33,20 +34,45 @@ WebServ::WebServ(int argc, char **argv) {
 	}
 }
 
-// Dit moet naar connectionutils.cpp ofzo
-void	closeCGIfds(SharedData* shared) {
-	if (shared->cgi_fd != -1) {
-		epoll_ctl(shared->epoll_fd, EPOLL_CTL_DEL, shared->cgi_fd, nullptr);
-		if (close(shared->cgi_fd) == -1)
-			std::cout << RED << "failed to close cgi fd " << shared->fd << ": " << std::string(strerror(errno)) << RESET << std::endl;
-		shared->cgi_fd = -1;
-	}
+WebServ::~WebServ() {
+	if (_epollFd != -1) close(_epollFd);
+	// _closeConnections();
 }
 
-void	closeConnection(SharedData* shared) {
-	epoll_ctl(shared->epoll_fd, EPOLL_CTL_DEL, shared->fd, nullptr);
-	if (close(shared->fd) == -1)
-		std::cout << RED << "failed to close regular fd " << shared->fd << ": " << std::string(strerror(errno)) << RESET << std::endl;
+void WebServ::initErrorPages(SharedData* shared) {
+	shared->errorPages[301] = "HTTP/1.1 301 Moved Permanently\r\n\n"
+	"Content-Type: text/html\r\n\nContent-Length: 150\r\n\r\n "
+	"<!DOCTYPE html><html><head><title>301</title></head><body><h1> 301 Moved Permanently! </h1><p>This page has been moved permanently.</p></body></html>";
+	shared->errorPages[302] = "HTTP/1.1 302 Found\r\n\n"
+	"Content-Type: text/html\r\n\nContent-Length: 138\r\n\r\n "
+	"<!DOCTYPE html><html><head><title>302</title></head><body><h1> 302 Found! </h1><p>This page has been temporarily moved.</p></body></html>";
+	shared->errorPages[307] = "HTTP/1.1 307 Temporary Redirect\r\n\n"
+	"Content-Type: text/html\r\n\nContent-Length: 137\r\n\r\n "
+	"<!DOCTYPE html><html><head><title>307</title></head><body><h1> 307 Temporary Redirect! </h1><p>This page is temporary.</p></body></html>";
+	shared->errorPages[308] = "HTTP/1.1 308 Permanent Redirect\r\n\n"
+	"Content-Type: text/html\r\n\nContent-Length: 151\r\n\r\n "
+	"<!DOCTYPE html><html><head><title>308</title></head><body><h1> 308 Permanent Redirect! </h1><p>This page has been permanently moved.</p></body></html>";
+	shared->errorPages[400] = "HTTP/1.1 400 Bad Request\r\n\n"
+	"Content-Type: text/html\r\n\nContent-Length: 151\r\n\r\n "
+	"<!DOCTYPE html><html><head><title>400</title></head><body><h1> 400 Bad Request Error! </h1><p>We are not speaking the same language!</p></body></html>";
+	shared->errorPages[403] = "HTTP/1.1 403 Forbiden\r\n\n"
+	"Content-Type: text/html\r\n\nContent-Length: 130\r\n\r\n "
+	"<!DOCTYPE html><html><head><title>403</title></head><body><h1> 403 Forbiden! </h1><p>This is top secret, sorry!</p></body></html>";
+	shared->errorPages[404] = "HTTP/1.1 404 Not Found\r\n"
+							"Content-Type: text/html\r\n\nContent-Length: 115\r\n\r\n "
+							"<!DOCTYPE html><html><head><title>404</title></head><body><h1> 404 Page not found! </h1><p>Puff!</p></body></html>";
+	// shared->errorPages[404] = "HTTP/1.1 404 Not Found\r\n\n"
+	// "Content-Type: text/html\r\n\nContent-Length: 115\r\n\r\n "
+	// "<!DOCTYPE html><html><head><title>404</title></head><body><h1> 404 Page not found! </h1><p>Puff!</p></body></html>";
+	shared->errorPages[405] = "HTTP/1.1 405 Method Not Allowed\r\n\n"
+	"Content-Type: text/html\r\n\nContent-Length: 139\r\n\r\n "
+	"<!DOCTYPE html><html><head><title>405</title></head><body><h1> 405 Method Not Allowed! </h1><p>We forgot how to do that!</p></body></html>";
+	shared->errorPages[413] = "HTTP/1.1 413 Payload Too Large\r\n\n"
+	"Content-Type: text/html\r\n\nContent-Length: 163\r\n\r\n "
+	"<!DOCTYPE html><html><head><title>413</title></head><body><h1> 413 Payload Too Large! </h1><p>We are too busy right now, please try again later!</p></body></html>";
+	shared->errorPages[500] = "HTTP/1.1 500 Internal Server Error\r\n\n"
+	"Content-Type: text/html\r\n\nContent-Length: 146\r\n\r\n "
+	"<!DOCTYPE html><html><head><title>500</title></head><body><h1> 500 Internal Server Error! </h1><p>I probably should study more!</p></body></html>";
 }
 
 void WebServ::handleRequest(SharedData* shared) {
@@ -124,17 +150,6 @@ void	WebServ::writeData(SharedData* shared) {
 	std::cout << PURPLE << "Am I here?\n" << RESET << std::endl;
 }
 
-void	WebServ::_closeConnections() {
-	int numEvents =  epoll_wait(_epollFd, _events, MAX_EVENTS, 0);
-	for (int idx = 0; idx < numEvents; idx++) {
-		SharedData *shared = static_cast<SharedData*>(_events[idx].data.ptr);
-		if (_events[idx].events && shared->status != Status::listening) {
-			closeCGIfds(shared);
-			closeConnection(shared);
-		}
-	}
-}
-
 void	WebServ::run() {
 	while (_serverShutdown == false) {
 		int numEvents = epoll_wait(_epollFd, _events, MAX_EVENTS, -1);
@@ -168,9 +183,15 @@ void	WebServ::run() {
 	_closeConnections();
 }
 
-
-void	WebServ::stop() {
-
+void	WebServ::_closeConnections() {
+	int numEvents =  epoll_wait(_epollFd, _events, MAX_EVENTS, 0);
+	for (int idx = 0; idx < numEvents; idx++) {
+		SharedData *shared = static_cast<SharedData*>(_events[idx].data.ptr);
+		if (_events[idx].events && shared->status != Status::listening) {
+			closeCGIfds(shared);
+			closeConnection(shared);
+		}
+	}
 }
 
 void	WebServ::_setNonBlocking(int fd) {
@@ -255,42 +276,6 @@ void	WebServ::newConnection(SharedData* shared) {
 	std::cout << CYAN << "Registered client fd =" << clientFd << RESET << std::endl;
 }
 
-void WebServ::initErrorPages(SharedData* shared) {
-	shared->errorPages[301] = "HTTP/1.1 301 Moved Permanently\r\n\n"
-	"Content-Type: text/html\r\n\nContent-Length: 150\r\n\r\n "
-	"<!DOCTYPE html><html><head><title>301</title></head><body><h1> 301 Moved Permanently! </h1><p>This page has been moved permanently.</p></body></html>";
-	shared->errorPages[302] = "HTTP/1.1 302 Found\r\n\n"
-	"Content-Type: text/html\r\n\nContent-Length: 138\r\n\r\n "
-	"<!DOCTYPE html><html><head><title>302</title></head><body><h1> 302 Found! </h1><p>This page has been temporarily moved.</p></body></html>";
-	shared->errorPages[307] = "HTTP/1.1 307 Temporary Redirect\r\n\n"
-	"Content-Type: text/html\r\n\nContent-Length: 137\r\n\r\n "
-	"<!DOCTYPE html><html><head><title>307</title></head><body><h1> 307 Temporary Redirect! </h1><p>This page is temporary.</p></body></html>";
-	shared->errorPages[308] = "HTTP/1.1 308 Permanent Redirect\r\n\n"
-	"Content-Type: text/html\r\n\nContent-Length: 151\r\n\r\n "
-	"<!DOCTYPE html><html><head><title>308</title></head><body><h1> 308 Permanent Redirect! </h1><p>This page has been permanently moved.</p></body></html>";
-	shared->errorPages[400] = "HTTP/1.1 400 Bad Request\r\n\n"
-	"Content-Type: text/html\r\n\nContent-Length: 151\r\n\r\n "
-	"<!DOCTYPE html><html><head><title>400</title></head><body><h1> 400 Bad Request Error! </h1><p>We are not speaking the same language!</p></body></html>";
-	shared->errorPages[403] = "HTTP/1.1 403 Forbiden\r\n\n"
-	"Content-Type: text/html\r\n\nContent-Length: 130\r\n\r\n "
-	"<!DOCTYPE html><html><head><title>403</title></head><body><h1> 403 Forbiden! </h1><p>This is top secret, sorry!</p></body></html>";
-	shared->errorPages[404] = "HTTP/1.1 404 Not Found\r\n"
-							"Content-Type: text/html\r\n\nContent-Length: 115\r\n\r\n "
-							"<!DOCTYPE html><html><head><title>404</title></head><body><h1> 404 Page not found! </h1><p>Puff!</p></body></html>";
-	// shared->errorPages[404] = "HTTP/1.1 404 Not Found\r\n\n"
-	// "Content-Type: text/html\r\n\nContent-Length: 115\r\n\r\n "
-	// "<!DOCTYPE html><html><head><title>404</title></head><body><h1> 404 Page not found! </h1><p>Puff!</p></body></html>";
-	shared->errorPages[405] = "HTTP/1.1 405 Method Not Allowed\r\n\n"
-	"Content-Type: text/html\r\n\nContent-Length: 139\r\n\r\n "
-	"<!DOCTYPE html><html><head><title>405</title></head><body><h1> 405 Method Not Allowed! </h1><p>We forgot how to do that!</p></body></html>";
-	shared->errorPages[413] = "HTTP/1.1 413 Payload Too Large\r\n\n"
-	"Content-Type: text/html\r\n\nContent-Length: 163\r\n\r\n "
-	"<!DOCTYPE html><html><head><title>413</title></head><body><h1> 413 Payload Too Large! </h1><p>We are too busy right now, please try again later!</p></body></html>";
-	shared->errorPages[500] = "HTTP/1.1 500 Internal Server Error\r\n\n"
-	"Content-Type: text/html\r\n\nContent-Length: 146\r\n\r\n "
-	"<!DOCTYPE html><html><head><title>500</title></head><body><h1> 500 Internal Server Error! </h1><p>I probably should study more!</p></body></html>";
-}
-
 void WebServ::_handleSignal(int sig) {
 	if (sig == SIGINT)
 		_serverShutdown = true;
@@ -299,9 +284,4 @@ void WebServ::_handleSignal(int sig) {
 
 void WebServ::_setUpSigHandlers() {
 	signal(SIGINT, _handleSignal);
-}
-
-WebServ::~WebServ() {
-	if (_epollFd != -1) close(_epollFd);
-	// if (_listenSocket != -1) close(_listenSocket); This needs to happen in hostDestructors.. I think
 }
