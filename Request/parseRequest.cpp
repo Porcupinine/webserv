@@ -21,7 +21,7 @@ parseRequest::parseRequest(struct SharedData* shared) :  _methodType(""), _versi
     std::cout << GREEN << "ServerConfig = " << shared->server_config->host << RESET << std::endl; // something up here.
     std::cout << GREEN << "ServerConfig = " << shared->server_config->root_dir << RESET << std::endl; // something up here.
     parseStr(shared->request, shared);
-    if (cgiInvolved(_headers["Path"]) == false)
+    if (cgiInvolved(_path) == false)
         shared->status = Status::writing;
 	std::cout << "response is " << shared->response << "\n";
 }
@@ -81,8 +81,8 @@ void parseRequest::parseStr(std::string &info, struct SharedData* shared) {
         _cookies = parseCookies(_headers["Cookie"]);
     
     _cgiresponse = "";
-    if (cgiInvolved(_headers["Path"]) == true) {
-        shared->status = Status::in_cgi; //TODO not updating it as it doesn't exist
+    if (cgiInvolved(_path) == true) {
+        shared->status = Status::in_cgi; //TODO changed the arg
         std::cout << "going in cgi??\n";
         return ;
     }
@@ -336,7 +336,7 @@ int parseRequest::parsePath(const std::string &line, size_t i, struct SharedData
     abspath.erase(0, 1);
     _absPathRoot = current + abspath;
 	if (_path[0] == '/' && _path.size() == 2) {
-        _path = _absPathRoot + "/form.html"; // LOOK INTO THIS -- SHOULD BE index.html BUT FOR NOW TO TEST OTHER PAGES
+        _path = _absPathRoot + "/upload.html"; // TODO LOOK INTO THIS -- SHOULD BE index.html BUT FOR NOW TO TEST OTHER PAGES
     }
     // else {
     //     // if its not / then i still need to append the _absPathRoot it so we can find the page

@@ -99,7 +99,7 @@ enum class Method
 
 
 std::string     initMethodString(Method method);
-bool            cgiInvolved(std::string path);
+bool            cgiInvolved(const std::string& path);
 
 
 
