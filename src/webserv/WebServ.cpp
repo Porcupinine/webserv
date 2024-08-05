@@ -28,7 +28,8 @@ WebServ::WebServ(int argc, char **argv) {
 		}
 		_initializeServers(config);
 	} catch (std::exception &e){
-		std::cout << "Error: " << e.what() << std::endl;
+		std::string err_msg =  "error: " + std::string(e.what());
+		throw InitException(err_msg);
 	}
 }
 

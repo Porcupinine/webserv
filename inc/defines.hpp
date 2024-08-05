@@ -58,9 +58,10 @@
 #define ROOT_DIR				"root"
 #define UPLOAD_DIR				"upload_dir"
 
+#define FILE_EXT				".conf"
 #define UNKNOWN_KEY				"Unknown key found "
-#define WRONG_EXT				"Wrong extension"
-#define OPEN_FILE_ERR			"Couldn't open file"
+#define WRONG_EXT				"incompatible file extension"
+#define OPEN_FILE_ERR			"couldn't open file"
 #define INVALID_REDIR_FORMAT	"invalid format for redirect"
 #define INVALID_ERROR_PAGE		"invalid error page format"
 #define SEPARATOR				"********************************************************"

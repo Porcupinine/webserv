@@ -3,8 +3,9 @@
 Config::Config(const std::string& filePath) : _filePath(filePath), _lineNum(0), _confErrorOccurred(false) {
 	
 	size_t findExt = filePath.find_last_of(".");
-    std::string ext = filePath.substr(findExt, sizeof("conf"));
-    if ((findExt + 4) == filePath.size() && ext != "conf")
+    std::string ext = filePath.substr(findExt);
+
+	if (ext != FILE_EXT)
 		throw FileException(WRONG_EXT);
 
 	std::ifstream configFile(filePath);
