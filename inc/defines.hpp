@@ -88,6 +88,8 @@ struct Locations {
 	std::set<std::string>				allowed_methods;
 	std::map<int, std::string>			redirect; // Domi had hier een vraag over, but I don't remember..
 	// std::map<std::string, std::string>	cgi_handlers; // ?? I think this is necessary?
+
+	bool operator==(const Locations& other) const;
 };
 
 struct ServerConfig {
@@ -104,6 +106,8 @@ struct ServerConfig {
 
 	std::map<int, std::string>		error_pages;
 	std::vector<struct Locations>	locations;
+
+	bool operator==(const std::unique_ptr<ServerConfig>& other) const;
 };
 
 struct ConfigError {
@@ -121,7 +125,7 @@ struct SharedData {
 	std::map<unsigned int, std::string>	errorPages;
 
 	int									fd;
-	int									epoll_fd; // check new conection or initserver
+	int									epoll_fd; // check newConnection or initServer
 
 	Status								status; // does this work like this? iT does :D
 	// std::list<ServerConfig *>		server_config;
