@@ -6,7 +6,7 @@
 /*   By: dmaessen <dmaessen@student.42.fr>            +#+                     */
 /*                                                   +#+                      */
 /*   Created: 2024/07/07 15:50:05 by dmaessen      #+#    #+#                 */
-/*   Updated: 2024/08/04 19:55:30 by ewehl         ########   odam.nl         */
+/*   Updated: 2024/08/05 13:59:19 by ewehl         ########   odam.nl         */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -19,6 +19,7 @@ parseRequest::parseRequest(struct SharedData* shared) :  _methodType(""), _versi
     if (shared->request.empty())
         shared->status = Status::closing;
     std::cout << GREEN << "ServerConfig = " << shared->server_config->host << RESET << std::endl; // something up here.
+    std::cout << GREEN << "ServerConfig = " << shared->server_config->root_dir << RESET << std::endl; // something up here.
     parseStr(shared->request, shared);
     if (cgiInvolved(_headers["Path"]) == false)
         shared->status = Status::writing;

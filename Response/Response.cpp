@@ -1,12 +1,12 @@
 /* ************************************************************************** */
 /*                                                                            */
-/*                                                        :::      ::::::::   */
-/*   Response.cpp                                       :+:      :+:    :+:   */
-/*                                                    +:+ +:+         +:+     */
-/*   By: dmaessen <dmaessen@student.42.fr>          +#+  +:+       +#+        */
-/*                                                +#+#+#+#+#+   +#+           */
-/*   Created: 2024/07/07 15:49:40 by dmaessen          #+#    #+#             */
-/*   Updated: 2024/08/01 14:07:34 by dmaessen         ###   ########.fr       */
+/*                                                        ::::::::            */
+/*   Response.cpp                                       :+:    :+:            */
+/*                                                     +:+                    */
+/*   By: dmaessen <dmaessen@student.42.fr>            +#+                     */
+/*                                                   +#+                      */
+/*   Created: 2024/07/07 15:49:40 by dmaessen      #+#    #+#                 */
+/*   Updated: 2024/08/05 14:04:49 by ewehl         ########   odam.nl         */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -32,6 +32,7 @@ std::string Response::giveResponse(parseRequest& request, struct SharedData* sha
     _statusCode = request.getRetVal();
     _type = "";
 
+    std::cout << "test\t" << shared->server_config->auto_index << "\n" << shared->server_config->root_dir << std::endl;
     _isAutoIndex = shared->server_config->auto_index;
     _absrootpath = shared->server_config->root_dir;
     initErrorCodes();
