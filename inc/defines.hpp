@@ -59,6 +59,7 @@
 #define UPLOAD_DIR				"upload_dir"
 
 #define UNKNOWN_KEY				"Unknown key found "
+#define WRONG_EXT				"Wrong extension"
 #define OPEN_FILE_ERR			"Couldn't open file"
 #define INVALID_REDIR_FORMAT	"invalid format for redirect"
 #define INVALID_ERROR_PAGE		"invalid error page format"
