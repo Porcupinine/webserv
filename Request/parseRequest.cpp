@@ -82,7 +82,7 @@ void parseRequest::parseStr(std::string &info, struct SharedData* shared) {
     
     _cgiresponse = "";
     if (cgiInvolved(_headers["Path"]) == true) {
-        shared->status = Status::in_cgi; //TODO not updating it
+        shared->status = Status::in_cgi; //TODO not updating it as it doesn't exist
         std::cout << "going in cgi??\n";
         return ;
     }
