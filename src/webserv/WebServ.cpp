@@ -22,7 +22,7 @@ WebServ::WebServ(int argc, char **argv) {
 		Config config(filePath);
 		if (config.hasErrorOccurred())
 			throw	InitException(config.buildErrorMessage(config.getError()));
-		// config.printConfigs();  Testing purposes.
+		config.printConfigs();  //Testing purposes.
 		if ((_epollFd = epoll_create1(0)) == -1) {
 			throw	std::runtime_error("epoll_create1: " + std::string(strerror(errno)));
 		}
@@ -146,11 +146,15 @@ void	WebServ::run() {
 			if (_events[idx].events & EPOLLIN && shared->status == Status::reading)
 				readData(shared);
 			if (shared->status == Status::handling_request){
-				handleRequest(shared);
-				// req = parseRequest(shared);
+				// handleRequest(shared);
+				std::cout << "SHARED->SERVCONFIG" << std::endl;
+				std::cout << shared->server_config->root_dir << std::endl;
+				req = parseRequest(shared);
 			}
-			if ((_events[idx].events & EPOLLHUP) && shared->status == Status::in_cgi)
+			if ((_events[idx].events & EPOLLHUP) && shared->status == Status::in_cgi){
+				std::cout << "in WebServ cgi\n";
 				cgiHandler(shared, req);
+			}
 			if ((_events[idx].events & EPOLLOUT) && shared->status == Status::writing)
 				writeData(shared);
 			if ((_events[idx].events & EPOLLERR) || shared->status == Status::closing) {
@@ -198,6 +202,8 @@ void WebServ::_initializeServers(Config& conf) {
 		auto server = std::make_unique<Server>();
 		const ServerConfig& servConfig = vhost.getConfig();
 
+
+		std::cout << servConfig.root_dir << std::endl;
 		if (server->initServer(&servConfig, _epollFd, SERVER_TIMEOUT, SERVER_MAX_NO_REQUEST) != 0) {
 			throw InitException("Failed to initialize server for host: " + servConfig.host);
 		}
@@ -228,6 +234,7 @@ void	WebServ::newConnection(SharedData* shared) {
 	clientShared->response_code = 200; // TODO check on this
 	// clientShared->server = shared->server;
 	clientShared->server_config = shared->server_config;
+	std::cout << clientShared->server_config->root_dir << std::endl;
 	// std::cout << "IN LOU " << shared->server_config->root_dir << " and " << shared->server_config->auto_index << "\n";
 	clientShared->connection_closed = false;
 	clientShared->timestamp_last_request = std::time(nullptr);

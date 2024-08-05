@@ -24,13 +24,14 @@ class parseRequest
         std::string _path;
         std::string _version;
         std::string _bodyMsg; 
-        unsigned int _port; // init to 80 by default or what??
+        unsigned int _port;
         unsigned int _returnValue;
         std::string _query;
         std::map<std::string, std::string> _headers;
 		std::list<std::pair<std::string, float>> _language;
         std::string _cgiresponse;
         std::map<std::string, std::string> _cookies;
+        std::string _absPathRoot;
 
 
         void parseStr(std::string &info, struct SharedData* shared);
@@ -39,8 +40,8 @@ class parseRequest
 
         std::string readLine(const std::string &str, size_t &i);
 
-        int parseFirstline(const std::string &info);
-        int parsePath(const std::string &line, size_t i);
+        int parseFirstline(const std::string &info, struct SharedData* shared);
+        int parsePath(const std::string &line, size_t i, struct SharedData &shared);
         int parseVersion(const std::string &line, size_t i);
         int validateMethodType();
 
