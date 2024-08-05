@@ -151,8 +151,10 @@ void	WebServ::run() {
 				std::cout << shared->server_config->root_dir << std::endl;
 				req = parseRequest(shared);
 			}
-			if ((_events[idx].events & EPOLLHUP) && shared->status == Status::in_cgi)
+			if ((_events[idx].events & EPOLLHUP) && shared->status == Status::in_cgi){
+				std::cout << "in WebServ cgi\n";
 				cgiHandler(shared, req);
+			}
 			if ((_events[idx].events & EPOLLOUT) && shared->status == Status::writing)
 				writeData(shared);
 			if ((_events[idx].events & EPOLLERR) || shared->status == Status::closing) {

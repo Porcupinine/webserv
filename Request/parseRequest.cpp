@@ -1,12 +1,12 @@
 /* ************************************************************************** */
 /*                                                                            */
-/*                                                        ::::::::            */
-/*   parseRequest.cpp                                   :+:    :+:            */
-/*                                                     +:+                    */
-/*   By: dmaessen <dmaessen@student.42.fr>            +#+                     */
-/*                                                   +#+                      */
-/*   Created: 2024/07/07 15:50:05 by dmaessen      #+#    #+#                 */
-/*   Updated: 2024/08/05 13:59:19 by ewehl         ########   odam.nl         */
+/*                                                        :::      ::::::::   */
+/*   parseRequest.cpp                                   :+:      :+:    :+:   */
+/*                                                    +:+ +:+         +:+     */
+/*   By: dmaessen <dmaessen@student.42.fr>          +#+  +:+       +#+        */
+/*                                                +#+#+#+#+#+   +#+           */
+/*   Created: 2024/07/07 15:50:05 by dmaessen          #+#    #+#             */
+/*   Updated: 2024/08/05 15:01:17 by dmaessen         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -61,7 +61,7 @@ void parseRequest::parseStr(std::string &info, struct SharedData* shared) {
     std::string value;
     std::string key;
 
-    parseFirstline(readLine(info, i));
+    parseFirstline(readLine(info, i), shared);
     while ((line = readLine(info, i)) != "\r" && line != "" && _returnValue != 400) {
         key = setKey(line);
         value = setValue(line);
@@ -84,6 +84,7 @@ void parseRequest::parseStr(std::string &info, struct SharedData* shared) {
     _cgiresponse = "";
     if (cgiInvolved(_headers["Path"]) == true) {
         shared->status = Status::in_cgi;
+        std::cout << "going in cgi??\n";
         return ;
     }
     Response res;
@@ -297,7 +298,7 @@ const std::map<std::string, std::string>&	parseRequest::getCookies(void) const {
 }
 
 /* PARSING REQUEST */
-int parseRequest::parseFirstline(const std::string &info) {
+int parseRequest::parseFirstline(const std::string &info, struct SharedData* shared) {
     size_t i;
     std::string line;
 
@@ -311,10 +312,11 @@ int parseRequest::parseFirstline(const std::string &info) {
         return _returnValue;
     }
     _methodType.assign(line, 0, i);
-    return parsePath(line, i);
+    std::cout << "ABS " << shared->server_config->root_dir << "\n";
+    return parsePath(line, i, *shared);
 }
 
-int parseRequest::parsePath(const std::string &line, size_t i) {
+int parseRequest::parsePath(const std::string &line, size_t i, struct SharedData &shared) {
     size_t j;
 
     if ((j = line.find_first_not_of(' ', i)) == std::string::npos) {
@@ -328,10 +330,19 @@ int parseRequest::parsePath(const std::string &line, size_t i) {
         return _returnValue;
     }
     _path.assign(line, i + 1, j - i);
+
+    std::string abspath = shared.server_config->root_dir;
+    std::string current = std::filesystem::current_path();
+    std::size_t found = current.find_last_of("/");
+    current.erase(found); // to rm after testing as the dir will be fine
+    abspath.erase(0, 1);
+    _absPathRoot = current + abspath;
 	if (_path[0] == '/' && _path.size() == 2) {
-		// _path = "/Users/ewehl/Documents/Core/GroupServ/index.html"; // check on this later to take from configfile/lou
-		std::cout << "path HERE: " << _path << "\n"; // to rm
-	}
+        _path = _absPathRoot + "/form.html"; // LOOK INTO THIS -- SHOULD BE index.html BUT FOR NOW TO TEST OTHER PAGES
+    }
+    // else {
+    //     // if its not / then i still need to append the _absPathRoot it so we can find the page
+    // }
     return parseVersion(line, j);
 }
 
