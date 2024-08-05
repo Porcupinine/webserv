@@ -27,8 +27,12 @@ Config::Config(const std::string& filePath) : _filePath(filePath), _lineNum(0), 
 
 		if (line == "}") {
 			if (currentConf) {
-				std::cout << "adding config: " << currentConf->host << ":" << currentConf->port << std::endl;
-				_serverConfigs.push_back(*currentConf);
+				if (std::find(_serverConfigs.begin(), _serverConfigs.end(), currentConf) != _serverConfigs.end())
+					std::cout << "We're skipping a duplicate of " << currentConf->host << ":" << currentConf->port << "." << std::endl; 
+				else {
+					_addConfig(*currentConf);
+					std::cout << "adding config: " << currentConf->host << ":" << currentConf->port << std::endl;
+				}
 				currentConf.reset();
 			}
 			continue;
