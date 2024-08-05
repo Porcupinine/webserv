@@ -56,15 +56,12 @@ private:
 		int									_getFD() const;
 		struct sockaddr_in					_getServerAddr() const;
 		std::shared_ptr<SharedData>			_getSharedData() const;
-		struct ServerConfig*				_getHostConfigs(const std::string &host) const;
-
 
 		void								_bindSocket();
     	void								_listenSocket(int backlog);
 		void								_setSocketOptions();
 		void								_setSharedData();
 		void								_registerWithEpoll(int epollFd, int fd, uint32_t events);
-		// void								_sendMockResponse(int clientFd);
 
 		int									_fd;
 		struct sockaddr_in					_serverAddr;

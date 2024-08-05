@@ -23,7 +23,7 @@ WebServ::WebServ(int argc, char **argv) {
 		Config config(filePath);
 		if (config.hasErrorOccurred())
 			throw	InitException(config.buildErrorMessage(config.getError()));
-		config.printConfigs();  //Testing purposes.
+		// config.printConfigs();  //Testing purposes.
 		if ((_epollFd = epoll_create1(0)) == -1) {
 			throw	std::runtime_error("epoll_create1: " + std::string(strerror(errno)));
 		}
@@ -87,6 +87,29 @@ void WebServ::handleRequest(SharedData* shared) {
 	shared->status = Status::writing;
 }
 
+void	WebServ::writeData(SharedData* shared) {
+	if (shared->status == Status::closing) return;
+	static int count;
+	int clientFd = shared->fd;
+	std::cout << PURPLE << "Am I here @start?\n" << RESET << std::endl;
+	// std::cout << "resp = " << shared->response << std::endl;
+	int len = std::min(static_cast<int>(shared->response.length()), BUFFER_SIZE);
+	len = send(clientFd, shared->response.c_str(), len, MSG_NOSIGNAL);
+	if (len == -1) {
+		std::cerr << "Some error occured trying to send. Reason " << RED << strerror(errno) << RESET << std::endl;
+		printf("\t\t%s%d%s", CYAN, clientFd, RESET);
+		shared->status = Status::closing;
+	} else if (len < static_cast<int>(shared->response.size())) {
+		shared->response = shared->response.substr(len, shared->response.npos);
+		shared->status = Status::writing;
+	} else {
+		std::cerr << "Does this ever happen? count " << RED << count++ << RESET << std::endl;
+		shared->response.clear();
+		shared->status = shared->connection_closed ? Status::closing : Status::reading;
+	}
+	std::cout << PURPLE << "Am I here?\n" << RESET << std::endl;
+}
+
 void WebServ::readData(SharedData* shared) {
 	char buffer[BUFFER_SIZE];
 	int bytesRead;
@@ -126,28 +149,49 @@ void WebServ::readData(SharedData* shared) {
 	}
 }
 
-
-void	WebServ::writeData(SharedData* shared) {
-	if (shared->status == Status::closing) return;
-	static int count;
-	int clientFd = shared->fd;
-	std::cout << PURPLE << "Am I here @start?\n" << RESET << std::endl;
-	// std::cout << "resp = " << shared->response << std::endl;
-	int len = std::min(static_cast<int>(shared->response.length()), BUFFER_SIZE);
-	len = send(clientFd, shared->response.c_str(), len, MSG_NOSIGNAL);
-	if (len == -1) {
-		std::cerr << "Some error occured trying to send. Reason " << RED << strerror(errno) << RESET << std::endl;
-		printf("\t\t%s%d%s", CYAN, clientFd, RESET);
-		shared->status = Status::closing;
-	} else if (len < static_cast<int>(shared->response.size())) {
-		shared->response = shared->response.substr(len, shared->response.npos);
-		shared->status = Status::writing;
-	} else {
-		std::cerr << "Does this ever happen? count " << RED << count++ << RESET << std::endl;
-		shared->response.clear();
-		shared->status = shared->connection_closed ? Status::closing : Status::reading;
+void	WebServ::newConnection(SharedData* shared) {
+	std::cout << PURPLE << "Do I get here newConnection?" << RESET << std::endl;
+	int clientFd = accept(shared->fd, nullptr, nullptr);
+	if (clientFd == -1) {
+		std::cerr << "Failed to accept new connection: " << strerror(errno) << std::endl; //make this some exception
+		return;
 	}
-	std::cout << PURPLE << "Am I here?\n" << RESET << std::endl;
+
+	// printf("%sClientFd: %d\tSharedFd: %d%s\n", PURPLE, clientFd, shared->fd, RESET);
+	std::cout << PURPLE << "ClientFd: " << clientFd << "\tSharedFd: " << shared->fd << RESET << std::endl;
+	_setNonBlocking(clientFd); // Add some errorhandling
+
+	std::cout << "Serv conf = " << shared->server_config->root_dir << std::endl;
+
+	auto clientShared = std::make_shared<SharedData>();
+	clientShared->fd = clientFd;
+	clientShared->epoll_fd = shared->epoll_fd;
+	clientShared->cgi_fd = -1;
+	clientShared->cgi_pid = -1;
+	clientShared->status = Status::reading;
+	clientShared->request = "";
+	clientShared->response = "";
+	clientShared->response_code = 200; // TODO check on this
+	// clientShared->server = shared->server;
+	clientShared->server_config = shared->server_config;
+	std::cout << shared->server_config->root_dir << std::endl;
+	// std::cout << "IN LOU " << shared->server_config->root_dir << " and " << shared->server_config->auto_index << "\n";
+	clientShared->connection_closed = false;
+	clientShared->timestamp_last_request = std::time(nullptr);
+	initErrorPages(shared);
+
+	epoll_event event;
+	event.events = EPOLLIN | EPOLLOUT;
+	event.data.ptr = clientShared.get();
+
+	if (epoll_ctl(shared->epoll_fd, EPOLL_CTL_ADD, clientFd, &event) == -1) {
+		std::cerr << "Error registering new client on epoll: " << strerror(errno) << std::endl;
+		close(clientFd);
+		return;
+	}
+
+	_sharedPtrs.push_back(clientShared);
+	std::cout << CYAN << "Registered client fd =" << clientFd << RESET << std::endl;
 }
 
 void	WebServ::run() {
@@ -224,56 +268,12 @@ void WebServ::_initializeServers(Config& conf) {
 		auto server = std::make_unique<Server>();
 		const ServerConfig& servConfig = vhost.getConfig();
 
-
-		std::cout << servConfig.root_dir << std::endl;
+		// std::cout << servConfig.root_dir << std::endl;
 		if (server->initServer(&servConfig, _epollFd, SERVER_TIMEOUT, SERVER_MAX_NO_REQUEST) != 0) {
 			throw InitException("Failed to initialize server for host: " + servConfig.host);
 		}
 		_servers.push_back(std::move(server));
 	}
-}
-
-void	WebServ::newConnection(SharedData* shared) {
-	std::cout << PURPLE << "Do I get here newConnection?" << RESET << std::endl;
-	int clientFd = accept(shared->fd, nullptr, nullptr);
-	if (clientFd == -1) {
-		std::cerr << "Failed to accept new connection: " << strerror(errno) << std::endl; //make this some exception
-		return;
-	}
-
-	// printf("%sClientFd: %d\tSharedFd: %d%s\n", PURPLE, clientFd, shared->fd, RESET);
-	std::cout << PURPLE << "ClientFd: " << clientFd << "\tSharedFd: " << shared->fd << RESET << std::endl;
-	_setNonBlocking(clientFd); // Add some errorhandling
-
-	auto clientShared = std::make_shared<SharedData>();
-	clientShared->fd = clientFd;
-	clientShared->epoll_fd = shared->epoll_fd;
-	clientShared->cgi_fd = -1;
-	clientShared->cgi_pid = -1;
-	clientShared->status = Status::reading;
-	clientShared->request = "";
-	clientShared->response = "";
-	clientShared->response_code = 200; // TODO check on this
-	// clientShared->server = shared->server;
-	clientShared->server_config = shared->server_config;
-	std::cout << clientShared->server_config->root_dir << std::endl;
-	// std::cout << "IN LOU " << shared->server_config->root_dir << " and " << shared->server_config->auto_index << "\n";
-	clientShared->connection_closed = false;
-	clientShared->timestamp_last_request = std::time(nullptr);
-	initErrorPages(shared);
-
-	epoll_event event;
-	event.events = EPOLLIN | EPOLLOUT;
-	event.data.ptr = clientShared.get();
-
-	if (epoll_ctl(shared->epoll_fd, EPOLL_CTL_ADD, clientFd, &event) == -1) {
-		std::cerr << "Error registering new client on epoll: " << strerror(errno) << std::endl;
-		close(clientFd);
-		return;
-	}
-
-	_sharedPtrs.push_back(clientShared);
-	std::cout << CYAN << "Registered client fd =" << clientFd << RESET << std::endl;
 }
 
 void WebServ::_handleSignal(int sig) {
