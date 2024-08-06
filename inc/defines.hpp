@@ -129,7 +129,7 @@ struct SharedData {
 
 	Status								status; // does this work like this? iT does :D
 	// std::list<ServerConfig *>		server_config;
-	const ServerConfig*					server_config;
+	std::shared_ptr<ServerConfig>		server_config;
 	bool								connection_closed;
 
 	time_t								timestamp_last_request;

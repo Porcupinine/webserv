@@ -20,7 +20,7 @@ public:
 		Server &operator=(Server const & rhs) = delete; // Might still want this.
 		~Server();
 
-		int									initServer(const ServerConfig *settings, int epollFd, double timeout, int maxNrOfRequests);
+		int									initServer(std::shared_ptr<ServerConfig> configs, int epollFd, double timeout, int maxNrOfRequests);
 		void								setConnection(SharedData *shared);
 		// void								handleRequest(int clientFd);
 
@@ -38,7 +38,7 @@ public:
 		size_t								getMaxBodySize() const;
 		std::string							getUploadDir(const std::string &location) const;
 		std::set<std::string>				getAllowedMethods(const std::string &location) const;
-		const ServerConfig*					getConf();
+		std::shared_ptr<ServerConfig>		getConf();
 
 		class ServerException : public std::exception {
 		public:
@@ -68,7 +68,7 @@ private:
 		std::map<std::string, int>			_knownClientIds;
 		double								_timeout;
 		int									_maxNrOfRequests;
-		const ServerConfig*					_configs;
+		std::shared_ptr<ServerConfig>		_configs;
 		// std::list<ServerConfig *>			_configs;
 		std::shared_ptr<SharedData>			_shared;
 };
