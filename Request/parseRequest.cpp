@@ -6,7 +6,7 @@
 /*   By: dmaessen <dmaessen@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2024/07/07 15:50:05 by dmaessen          #+#    #+#             */
-/*   Updated: 2024/08/06 12:34:55 by dmaessen         ###   ########.fr       */
+/*   Updated: 2024/08/06 12:42:40 by dmaessen         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -335,11 +335,12 @@ int parseRequest::parsePath(const std::string &line, size_t i, struct SharedData
     abspath.erase(0, 1); // this will always be true
     _absPathRoot = current + abspath;
 	if (_path[0] == '/' && _path.size() == 2) {
-        _path = _absPathRoot + "/upload.html"; // TODO LOOK INTO THIS -- SHOULD BE index.html BUT FOR NOW TO TEST OTHER PAGES
+        _path = _absPathRoot + "/htmls/upload.html"; // TODO LOOK INTO THIS -- SHOULD BE index.html BUT FOR NOW TO TEST OTHER PAGES
     }
     else {
 		_path = current + _path;
     }
+    std::cout << "PATH HERE= " << _path << " ABS= " << _absPathRoot << "\n"; // to rm
     return parseVersion(line, j);
 }
 
