@@ -6,7 +6,7 @@
 /*   By: dmaessen <dmaessen@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2024/07/07 15:50:05 by dmaessen          #+#    #+#             */
-/*   Updated: 2024/08/05 15:13:58 by dmaessen         ###   ########.fr       */
+/*   Updated: 2024/08/06 12:30:24 by dmaessen         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -311,7 +311,6 @@ int parseRequest::parseFirstline(const std::string &info, struct SharedData* sha
         return _returnValue;
     }
     _methodType.assign(line, 0, i);
-//    std::cout << "ABS " << shared->server_config->root_dir << "\n";
     return parsePath(line, i, *shared);
 }
 
@@ -333,16 +332,14 @@ int parseRequest::parsePath(const std::string &line, size_t i, struct SharedData
     std::string current = std::filesystem::current_path();
     std::size_t found = current.find_last_of("/");
     current.erase(found); // to rm after testing as the dir will be fine
-    abspath.erase(0, 1);
+    abspath.erase(0, 1); // this will always be true
     _absPathRoot = current + abspath;
 	if (_path[0] == '/' && _path.size() == 2) {
         _path = _absPathRoot + "/upload.html"; // TODO LOOK INTO THIS -- SHOULD BE index.html BUT FOR NOW TO TEST OTHER PAGES
     }
-     else {
-         // if its not / then i still need to append the _absPathRoot it so we can find the page
+    else {
 		_path = current + _path;
-     }
-	 std::cout << "ABS PATH IN REQUEST= " << _absPathRoot << "\n";
+    }
     return parseVersion(line, j);
 }
 
