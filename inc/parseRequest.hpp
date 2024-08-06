@@ -65,6 +65,7 @@ class parseRequest
         parseRequest& operator=(const parseRequest &cpy);
 
         /* GETTERS */
+		std::string getAbsPath(void) const;
         std::string getMethod(void) const;
         std::string getPath(void) const;
         std::string getVersion(void) const;

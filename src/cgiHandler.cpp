@@ -19,7 +19,8 @@
 #include <filesystem>
 #include <cctype>
 #include "defines.hpp"
-
+#include <errno.h>
+#include <stdio.h>
 
 //TODO need the server info
 
@@ -71,13 +72,15 @@ namespace {
 
 	std::string getCgiPath(parseRequest &request, SharedData *shared) {
 		if (shared->server_config->cgi_dir.empty())
-			return "/home/lpraca-l/Documents/webserv/cgi-bin/" + request.getPath();
+			return request.getPath();
+//			return request.getAbsPath() + request.getPath();
 		return shared->server_config->cgi_dir + "/" + request.getPath();
 	}
 
 	int runChild(parseRequest &request, int pipeRead, int pipeWrite, SharedData* shared) {
-		std::string cgiPath = getCgiPath(request, shared); //TODO test this
-		char *argv[] = {cgiPath.data(), nullptr}; //path and NULL
+		char* cgiPath = {};
+		std::strcpy(cgiPath, request.getPath().data());
+		char *argv[] = {cgiPath, nullptr}; //path and NULL
 		char **env = getEnv(request, shared);
 		int x = 0;
 		std::cout << "------env----\n";
@@ -87,6 +90,7 @@ namespace {
 		}
 		std::cout << "------endv----\n";
 		std::cout << "FROM INSIDE the kids\n" << "body: " << request.getBodyMsg() << "\n";
+		std::cout << "ARGV HERE IS " << argv[0] << "\n";
 		if (dup2(pipeRead, STDIN_FILENO) == -1 || dup2(pipeWrite, STDOUT_FILENO) == -1) {
 			std::cerr << "Leave the kids alone!\n";
 			close(pipeRead); // Close unused read end
@@ -96,6 +100,7 @@ namespace {
 		}
 		if (execve(argv[0], argv, env) == -1) {
 			std::cerr << "This is no middle age\n";
+			std::cerr << strerror(errno)<< "\n";
 			close(pipeRead); // Close unused read end
 			close(pipeWrite); // Close the original pipe write end
 			freeEnv(env);
@@ -106,7 +111,7 @@ namespace {
 }
 
 int cgiHandler(SharedData* shared, parseRequest& request) {
-	(void) shared;
+//	(void) shared;
 	if (std::filesystem::exists(request.getPath())) {
 		std::cerr<<"Sorry, can't find this file! Stop wasting my time!\n";
 		return 1;

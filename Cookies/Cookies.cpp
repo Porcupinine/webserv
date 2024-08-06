@@ -34,6 +34,10 @@ std::map<std::string, std::string> parseRequest::parseCookies(const std::string&
     return cookieMap;
 }
 
+std::string parseRequest::getAbsPath(void) const {
+	return _absPathRoot;
+}
+
 /* create Set-Cookies for the response header */
 std::vector<std::string> Response::createSetCookie(const std::map<std::string, std::string> &cookieMap) {
     int expDays = 30;

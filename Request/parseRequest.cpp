@@ -18,8 +18,8 @@ parseRequest::parseRequest(struct SharedData* shared) :  _methodType(""), _versi
 	// std::cout << "req is " << shared->request << "\n";
     if (shared->request.empty())
         shared->status = Status::closing;
-    std::cout << GREEN << "ServerConfig = " << shared->server_config->host << RESET << std::endl; // something up here.
-    std::cout << GREEN << "ServerConfig = " << shared->server_config->root_dir << RESET << std::endl; // something up here.
+//    std::cout << GREEN << "ServerConfig = " << shared->server_config->host << RESET << std::endl; // something up here.
+//    std::cout << GREEN << "ServerConfig = " << shared->server_config->root_dir << RESET << std::endl; // something up here.
     parseStr(shared->request, shared);
     if (cgiInvolved(_path) == false)
         shared->status = Status::writing;
@@ -140,7 +140,7 @@ void parseRequest::setLanguage() {
     std::string header;
     size_t i;
 
-    if ((header = _headers["Accept-Language"]) != "")
+    if (!(header = _headers["Accept-Language"]).empty())
     {
         vec = split(header, ',');
         for (std::vector<std::string>::iterator it = vec.begin(); it != vec.end(); it++)
@@ -311,7 +311,7 @@ int parseRequest::parseFirstline(const std::string &info, struct SharedData* sha
         return _returnValue;
     }
     _methodType.assign(line, 0, i);
-    std::cout << "ABS " << shared->server_config->root_dir << "\n";
+//    std::cout << "ABS " << shared->server_config->root_dir << "\n";
     return parsePath(line, i, *shared);
 }
 
@@ -338,9 +338,11 @@ int parseRequest::parsePath(const std::string &line, size_t i, struct SharedData
 	if (_path[0] == '/' && _path.size() == 2) {
         _path = _absPathRoot + "/upload.html"; // TODO LOOK INTO THIS -- SHOULD BE index.html BUT FOR NOW TO TEST OTHER PAGES
     }
-    // else {
-    //     // if its not / then i still need to append the _absPathRoot it so we can find the page
-    // }
+     else {
+         // if its not / then i still need to append the _absPathRoot it so we can find the page
+		_path = current + _path;
+     }
+	 std::cout << "ABS PATH IN REQUEST= " << _absPathRoot << "\n";
     return parseVersion(line, j);
 }
 
