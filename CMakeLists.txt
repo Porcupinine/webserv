@@ -20,7 +20,9 @@ add_executable(webserver
     src/server/Server.cpp
     src/config/Config.cpp
     src/virtualHost/VirtualHost.cpp
-    src/utils.cpp
+	src/utils/fdManagement.cpp
+	src/utils/structUtils.cpp
+	# src/utils.cpp
 	src/cgiHandler.cpp
 	src/Cgi.cpp
 	Request/parseRequest.cpp

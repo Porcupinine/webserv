@@ -6,13 +6,13 @@
 
 class VirtualHost {
 public:
-	VirtualHost(const std::string& name, const ServerConfig& Config);
+	VirtualHost(const std::string& name, std::shared_ptr<ServerConfig> config);
 
 	const std::string& getName() const;
-	const ServerConfig& getConfig() const;
+	std::shared_ptr<ServerConfig> getConfig() const;
 
 private:
-	std::string		_name;
-	ServerConfig	_conf;
+	std::string						_name;
+	std::shared_ptr<ServerConfig>	_conf;
 };
 #endif

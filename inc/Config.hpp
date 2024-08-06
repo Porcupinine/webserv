@@ -12,9 +12,9 @@ class Config {
 		Config operator=(const Config & other) = delete;
 		~Config();
 
-		const ConfigError&					getError() const;
-		std::map<int, std::string>*			getErrorPages();
-		const std::vector<ServerConfig>&	getServerConfigs() const;
+		const ConfigError&							getError() const;
+		std::map<int, std::string>*					getErrorPages();
+		std::vector<std::shared_ptr<ServerConfig>>	getServerConfigs() const;
 		
 		bool								hasErrorOccurred() const;
 		std::string							buildErrorMessage(const ConfigError& err) const;
@@ -40,16 +40,16 @@ class Config {
 		};
 
 	private:
-		std::string					_filePath;
-		unsigned int				_lineNum;
-		std::vector<ServerConfig>	_serverConfigs;
-		ConfigError					_error;
-		bool						_confErrorOccurred;
+		std::string									_filePath;
+		unsigned int								_lineNum;
+		std::vector<std::shared_ptr<ServerConfig>>	_serverConfigs;
+		ConfigError									_error;
+		bool										_confErrorOccurred;
 
 		void	_parseLine(const std::string& line, ServerConfig& config, std::ifstream& configFile);
 		void	_handleErrorPages(ServerConfig& config, std::ifstream& configFile);
 		void	_handleLocation(ServerConfig& config, std::ifstream& configFile, std::string& spec);
-		void	_addConfig(const ServerConfig& config);
+		void	_addConfig(std::shared_ptr<ServerConfig> config);
 		void	_deleteConfig();
 };
 

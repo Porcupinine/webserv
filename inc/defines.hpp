@@ -58,9 +58,10 @@
 #define ROOT_DIR				"root"
 #define UPLOAD_DIR				"upload_dir"
 
+#define FILE_EXT				".conf"
 #define UNKNOWN_KEY				"Unknown key found "
-#define WRONG_EXT				"Wrong extension"
-#define OPEN_FILE_ERR			"Couldn't open file"
+#define WRONG_EXT				"incompatible file extension"
+#define OPEN_FILE_ERR			"couldn't open file"
 #define INVALID_REDIR_FORMAT	"invalid format for redirect"
 #define INVALID_ERROR_PAGE		"invalid error page format"
 #define SEPARATOR				"********************************************************"
@@ -87,6 +88,8 @@ struct Locations {
 	std::set<std::string>				allowed_methods;
 	std::map<int, std::string>			redirect; // Domi had hier een vraag over, but I don't remember..
 	// std::map<std::string, std::string>	cgi_handlers; // ?? I think this is necessary?
+
+	bool operator==(const Locations& other) const;
 };
 
 struct ServerConfig {
@@ -104,6 +107,8 @@ struct ServerConfig {
 
 	std::map<int, std::string>		error_pages;
 	std::vector<struct Locations>	locations;
+
+	bool operator==(const std::unique_ptr<ServerConfig>& other) const;
 };
 
 struct ConfigError {
@@ -121,11 +126,11 @@ struct SharedData {
 	std::map<unsigned int, std::string>	errorPages;
 
 	int									fd;
-	int									epoll_fd; // check new conection or initserver
+	int									epoll_fd; // check newConnection or initServer
 
 	Status								status; // does this work like this? iT does :D
 	// std::list<ServerConfig *>		server_config;
-	const ServerConfig*					server_config;
+	std::shared_ptr<ServerConfig>		server_config;
 	bool								connection_closed;
 
 	time_t								timestamp_last_request;
