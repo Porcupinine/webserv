@@ -13,7 +13,7 @@ Config::Config(const std::string& filePath) : _filePath(filePath), _lineNum(0), 
 		throw FileException(OPEN_FILE_ERR);
 
 	std::string						line;
-	std::unique_ptr<ServerConfig>	currentConf;
+	std::shared_ptr<ServerConfig>	currentConf;
 
 	while (std::getline(configFile, line)) {
 		_lineNum++;
@@ -21,7 +21,7 @@ Config::Config(const std::string& filePath) : _filePath(filePath), _lineNum(0), 
 		if (line.empty() || line[0] == '#') continue;
 
 		if (line == "server {") {
-			currentConf = std::make_unique<ServerConfig>();
+			currentConf = std::make_shared<ServerConfig>();
 			continue;
 		}
 
@@ -30,7 +30,7 @@ Config::Config(const std::string& filePath) : _filePath(filePath), _lineNum(0), 
 				if (std::find(_serverConfigs.begin(), _serverConfigs.end(), currentConf) != _serverConfigs.end())
 					std::cout << "We're skipping a duplicate of " << currentConf->host << ":" << currentConf->port << "." << std::endl; 
 				else {
-					_addConfig(*currentConf);
+					_addConfig(currentConf);
 					std::cout << "adding config: " << currentConf->host << ":" << currentConf->port << std::endl;
 				}
 				currentConf.reset();
@@ -53,7 +53,7 @@ Config::Config(const std::string& filePath) : _filePath(filePath), _lineNum(0), 
 	}
 }
 
-const std::vector<ServerConfig>& Config::getServerConfigs() const { return _serverConfigs; }
+std::vector<std::shared_ptr<ServerConfig>> Config::getServerConfigs() const { return _serverConfigs; }
 
 void	Config::_parseLine(const std::string& line, ServerConfig& config, std::ifstream& configFile) {
 	std::istringstream	iss(line);
@@ -187,26 +187,26 @@ void Config::printConfigs() const {
 	std::cout << GREEN << "\nServerConfig count = " << _serverConfigs.size() << RESET << std::endl;
 
 	for (const auto &config : _serverConfigs){
-		std::cout << "host: " << config.host << std::endl;
-		std::cout << "port: " << config.port << std::endl;
-		std::cout << "server_name: " << config.server_name << std::endl<< std::endl;
+		std::cout << "host: " << config->host << std::endl;
+		std::cout << "port: " << config->port << std::endl;
+		std::cout << "server_name: " << config->server_name << std::endl<< std::endl;
 
-		std::cout << "\tindex: " << config.index << std::endl;
-		std::cout << "\tauto_index: " << ((config.auto_index == true )? "on" : "off") << std::endl << std::endl;
-		std::cout << "\troot: " << config.root_dir << std::endl;
-		std::cout << "\tupload_dir: " << config.upload_dir << std::endl << std::endl;
-		std::cout << "\tmax_client_body_size: " << config.max_client_body_size << std::endl << std::endl;
+		std::cout << "\tindex: " << config->index << std::endl;
+		std::cout << "\tauto_index: " << ((config->auto_index == true )? "on" : "off") << std::endl << std::endl;
+		std::cout << "\troot: " << config->root_dir << std::endl;
+		std::cout << "\tupload_dir: " << config->upload_dir << std::endl << std::endl;
+		std::cout << "\tmax_client_body_size: " << config->max_client_body_size << std::endl << std::endl;
 
-		if (config.error_pages.size() > 0){
+		if (config->error_pages.size() > 0){
 			std::cout << "\terror_pages {" << std::endl;
-			for (const auto &error_page: config.error_pages) {
+			for (const auto &error_page: config->error_pages) {
 				std::cout << "\t\terror_page: [" << error_page.first << "] " << error_page.second << std::endl;
 		}
 		std::cout << "\t}" << std::endl << std::endl;
 		}
 
-		std::cout << "\tLocation Count = " << config.locations.size() << std::endl;
-		for (const auto &location : config.locations) {
+		std::cout << "\tLocation Count = " << config->locations.size() << std::endl;
+		for (const auto &location : config->locations) {
 			std::cout << "\tspecifier: " << location.specifier << std::endl;
 			std::cout << "\t\tpath: " << location.path << std::endl;
 			std::cout << "\t\tdir_listing: " << ((location.dir_listing == true) ? "on" : "off") << std::endl;
@@ -228,8 +228,8 @@ void Config::printConfigs() const {
 // Before I call this function I need to check if config is alreaddy in there.
 // Perhaps a operator== overload?
 //		bool operator==(const ServerConfig& other);
-void	Config::_addConfig(const ServerConfig& config) {
-	_serverConfigs.push_back(config);
+void	Config::_addConfig(std::shared_ptr<ServerConfig> config) {
+	_serverConfigs.push_back(std::move(config));
 }
 
 Config::~Config(){

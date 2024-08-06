@@ -17,7 +17,7 @@ Server::~Server() {
 }
 
 // Dit kan netter, time ? doen : skip;
-int Server::initServer(const ServerConfig *config, int epollFd, double timeout, int maxNrOfRequests) {
+int Server::initServer(std::shared_ptr<ServerConfig> config, int epollFd, double timeout, int maxNrOfRequests) {
 	_timeout = timeout;
 	_maxNrOfRequests = maxNrOfRequests;
 
@@ -214,6 +214,6 @@ std::shared_ptr<SharedData> Server::_getSharedData() const {
 	return _shared;
 }
 
-const ServerConfig* Server::getConf() {
+std::shared_ptr<ServerConfig> Server::getConf() {
 	return _configs;
 }

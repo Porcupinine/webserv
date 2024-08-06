@@ -252,25 +252,25 @@ void	WebServ::_setNonBlocking(int fd) {
 }
 
 std::vector<VirtualHost> WebServ::_setUpHosts(Config& conf) {
-	std::vector<VirtualHost> virtualHosts;
+    std::vector<VirtualHost> virtualHosts;
+    auto serverConfigs = conf.getServerConfigs();  // Now returns std::vector<std::shared_ptr<ServerConfig>>
 
-	std::vector<ServerConfig> serverConfigs =  conf.getServerConfigs();
-	for (const auto& configs : serverConfigs) {
-		VirtualHost vhost(configs.host, configs);
-		virtualHosts.push_back(vhost);
-	}
-	return virtualHosts;
+    for (const auto& configPtr : serverConfigs) {
+        VirtualHost vhost(configPtr->host, configPtr);
+        virtualHosts.push_back(vhost);
+    }
+    return virtualHosts;
 }
 
 void WebServ::_initializeServers(Config& conf) {
 	std::vector<VirtualHost>  virtualHosts = _setUpHosts(conf);
 	for (const auto& vhost : virtualHosts) {
 		auto server = std::make_unique<Server>();
-		const ServerConfig& servConfig = vhost.getConfig();
+		auto servConfig = std::shared_ptr(vhost.getConfig());
 
 		// std::cout << servConfig.root_dir << std::endl;
-		if (server->initServer(&servConfig, _epollFd, SERVER_TIMEOUT, SERVER_MAX_NO_REQUEST) != 0) {
-			throw InitException("Failed to initialize server for host: " + servConfig.host);
+		if (server->initServer(servConfig, _epollFd, SERVER_TIMEOUT, SERVER_MAX_NO_REQUEST) != 0) {
+			throw InitException("Failed to initialize server for host: " + servConfig->host);
 		}
 		_servers.push_back(std::move(server));
 	}
