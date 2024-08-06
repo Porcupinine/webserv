@@ -40,7 +40,7 @@ std::vector<std::string> parseRequest::split(const std::string &str, char c) {
     return vec;
 }
 
-bool cgiInvolved(std::string path) {
+bool cgiInvolved(const std::string& path) {
     std::size_t found = path.find("cgi-bin");
     // std::size_t foundExtPy = path.find(".py");
     // std::size_t foundExtSh = path.find(".sh");

@@ -99,6 +99,7 @@ struct ServerConfig {
 
 	std::string						root_dir;
 	std::string						upload_dir;
+	std::string						cgi_dir;
 	size_t							max_client_body_size;
 
 	std::map<int, std::string>		error_pages;

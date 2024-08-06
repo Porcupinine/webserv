@@ -94,8 +94,8 @@ void WebServ::readData(SharedData* shared) {
 	}
 
 	if (shared->status == Status::handling_request) {
-		std::cerr << "fd = " << shared->fd << std::endl;
-		std::cerr << "Request = " << shared->request << std::endl;
+//		std::cerr << "fd = " << shared->fd << std::endl;
+		std::cerr << "is this the one ? Request = " << shared->request << std::endl;
 	}
 }
 
@@ -148,12 +148,14 @@ void	WebServ::run() {
 			if (shared->status == Status::handling_request){
 				// handleRequest(shared);
 				std::cout << "SHARED->SERVCONFIG" << std::endl;
-				std::cout << shared->server_config->root_dir << std::endl;
+//				std::cout << shared->server_config->root_dir << std::endl;
 				req = parseRequest(shared);
+				if (shared->status == Status::in_cgi) //TODO run cgi here
+					cgiHandler(shared, req);
 			}
 			if ((_events[idx].events & EPOLLHUP) && shared->status == Status::in_cgi){
-				std::cout << "in WebServ cgi\n";
-				cgiHandler(shared, req);
+				std::cout << "in WebServ cgi\n"; //TODO read from cgi fd here
+//				cgiHandler(shared, req);
 			}
 			if ((_events[idx].events & EPOLLOUT) && shared->status == Status::writing)
 				writeData(shared);
@@ -234,7 +236,7 @@ void	WebServ::newConnection(SharedData* shared) {
 	clientShared->response_code = 200; // TODO check on this
 	// clientShared->server = shared->server;
 	clientShared->server_config = shared->server_config;
-	std::cout << clientShared->server_config->root_dir << std::endl;
+//	std::cout << clientShared->server_config->root_dir << std::endl;
 	// std::cout << "IN LOU " << shared->server_config->root_dir << " and " << shared->server_config->auto_index << "\n";
 	clientShared->connection_closed = false;
 	clientShared->timestamp_last_request = std::time(nullptr);

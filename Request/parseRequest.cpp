@@ -18,21 +18,21 @@ parseRequest::parseRequest(struct SharedData* shared) :  _methodType(""), _versi
 	// std::cout << "req is " << shared->request << "\n";
     if (shared->request.empty())
         shared->status = Status::closing;
-    std::cout << GREEN << "ServerConfig = " << shared->server_config->host << RESET << std::endl; // something up here.
-    std::cout << GREEN << "ServerConfig = " << shared->server_config->root_dir << RESET << std::endl; // something up here.
+//    std::cout << GREEN << "ServerConfig = " << shared->server_config->host << RESET << std::endl; // something up here.
+//    std::cout << GREEN << "ServerConfig = " << shared->server_config->root_dir << RESET << std::endl; // something up here.
     parseStr(shared->request, shared);
-    if (cgiInvolved(_headers["Path"]) == false)
+    if (cgiInvolved(_path) == false)
         shared->status = Status::writing;
 	std::cout << "response is " << shared->response << "\n";
 }
 
-parseRequest::parseRequest() {
-
-}
-
-parseRequest::~parseRequest() {
-
-}
+//parseRequest::parseRequest() {
+//
+//}
+//
+//parseRequest::~parseRequest() {
+//
+//}
 
 parseRequest&	parseRequest::operator=(const parseRequest &cpy)
 {
@@ -54,7 +54,6 @@ void parseRequest::parseStr(std::string &info, struct SharedData* shared) {
         "<!DOCTYPE html><html><head><title>500</title></head><body><h1> 500 Internal Server Error! </h1><p>I probably should study more!</p></body></html>";
         return ;
     }
-    
     size_t i = 0;
     std::string line;
     std::string bodyLine;
@@ -82,8 +81,8 @@ void parseRequest::parseStr(std::string &info, struct SharedData* shared) {
         _cookies = parseCookies(_headers["Cookie"]);
     
     _cgiresponse = "";
-    if (cgiInvolved(_headers["Path"]) == true) {
-        shared->status = Status::in_cgi;
+    if (cgiInvolved(_path) == true) {
+        shared->status = Status::in_cgi; //TODO changed the arg
         std::cout << "going in cgi??\n";
         return ;
     }
@@ -141,7 +140,7 @@ void parseRequest::setLanguage() {
     std::string header;
     size_t i;
 
-    if ((header = _headers["Accept-Language"]) != "")
+    if (!(header = _headers["Accept-Language"]).empty())
     {
         vec = split(header, ',');
         for (std::vector<std::string>::iterator it = vec.begin(); it != vec.end(); it++)
@@ -312,7 +311,7 @@ int parseRequest::parseFirstline(const std::string &info, struct SharedData* sha
         return _returnValue;
     }
     _methodType.assign(line, 0, i);
-    std::cout << "ABS " << shared->server_config->root_dir << "\n";
+//    std::cout << "ABS " << shared->server_config->root_dir << "\n";
     return parsePath(line, i, *shared);
 }
 
@@ -330,7 +329,6 @@ int parseRequest::parsePath(const std::string &line, size_t i, struct SharedData
         return _returnValue;
     }
     _path.assign(line, i + 1, j - i);
-
     std::string abspath = shared.server_config->root_dir;
     std::string current = std::filesystem::current_path();
     std::size_t found = current.find_last_of("/");
@@ -338,11 +336,13 @@ int parseRequest::parsePath(const std::string &line, size_t i, struct SharedData
     abspath.erase(0, 1);
     _absPathRoot = current + abspath;
 	if (_path[0] == '/' && _path.size() == 2) {
-        _path = _absPathRoot + "/form.html"; // LOOK INTO THIS -- SHOULD BE index.html BUT FOR NOW TO TEST OTHER PAGES
+        _path = _absPathRoot + "/upload.html"; // TODO LOOK INTO THIS -- SHOULD BE index.html BUT FOR NOW TO TEST OTHER PAGES
     }
-    // else {
-    //     // if its not / then i still need to append the _absPathRoot it so we can find the page
-    // }
+     else {
+         // if its not / then i still need to append the _absPathRoot it so we can find the page
+		_path = current + _path;
+     }
+	 std::cout << "ABS PATH IN REQUEST= " << _absPathRoot << "\n";
     return parseVersion(line, j);
 }
 
