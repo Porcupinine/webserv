@@ -4,6 +4,8 @@
 #include <fcntl.h>
 #include <ctime>
 
+#include <regex> // check if needed
+
 bool WebServ::_serverShutdown = false; 
 
 WebServ::InitException::InitException(const std::string& msg) : _message(msg) {}
@@ -110,12 +112,35 @@ void	WebServ::writeData(SharedData* shared) {
 	std::cout << PURPLE << "Am I here?\n" << RESET << std::endl;
 }
 
+
+// bool hasCompleteRequest(const std::string& request) {
+//     size_t headerEnd = request.find("\r\n\r\n");
+//     if (headerEnd == std::string::npos) {
+//         return false;
+//     }
+
+//     size_t contentLengthPos = request.find("Content-Length: ");
+//     if (contentLengthPos != std::string::npos) {
+//         size_t valueStart = contentLengthPos + 16;
+//         size_t valueEnd = request.find("\r\n", valueStart);
+//         std::string contentLengthStr = request.substr(valueStart, valueEnd - valueStart);
+//         size_t contentLength = std::stoul(contentLengthStr);
+//         size_t bodyStart = headerEnd + 4;
+//         return request.size() >= bodyStart + contentLength;
+//     }
+
+//     return true;
+// }
+
+
+
 void WebServ::readData(SharedData* shared) {
 	char buffer[BUFFER_SIZE];
 	int bytesRead;
 
 	while (true) {
 		bytesRead = recv(shared->fd, buffer, BUFFER_SIZE - 1, MSG_DONTWAIT);
+		// bytesRead = recv(shared->fd, buffer, BUFFER_SIZE - 1, 0);
 
 		if (bytesRead > 0) {
 			buffer[bytesRead] = '\0';
@@ -143,11 +168,49 @@ void WebServ::readData(SharedData* shared) {
 		}
 	}
 
+
+	// char buffer[BUFFER_SIZE];
+    // int bytesRead;
+
+    // while (true) {
+    //     bytesRead = recv(shared->fd, buffer, BUFFER_SIZE - 1, MSG_DONTWAIT);
+    //     if (bytesRead > 0) {
+    //         buffer[bytesRead] = '\0';
+    //         shared->request.append(buffer);
+    //         std::time(&(shared->timestamp_last_request));
+
+    //         if (hasCompleteRequest(shared->request)) {
+    //             shared->status = Status::handling_request;
+    //             break;
+    //         }
+    //     } else if (bytesRead == 0) {
+    //         shared->status = Status::closing;
+    //         break;
+    //     } else {
+    //         if (errno == EAGAIN || errno == EWOULDBLOCK) {
+    //             // No more data to read at the moment
+    //             break;
+    //         } else {
+    //             std::cerr << "Critical error reading from socket: " << strerror(errno) << "\n";
+    //             shared->response_code = 500;
+    //             shared->status = Status::writing;
+    //             auto pos = shared->errorPages.find(shared->response_code);
+    //             if (pos != shared->errorPages.end()) {
+    //                 shared->response = pos->second;
+    //             }
+    //             break;
+    //         }
+    //     }
+    // }
+
+
 	if (shared->status == Status::handling_request) {
 //		std::cerr << "fd = " << shared->fd << std::endl;
 		std::cerr << "is this the one ? Request = " << shared->request << std::endl;
 	}
 }
+
+
 
 void	WebServ::newConnection(SharedData* shared) {
 	std::cout << PURPLE << "Do I get here newConnection?" << RESET << std::endl;

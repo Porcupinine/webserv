@@ -22,7 +22,7 @@
 
 // MAGIC NUMBERS
 #define ONE_MB					1048576 // Default max body size (1MB)
-#define BUFFER_SIZE				1024
+#define BUFFER_SIZE				10000 // CHANGED
 #define SERVER_TIMEOUT			2000
 #define MAX_EVENTS				20
 #define BACKLOG					20
