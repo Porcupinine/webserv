@@ -32,7 +32,8 @@ class Response
         /*RESPONSE HEADER FIELDS*/
         std::string					_allow;
         std::string					_contentLanguage;
-        std::string					_contentLength;
+        // std::string					_contentLength;
+        long unsigned int           _contentLength;
         std::string					_contentType;
         std::string					_date;
         std::string					_location;
