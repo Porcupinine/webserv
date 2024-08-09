@@ -61,12 +61,13 @@ class parseRequest
         std::vector<std::string> split(const std::string &str, char c);
 
     public:
-		parseRequest(); // take the address of the struct 
-        parseRequest(struct SharedData* shared); // ++ server instance -- TO DO
-        ~parseRequest();
+		parseRequest() = default; // take the address of the struct
+        explicit parseRequest(struct SharedData* shared); // ++ server instance -- TO DO
+        ~parseRequest() = default;
         parseRequest& operator=(const parseRequest &cpy);
 
         /* GETTERS */
+		std::string getAbsPath(void) const;
         std::string getMethod(void) const;
         std::string getPath(void) const;
         std::string getVersion(void) const;
@@ -101,7 +102,7 @@ enum class Method
 
 
 std::string     initMethodString(Method method);
-bool            cgiInvolved(std::string path);
+bool            cgiInvolved(const std::string& path);
 
 
 

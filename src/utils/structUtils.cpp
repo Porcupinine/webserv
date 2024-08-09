@@ -16,7 +16,7 @@ bool Locations::operator==(const Locations& other) const {
 // Don't need to compare all the other things, I think.
 bool ServerConfig::operator==(const std::unique_ptr<ServerConfig>& other) const {
 	return (host == other->host && port == other->port /*&& server_name == other->server_name
-			/*&& index == other->index && auto_index == other->auto_index && root_dir == other->root_dir
+			&& index == other->index && auto_index == other->auto_index && root_dir == other->root_dir
 			&& upload_dir == other->upload_dir && max_client_body_size == other->max_client_body_size
 			&& map_compare(error_pages, other->error_pages) && locations == other->locations*/);
 }
