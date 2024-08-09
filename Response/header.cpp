@@ -6,7 +6,7 @@
 /*   By: dmaessen <dmaessen@student.42.fr>            +#+                     */
 /*                                                   +#+                      */
 /*   Created: 2024/07/07 15:50:08 by dmaessen      #+#    #+#                 */
-/*   Updated: 2024/08/04 20:10:52 by ewehl         ########   odam.nl         */
+/*   Updated: 2024/08/09 18:42:42 by ewehl         ########   odam.nl         */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -23,7 +23,7 @@ std::string Response::buildResponseHeader(parseRequest& request, struct SharedDa
 void Response::initResponseHeaderFields() {
 	_allow = "";
 	_contentLanguage = "";
-	_contentLength = "";
+	_contentLength = 0;
 	_contentType = "";
 	_date = "";
 	_location = "";
@@ -34,6 +34,7 @@ void Response::setHeaderValues(parseRequest& request) {
 	_allow = setAllow(request);
 	_contentLanguage = request.getLanguageStr();
 	_contentLength = _response.size();
+	std::cout << "setting contentLen = " << _response.size() << std::endl;
 	_contentType = _type; // but what if empty??
 	_date = setDate(request);
 	_location = "";
@@ -45,9 +46,9 @@ void Response::setHeaderValues(parseRequest& request) {
 std::string Response::setAllow(parseRequest& request) {
 	std::ostringstream allowedMethods;
 
-    for (auto it = _method.begin(); it != _method.end(); it++) {
+    for (auto it = _method.begin(); it != _method.end(); ++it) {
         allowedMethods << it->first;
-        if (it != _method.end())
+        if (std::next(it) != _method.end())
             allowedMethods << ", ";
     }
     return allowedMethods.str();
@@ -65,21 +66,21 @@ std::string Response::setDate(parseRequest& request) {
 
 /* HEADER GETTERS */
 std::string Response::getHeaderValues(parseRequest& request, std::string header, struct SharedData* shared) {
-	header += "HTTP/" + request.getVersion() + " " + std::to_string(_statusCode) + " " + getMatchingCodeString(_statusCode) + "/r/n";
+	header += "HTTP/" + request.getVersion() + " " + std::to_string(_statusCode) + " " + getMatchingCodeString(_statusCode) + LINE_ENDING;
 	if (_allow != "")
-		header += "Allow: " + _allow + "/r/n";
+		header += "Allow: " + _allow + LINE_ENDING;
 	if (request.getCookies().size() > 0) {
 		for (const auto& cookie : _setcookies)
 			header += cookie + "\r\n";
 	}
 	if (_contentLanguage != "")
-		header += "Content-Language: " + _contentLanguage + "/r/n";
-	if (_contentLength != "")
-		header += "Content-Length: " + _contentLength + "/r/n";
+		header += "Content-Language: " + _contentLanguage + LINE_ENDING;
+	if (_contentLength != 0)
+		header += "Content-Length: " + std::to_string(_contentLength) + LINE_ENDING;
 		if (_contentType != "")
-		header += "Content-Type: " + _contentType + "/r/n";
+		header += "Content-Type: " + _contentType + LINE_ENDING;
 	if (_date != "")
-		header += "Date: " + _date + "/r/n";
+		header += "Date: " + _date + LINE_ENDING;
 	if (_statusCode == 301 || _statusCode == 302 || _statusCode == 307 || _statusCode == 308){
 		int key = 1;
 		
@@ -90,13 +91,13 @@ std::string Response::getHeaderValues(parseRequest& request, std::string header,
     	// }
 		auto it = shared->server_config->locations[0].redirect.find(key);
 		if (it != shared->server_config->locations[0].redirect.end()) {
-			header += "Location: " + it->second + "\r\n";
+			header += "Location: " + it->second + LINE_ENDING;
 		}
 	}
-	header += "Connection: closed/r/n";
+	header += "Connection: closed\r\n";
 
 	if (_response != "")
-		header += "/r/n" + _response + "/r/n";
+		header += LINE_ENDING + _response + LINE_ENDING;
 	// std::cout << "header = " << header << std::endl; 
 	return header;
 }
