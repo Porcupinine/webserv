@@ -14,6 +14,8 @@
 #include "response.h"
 #include "defines.hpp"
 
+#define LINE_ENDING "\r\n"
+
 class Response;
 struct SharedData;
 
