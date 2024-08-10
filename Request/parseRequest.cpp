@@ -6,11 +6,12 @@
 /*   By: dmaessen <dmaessen@student.42.fr>            +#+                     */
 /*                                                   +#+                      */
 /*   Created: 2024/07/07 15:50:05 by dmaessen      #+#    #+#                 */
-/*   Updated: 2024/08/10 17:49:51 by ewehl         ########   odam.nl         */
+/*   Updated: 2024/08/10 19:53:50 by ewehl         ########   odam.nl         */
 /*                                                                            */
 /* ************************************************************************** */
 
 #include "parseRequest.hpp"
+#include "Server.hpp"
 
 parseRequest::parseRequest(struct SharedData* shared) :  _methodType(""), _version(""), _returnValue(shared->response_code),
                               _bodyMsg(""), _port(shared->server_config->port), _path(""), _query("") {
@@ -71,9 +72,7 @@ void parseRequest::parseStr(std::string &info, struct SharedData* shared) {
 	size_t startBody = info.find("\r\n\r\n") + 4;
 	_bodyMsg = info.substr(startBody, std::string::npos);
 
-    std::cout << RED << " Nope 1" << RESET << std::endl;
-    setPort(_headers["Host"]); // Hier de Fuck#2's TODOMI - Should be fixed.
-    std::cout << RED << " Nope 2" << RESET << std::endl;
+    setPort(_headers["Host"]);
     setQuery();
     setLanguage();
 
@@ -82,7 +81,7 @@ void parseRequest::parseStr(std::string &info, struct SharedData* shared) {
     
     _cgiresponse = "";
     if (cgiInvolved(_path) == true) {
-        shared->status = Status::in_cgi; //TODO changed the arg
+        shared->status = Status::start_cgi; //TODO changed the arg
         std::cout << "going in cgi??\n";
         return ;
     }
@@ -328,6 +327,16 @@ int parseRequest::parsePath(const std::string &line, size_t i, struct SharedData
         return _returnValue;
     }
     _path.assign(line, i + 1, j - i);
+    // Hier moet dus de path check uitgevoerd worden, en based on de configuratie moeten we dan 
+    // de request naar behoren afhandelen.
+
+        //server::getLocation(_path)
+        // vindt de location specified by _path
+        // haal alle ingevulde velden op / check deze 1 by 1.
+        // dit moet dan een aantal _settings_ / _voorwaarden_ waar de huidige request
+        // aan moet voldoen leveren.
+
+    shared.server->getRedirect(_path);
     std::string abspath = shared.server_config->root_dir;
     std::string current = std::filesystem::current_path();
     std::size_t found = current.find_last_of("/");
@@ -377,6 +386,9 @@ std::string initMethodString(Method method)
 }
 
 int parseRequest::validateMethodType() {
+    // Check welke in de config toegestaan is.
+    // std::set allowedMethods = shared->getAllowedMethods(_path);
+    // check if _methodType is one of the allowedMethods.
     if (_methodType == initMethodString(Method::GET) 
     || _methodType == initMethodString(Method::POST) 
     || _methodType == initMethodString(Method::DELETE))
