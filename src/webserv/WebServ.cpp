@@ -25,7 +25,7 @@ WebServ::WebServ(int argc, char **argv) {
 		Config config(filePath);
 		if (config.hasErrorOccurred())
 			throw	InitException(config.buildErrorMessage(config.getError()));
-		// config.printConfigs();  //Testing purposes.
+		config.printConfigs();  //Testing purposes.
 		if ((_epollFd = epoll_create1(0)) == -1) {
 			throw	std::runtime_error("epoll_create1: " + std::string(strerror(errno)));
 		}
@@ -105,7 +105,7 @@ void	WebServ::writeData(SharedData* shared) {
 		shared->response = shared->response.substr(len, shared->response.npos);
 		shared->status = Status::writing;
 	} else {
-		std::cerr << "Does this ever happen? count " << RED << count++ << RESET << std::endl;
+		std::cerr << "We wrote, now what? count " << RED << count++ << RESET << std::endl;
 		shared->response.clear();
 		shared->status = shared->connection_closed ? Status::closing : Status::reading;
 	}
@@ -113,22 +113,18 @@ void	WebServ::writeData(SharedData* shared) {
 }
 
 bool requestIsComplete(const std::string& buffer) {
-	// Check if the end of the header section has been reached
 	size_t headers_end = buffer.find("\r\n\r\n");
 	if (headers_end == std::string::npos) {
-		return false; // Haven't finished receiving the headers
+		return false;
 	}
 
-	// Header section is complete, now check for Content-Length to handle the body
 	size_t content_length_pos = buffer.find("Content-Length:");
 	if (content_length_pos != std::string::npos && content_length_pos < headers_end) {
-		// Extract the content length value
 		size_t start = buffer.find_first_of("0123456789", content_length_pos);
 		if (start != std::string::npos) {
 			size_t end = buffer.find(LINE_ENDING, start);
 			if (end != std::string::npos) {
 				int content_length = std::stoi(buffer.substr(start, end - start));
-				// Calculate the total size required to consider the request complete
 				size_t total_request_size = headers_end + 4 + content_length; // 4 for "\r\n\r\n"
 				std::cout << total_request_size << "vs " << buffer.size() << std::endl;
 				return buffer.size() >= total_request_size;
@@ -139,7 +135,7 @@ bool requestIsComplete(const std::string& buffer) {
 		return true; // The headers are complete, and no body is expected
 	}
 
-	return false; // Default case, not complete
+	return false;
 }
 
 void WebServ::readData(SharedData* shared) {
@@ -149,8 +145,8 @@ void WebServ::readData(SharedData* shared) {
 	while (true) {
 		bytesRead = recv(shared->fd, buffer, BUFFER_SIZE - 1, MSG_DONTWAIT);
 
-		std::cout << RED << " BYTES READ: "<< bytesRead << RESET << std::endl;
-		std::cout << buffer << std::endl;
+		// std::cout << RED << " BYTES READ: "<< bytesRead << RESET << std::endl;
+		// std::cout << buffer << std::endl;
 		if (bytesRead > 0) {
 			buffer[bytesRead] = '\0';
 			shared->request.append(buffer, bytesRead);
@@ -161,7 +157,8 @@ void WebServ::readData(SharedData* shared) {
 			break;
 		} else {
 			if (shared->fd != -1) {
-				shared->status = (requestIsComplete(buffer) ? Status::handling_request : Status::reading);
+				shared->status = Status::handling_request;
+				// shared->status = (requestIsComplete(buffer) ? Status::handling_request : Status::reading);
 				break;
 			} else {
 				// Assuming an error that we need to handle as a critical failure
@@ -245,12 +242,14 @@ void	WebServ::run() {
 				// handleRequest(shared);
 				std::cout << "Am I here?\n";
 				req = parseRequest(shared);
-				if (shared->status == Status::in_cgi) //TODO run cgi here no please don't. this is ugly.
+				if (shared->status == Status::start_cgi) //TODO run cgi here no please don't. this is ugly.
 					cgiHandler(shared, req);
+				shared->request.clear();
 			}
 			if ((_events[idx].events & EPOLLHUP) && shared->status == Status::in_cgi){
 				std::cout << "in WebServ cgi\n"; //TODO read from cgi fd here
-//				cgiHandler(shared, req);
+				// readCgi();
+				//cgiHandler(shared, req);
 			}
 			if ((_events[idx].events & EPOLLOUT) && shared->status == Status::writing)
 				writeData(shared);
