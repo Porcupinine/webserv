@@ -25,7 +25,7 @@ WebServ::WebServ(int argc, char **argv) {
 		Config config(filePath);
 		if (config.hasErrorOccurred())
 			throw	InitException(config.buildErrorMessage(config.getError()));
-		// config.printConfigs();  //sTesting purposes.
+		// config.printConfigs();  //Testing purposes.
 		if ((_epollFd = epoll_create1(0)) == -1) {
 			throw	std::runtime_error("epoll_create1: " + std::string(strerror(errno)));
 		}
