@@ -112,38 +112,45 @@ void	WebServ::writeData(SharedData* shared) {
 	std::cout << PURPLE << "Am I here?\n" << RESET << std::endl;
 }
 
+bool requestIsComplete(const std::string& buffer) {
+	// Check if the end of the header section has been reached
+	size_t headers_end = buffer.find("\r\n\r\n");
+	if (headers_end == std::string::npos) {
+		return false; // Haven't finished receiving the headers
+	}
 
-// bool hasCompleteRequest(const std::string& request) {
-//     size_t headerEnd = request.find("\r\n\r\n");
-//     if (headerEnd == std::string::npos) {
-//         return false;
-//     }
+	// Header section is complete, now check for Content-Length to handle the body
+	size_t content_length_pos = buffer.find("Content-Length:");
+	if (content_length_pos != std::string::npos && content_length_pos < headers_end) {
+		// Extract the content length value
+		size_t start = buffer.find_first_of("0123456789", content_length_pos);
+		if (start != std::string::npos) {
+			size_t end = buffer.find(LINE_ENDING, start);
+			if (end != std::string::npos) {
+				int content_length = std::stoi(buffer.substr(start, end - start));
+				// Calculate the total size required to consider the request complete
+				size_t total_request_size = headers_end + 4 + content_length; // 4 for "\r\n\r\n"
+				std::cout << total_request_size << "vs " << buffer.size() << std::endl;
+				return buffer.size() >= total_request_size;
+			}
+		}
+	} else {
+		// No Content-Length header found, assume no body expected
+		return true; // The headers are complete, and no body is expected
+	}
 
-//     size_t contentLengthPos = request.find("Content-Length: ");
-//     if (contentLengthPos != std::string::npos) {
-//         size_t valueStart = contentLengthPos + 16;
-//         size_t valueEnd = request.find("\r\n", valueStart);
-//         std::string contentLengthStr = request.substr(valueStart, valueEnd - valueStart);
-//         size_t contentLength = std::stoul(contentLengthStr);
-//         size_t bodyStart = headerEnd + 4;
-//         return request.size() >= bodyStart + contentLength;
-//     }
-
-//     return true;
-// }
-
-
+	return false; // Default case, not complete
+}
 
 void WebServ::readData(SharedData* shared) {
 	char buffer[BUFFER_SIZE];
 	int bytesRead;
 
-	shared->request.clear();
 	while (true) {
 		bytesRead = recv(shared->fd, buffer, BUFFER_SIZE - 1, MSG_DONTWAIT);
-		// std::cout << "kutzooi: " << std::to_string(bytesRead) << std::endl;
-		// bytesRead = recv(shared->fd, buffer, BUFFER_SIZE - 1, 0);
 
+		std::cout << RED << " BYTES READ: "<< bytesRead << RESET << std::endl;
+		std::cout << buffer << std::endl;
 		if (bytesRead > 0) {
 			buffer[bytesRead] = '\0';
 			shared->request.append(buffer, bytesRead);
@@ -154,7 +161,7 @@ void WebServ::readData(SharedData* shared) {
 			break;
 		} else {
 			if (shared->fd != -1) {
-				shared->status = Status::handling_request;
+				shared->status = (requestIsComplete(buffer) ? Status::handling_request : Status::reading);
 				break;
 			} else {
 				// Assuming an error that we need to handle as a critical failure
@@ -169,42 +176,6 @@ void WebServ::readData(SharedData* shared) {
 			}
 		}
 	}
-
-
-	// char buffer[BUFFER_SIZE];
-    // int bytesRead;
-
-    // while (true) {
-    //     bytesRead = recv(shared->fd, buffer, BUFFER_SIZE - 1, MSG_DONTWAIT);
-    //     if (bytesRead > 0) {
-    //         buffer[bytesRead] = '\0';
-    //         shared->request.append(buffer);
-    //         std::time(&(shared->timestamp_last_request));
-
-    //         if (hasCompleteRequest(shared->request)) {
-    //             shared->status = Status::handling_request;
-    //             break;
-    //         }
-    //     } else if (bytesRead == 0) {
-    //         shared->status = Status::closing;
-    //         break;
-    //     } else {
-    //         if (errno == EAGAIN || errno == EWOULDBLOCK) {
-    //             // No more data to read at the moment
-    //             break;
-    //         } else {
-    //             std::cerr << "Critical error reading from socket: " << strerror(errno) << "\n";
-    //             shared->response_code = 500;
-    //             shared->status = Status::writing;
-    //             auto pos = shared->errorPages.find(shared->response_code);
-    //             if (pos != shared->errorPages.end()) {
-    //                 shared->response = pos->second;
-    //             }
-    //             break;
-    //         }
-    //     }
-    // }
-
 
 	if (shared->status == Status::handling_request) {
 //		std::cerr << "fd = " << shared->fd << std::endl;
@@ -272,10 +243,9 @@ void	WebServ::run() {
 				readData(shared);
 			if (shared->status == Status::handling_request){
 				// handleRequest(shared);
-				std::cout << "SHARED->SERVCONFIG" << std::endl;
-//				std::cout << shared->server_config->root_dir << std::endl;
+				std::cout << "Am I here?\n";
 				req = parseRequest(shared);
-				if (shared->status == Status::in_cgi) //TODO run cgi here
+				if (shared->status == Status::in_cgi) //TODO run cgi here no please don't. this is ugly.
 					cgiHandler(shared, req);
 			}
 			if ((_events[idx].events & EPOLLHUP) && shared->status == Status::in_cgi){
@@ -288,6 +258,7 @@ void	WebServ::run() {
 				std::cout << RED << "HERE" << std::endl;
 				closeCGIfds(shared);
 				closeConnection(shared);
+				shared->request.clear(); // might introduce complications.. Guess well find out.
 			}
 		}
 	}
@@ -319,14 +290,14 @@ void	WebServ::_setNonBlocking(int fd) {
 }
 
 std::vector<VirtualHost> WebServ::_setUpHosts(Config& conf) {
-    std::vector<VirtualHost> virtualHosts;
-    auto serverConfigs = conf.getServerConfigs();  // Now returns std::vector<std::shared_ptr<ServerConfig>>
+	std::vector<VirtualHost> virtualHosts;
+	auto serverConfigs = conf.getServerConfigs();  // Now returns std::vector<std::shared_ptr<ServerConfig>>
 
-    for (const auto& configPtr : serverConfigs) {
-        VirtualHost vhost(configPtr->host, configPtr);
-        virtualHosts.push_back(vhost);
-    }
-    return virtualHosts;
+	for (const auto& configPtr : serverConfigs) {
+		VirtualHost vhost(configPtr->host, configPtr);
+		virtualHosts.push_back(vhost);
+	}
+	return virtualHosts;
 }
 
 void WebServ::_initializeServers(Config& conf) {
