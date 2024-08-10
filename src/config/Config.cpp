@@ -79,10 +79,14 @@ void	Config::_parseLine(const std::string& line, ServerConfig& config, std::ifst
 			// std::cout << "index" << std::endl;
 			iss >> config.index;
 			break;
-		case ConfigKey::auto_index:
+		case ConfigKey::auto_index: {
 			// std::cout << "aidx" << std::endl;
-			iss >> config.auto_index;
-			break;
+			std::string val;
+			iss >> val;
+			std::transform(val.begin(), val.end(), val.begin(), 
+				[](unsigned char c){return std::tolower(c);});
+			config.auto_index = ((val == "on") ? true : false);
+			break; }
 		case ConfigKey::root_dir:
 			// std::cout << "root" << std::endl;
 			iss >> config.root_dir;
