@@ -66,6 +66,8 @@
 #define INVALID_ERROR_PAGE		"invalid error page format"
 #define SEPARATOR				"********************************************************"
 
+class Server;
+
 //Enum class > enum, because of typesafety, readability (scoped access, so you know exactly what its used for.), also reducing risk of namecollisions.
 enum class ConfigKey {
 	host, port, server_name, index, auto_index, root_dir, upload_dir,
@@ -73,7 +75,7 @@ enum class ConfigKey {
 };
 
 enum class Status	{
-	listening, reading, handling_request, in_cgi, writing, closing
+	listening, reading, handling_request, start_cgi, in_cgi, writing, closing
 };
 
 struct Locations {
@@ -117,6 +119,8 @@ struct ConfigError {
 };
 
 struct SharedData {
+	Server*								server;
+
 	int									cgi_fd;
 	pid_t								cgi_pid;
 
