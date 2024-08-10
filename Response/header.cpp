@@ -6,11 +6,12 @@
 /*   By: dmaessen <dmaessen@student.42.fr>            +#+                     */
 /*                                                   +#+                      */
 /*   Created: 2024/07/07 15:50:08 by dmaessen      #+#    #+#                 */
-/*   Updated: 2024/08/09 18:42:42 by ewehl         ########   odam.nl         */
+/*   Updated: 2024/08/10 19:15:43 by ewehl         ########   odam.nl         */
 /*                                                                            */
 /* ************************************************************************** */
 
 #include "response.h"
+#include "Server.hpp"
 
 std::string Response::buildResponseHeader(parseRequest& request, struct SharedData* shared) {
     std::string header = "";
@@ -84,15 +85,15 @@ std::string Response::getHeaderValues(parseRequest& request, std::string header,
 	if (_statusCode == 301 || _statusCode == 302 || _statusCode == 307 || _statusCode == 308){
 		int key = 1;
 		
-		// auto redirectMap = shared->server->getRedirect();
-		// auto it = redirectMap.find(key);
-		// if (it != redirectMap.end()) {
-       	// 	header += "Location: " + it->second + "\r\n";
-    	// }
-		auto it = shared->server_config->locations[0].redirect.find(key);
-		if (it != shared->server_config->locations[0].redirect.end()) {
-			header += "Location: " + it->second + LINE_ENDING;
-		}
+		auto redirectMap = shared->server->getRedirect("redir"); // Hier moet dus de location name in..
+		auto it = redirectMap.find(key);
+		if (it != redirectMap.end()) {
+       		header += "Location: " + it->second + "\r\n";
+    	}
+		// auto it = shared->server_config->locations[0].redirect.find(key);
+		// if (it != shared->server_config->locations[0].redirect.end()) {
+		// 	header += "Location: " + it->second + LINE_ENDING;
+		// }
 	}
 	header += "Connection: closed\r\n";
 
