@@ -75,6 +75,8 @@ void Server::_listenSocket(int backlog) {
 void Server::_registerWithEpoll(int epollFd, int fd, uint32_t events) {
 	epoll_event	event;
 	
+	_shared->server = this;
+
 	_shared->cgi_fd = -1;	//Laura??
 	_shared->cgi_pid = -1;	//Laura??
 
@@ -101,10 +103,6 @@ void Server::_registerWithEpoll(int epollFd, int fd, uint32_t events) {
 		throw ServerException("Failed to register with epoll");
 }
 
-// void Server::setConnection(SharedData *shared) {
-// 	_shared = shared;
-// }
-
 uint16_t Server::getPort() const {
 	return ntohs(_serverAddr.sin_port);
 }
@@ -124,7 +122,7 @@ std::map<std::string, int> Server::getKnownClientIds() const {
 std::string Server::getIndex(const std::string &location) const {
 	if (_configs) {
 		auto it = std::find_if(_configs->locations.begin(), _configs->locations.end(),
-			[&location](const Locations& loc) { return loc.path == location; });
+			[&location](const Locations& loc) { return loc.specifier == location; });
 		if (it != _configs->locations.end()) {
 			return it->default_file;
 		}
@@ -136,7 +134,7 @@ std::string Server::getIndex(const std::string &location) const {
 bool Server::getDirListing(const std::string &location) const {
 	if (_configs) {
 		auto it = std::find_if(_configs->locations.begin(), _configs->locations.end(),
-			[&location](const Locations& loc) { return loc.path == location; });
+			[&location](const Locations& loc) { return loc.specifier == location; });
 		if (it != _configs->locations.end()) {
 			return it->dir_listing;
 		}
@@ -147,7 +145,7 @@ bool Server::getDirListing(const std::string &location) const {
 std::string Server::getRootFolder(const std::string &location) const {
 	if (_configs) {
 		auto it = std::find_if(_configs->locations.begin(), _configs->locations.end(),
-							   [&location](const Locations& loc) { return loc.path == location; });
+							   [&location](const Locations& loc) { return loc.specifier == location; });
 		if (it != _configs->locations.end()) {
 			return it->root_dir.empty() ? _configs->root_dir : it->root_dir; // Use location-specific or fallback to general
 		}
@@ -158,7 +156,7 @@ std::string Server::getRootFolder(const std::string &location) const {
 std::set<std::string> Server::getAllowedMethods(const std::string &location) const {
 	if (_configs) {
 		auto it = std::find_if(_configs->locations.begin(), _configs->locations.end(),
-							   [&location](const Locations& loc) { return loc.path == location; });
+							   [&location](const Locations& loc) { return loc.specifier == location; });
 		if (it != _configs->locations.end() && !it->allowed_methods.empty()) {
 			return it->allowed_methods;
 		}
@@ -169,7 +167,7 @@ std::set<std::string> Server::getAllowedMethods(const std::string &location) con
 std::map<int, std::string> Server::getRedirect(const std::string &location) const {
 	if (_configs) {
 		auto it = std::find_if(_configs->locations.begin(), _configs->locations.end(),
-							   [&location](const Locations& loc) { return loc.path == location; });
+							   [&location](const Locations& loc) { return loc.specifier == location; });
 		if (it != _configs->locations.end()) {
 			return it->redirect;
 		}
@@ -187,7 +185,7 @@ size_t Server::getMaxBodySize() const {
 std::string Server::getUploadDir(const std::string &location) const {
 	if (_configs) {
 		for (auto it = _configs->locations.rbegin(); it != _configs->locations.rend(); ++it) {
-			if (location.find(it->path) == 0) {
+			if (location.find(it->specifier) == 0) {
 				if (!it->upload_dir.empty()) {
 					return it->upload_dir;
 				}
