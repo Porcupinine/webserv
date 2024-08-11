@@ -40,7 +40,7 @@ std::string Response::giveResponse(parseRequest& request, struct SharedData* sha
     if (shared->server_config->max_client_body_size < request.getBodyMsg().size())
         _statusCode = 413;
         
-    std::map<std::string, void (Response::*)(parseRequest&, struct SharedData* shared)>::iterator it = _method.find(request.getMethod());
+    std::map<std::string, ResponseCallback>::iterator it = _method.find(request.getMethod());
     if (it != _method.end())
         (this->*(it->second))(request, shared);
     else
@@ -54,9 +54,9 @@ std::string Response::giveResponse(parseRequest& request, struct SharedData* sha
 }
 
 /* STATIC INIT */
-std::map<std::string, void (Response::*)(parseRequest &, struct SharedData* shared)> Response::initMethods()
+std::map<std::string, Response::ResponseCallback> Response::initMethods()
 {
-	std::map<std::string, void (Response::*)(parseRequest&, struct SharedData* shared)> map;
+	std::map<std::string, ResponseCallback> map;
 
 	map["GET"] = &Response::getMethod;
 	map["POST"] = &Response::postMethod;
@@ -64,7 +64,7 @@ std::map<std::string, void (Response::*)(parseRequest &, struct SharedData* shar
 	return map;
 }
 
-std::map<std::string, void (Response::*)(parseRequest &, struct SharedData* shared)> Response::_method = Response::initMethods();
+std::map<std::string, Response::ResponseCallback> Response::_method = Response::initMethods();
 
 
 /* METHOD FUNCTIONS */

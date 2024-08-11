@@ -89,7 +89,6 @@ void parseRequest::parseStr(std::string &info, struct SharedData* shared) {
     Response res;
     shared->response = res.giveResponse(*this, shared);
     shared->status = Status::writing;
-    return ;
 }
 
 
@@ -129,7 +128,7 @@ std::string parseRequest::setValue(const std::string &line) {
     i = line.find_first_of(":", 1);
     i = line.find_first_not_of(" ", i + 1);
     endline = line.find_first_of("\r", i);
-    line.substr(i, endline - 1);
+    line.substr(i, endline - 1); //TODO ignoring return value
     if (i != std::string::npos)
         res.append(line, i, std::string::npos);
     return rmSpaces(res);
@@ -327,6 +326,7 @@ int parseRequest::parsePath(const std::string &line, size_t i, struct SharedData
         std::cerr << "Error: no HTTP version\n"; // do we want this here, should go further not?
         return _returnValue;
     }
+	//TODO set different path for redirection and for cgi??
     _path.assign(line, i + 1, j - i);
     std::string abspath = shared.server_config->root_dir;
     std::string current = std::filesystem::current_path();
