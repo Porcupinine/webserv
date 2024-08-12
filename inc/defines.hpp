@@ -95,20 +95,20 @@ struct Locations {
 };
 
 struct ServerConfig {
-	std::string						host;
-	int								port;
-	std::string						server_name;
+	std::string										host;
+	int												port;
+	std::string										server_name;
 
-	std::string						index;
-	bool							auto_index;
+	std::string										index;
+	bool											auto_index;
 
-	std::string						root_dir;
-	std::string						upload_dir;
-	std::string						cgi_dir;
-	size_t							max_client_body_size;
+	std::string										root_dir;
+	std::string										upload_dir;
+	std::string										cgi_dir;
+	size_t											max_client_body_size;
 
-	std::map<int, std::string>		error_pages;
-	std::vector<struct Locations>	locations;
+	std::map<int, std::string>						error_pages;
+	std::vector<std::shared_ptr<struct Locations>>	locations;
 
 	bool operator==(const std::unique_ptr<ServerConfig>& other) const;
 };
@@ -119,7 +119,7 @@ struct ConfigError {
 };
 
 struct SharedData {
-	Server*								server;
+	std::shared_ptr<Server>				server;
 
 	int									cgi_fd;
 	pid_t								cgi_pid;

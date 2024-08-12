@@ -31,6 +31,7 @@ public:
 		std::map<std::string, int>			getKnownClientIds() const;
 
 		// Content getters
+		Locations*							getLocation(std::string &locationSpec) const;
 		std::string							getIndex(const std::string &location) const;
 		bool								getDirListing(const std::string &location) const;
 		std::map<int, std::string>			getRedirect(const std::string &location) const;
