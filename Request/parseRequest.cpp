@@ -6,7 +6,7 @@
 /*   By: dmaessen <dmaessen@student.42.fr>            +#+                     */
 /*                                                   +#+                      */
 /*   Created: 2024/07/07 15:50:05 by dmaessen      #+#    #+#                 */
-/*   Updated: 2024/08/10 19:53:50 by ewehl         ########   odam.nl         */
+/*   Updated: 2024/08/12 18:23:40 by ewehl         ########   odam.nl         */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -19,7 +19,7 @@ parseRequest::parseRequest(struct SharedData* shared) :  _methodType(""), _versi
 	// std::cout << "req is " << shared->request << "\n";
     if (shared->request.empty())
         shared->status = Status::closing;
-//    std::cout << GREEN << "ServerConfig = " << shared->server_config->host << RESET << std::endl; // something up here.
+    std::cout << GREEN << "ServerConfig = " << shared->server_config->host << RESET << std::endl; // something up here.
 //    std::cout << GREEN << "ServerConfig = " << shared->server_config->root_dir << RESET << std::endl; // something up here.
     parseStr(shared->request, shared);
     if (cgiInvolved(_path) == false)
@@ -327,18 +327,15 @@ int parseRequest::parsePath(const std::string &line, size_t i, struct SharedData
         return _returnValue;
     }
     _path.assign(line, i + 1, j - i);
-    // Hier moet dus de path check uitgevoerd worden, en based on de configuratie moeten we dan 
-    // de request naar behoren afhandelen.
 
-        //server::getLocation(_path)
-        // vindt de location specified by _path
-        // haal alle ingevulde velden op / check deze 1 by 1.
-        // dit moet dan een aantal _settings_ / _voorwaarden_ waar de huidige request
-        // aan moet voldoen leveren.
+    // std::cout << GREEN << "segfaulting here" RESET << std::endl;
+    // Locations *loc = shared.server->getLocation(_path);
+    // std::cout << loc->specifier << std::endl;
 
-    shared.server->getRedirect(_path);
+    std::map<int, std::string> redirMap = shared.server->getRedirect(_path);
+    std::cout << "url = " <<  redirMap.begin()->second << std::endl;
     std::string abspath = shared.server_config->root_dir;
-    std::string current = std::filesystem::current_path();
+    std::string current = std::filesystem::current_path(); // this can throw an error, if does, server crashes.
     std::size_t found = current.find_last_of("/");
     current.erase(found); // to rm after testing as the dir will be fine
     abspath.erase(0, 1); // this will always be true
