@@ -17,6 +17,10 @@ Server::~Server() {
 	}
 }
 
+Server::std::shared_ptr<Server> getShared() {
+	
+}
+
 // Dit kan netter, time ? doen : skip;
 int Server::initServer(std::shared_ptr<ServerConfig> config, int epollFd, double timeout, int maxNrOfRequests) {
 	_timeout = timeout;
@@ -91,7 +95,7 @@ void Server::_registerWithEpoll(int epollFd, int fd, uint32_t events) {
 	_shared->server = this;
 	// _shared->server = std::make_shared<>();
 	_shared->server_config = _configs;
-	_shared->connection_closed = false; // Should I set this..? No I think domi..
+	_shared->connection_closed = false;
 
 	_shared->timestamp_last_request = std::time(nullptr);
 
