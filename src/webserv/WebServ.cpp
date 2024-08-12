@@ -205,7 +205,7 @@ void	WebServ::newConnection(SharedData* shared) {
 	clientShared->request = "";
 	clientShared->response = "";
 	clientShared->response_code = 200; // TODO check on this
-	// clientShared->server = shared->server;
+	clientShared->server = shared->server;
 	clientShared->server_config = shared->server_config;
 	std::cout << shared->server_config->root_dir << std::endl;
 	// std::cout << "IN LOU " << shared->server_config->root_dir << " and " << shared->server_config->auto_index << "\n";
@@ -240,9 +240,9 @@ void	WebServ::run() {
 				readData(shared);
 			if (shared->status == Status::handling_request){
 				// handleRequest(shared);
-				std::cout << "Am I here?\n";
+				std::cout << "Location test = " << shared->server_config->locations[1]->specifier << std::endl;
 				req = parseRequest(shared);
-				if (shared->status == Status::start_cgi) //TODO run cgi here no please don't. this is ugly.
+				if (shared->status == Status::start_cgi) //TODO run cgi here, no please don't. this is ugly.
 					cgiHandler(shared, req);
 				shared->request.clear();
 			}
