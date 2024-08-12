@@ -51,7 +51,7 @@ namespace {
 		env[count] = new char[tmp.size()];
 		std::strcpy(env[count], tmp.data());
 		count++;
-		tmp = "UPLOAD_DIR=" + shared->server_config->upload_dir;
+		tmp = "UPLOAD_DIR=" + request.getAbsPath() + shared->server_config->upload_dir; //TODO remove fucking point??
 		env[count] = new char[tmp.size()];
 		std::strcpy(env[count], tmp.data());
 		count++;

@@ -44,6 +44,7 @@ parseRequest&	parseRequest::operator=(const parseRequest &cpy)
 	this->_port = cpy.getPort();
 	this->_path = cpy.getPath();
     this->_query = cpy._query;
+	this->_absPathRoot = cpy._absPathRoot;
 	return (*this);
 }
 
@@ -332,13 +333,14 @@ int parseRequest::parsePath(const std::string &line, size_t i, struct SharedData
     std::string current = std::filesystem::current_path();
     std::size_t found = current.find_last_of("/");
     current.erase(found); // to rm after testing as the dir will be fine
-    abspath.erase(0, 1); // this will always be true
-    _absPathRoot = current + abspath;
+//    abspath.erase(0, 1); // this will always be true //TODO it doesn't make sense to keep spreading the dot so both domi and me need to remove it
+    _absPathRoot = current;
 	if (_path[0] == '/' && _path.size() == 2) {
-        _path = _absPathRoot + "/htmls/upload.html"; // TODO LOOK INTO THIS -- SHOULD BE index.html BUT FOR NOW TO TEST OTHER PAGES
+//		_path = shared.server_config->root_dir + "/htmls/upload.html";
+        _path = _absPathRoot + abspath + "/htmls/upload.html"; // TODO LOOK INTO THIS -- SHOULD BE index.html BUT FOR NOW TO TEST OTHER PAGES
     }
     else {
-		_path = current + _path;
+		_path = current + _path; //TODO This is fot cgi, for redirect will be different
     }
     std::cout << "PATH HERE= " << _path << " ABS= " << _absPathRoot << "\n"; // to rm
     return parseVersion(line, j);
