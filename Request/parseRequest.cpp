@@ -6,7 +6,7 @@
 /*   By: dmaessen <dmaessen@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2024/07/07 15:50:05 by dmaessen          #+#    #+#             */
-/*   Updated: 2024/08/13 11:35:30 by dmaessen         ###   ########.fr       */
+/*   Updated: 2024/08/13 11:49:48 by dmaessen         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -45,6 +45,7 @@ parseRequest&	parseRequest::operator=(const parseRequest &cpy)
 	this->_port = cpy.getPort();
 	this->_path = cpy.getPath();
     this->_query = cpy._query;
+	this->_absPathRoot = cpy._absPathRoot;
 	return (*this);
 }
 
@@ -88,7 +89,6 @@ void parseRequest::parseStr(std::string &info, struct SharedData* shared) {
     Response res;
     shared->response = res.giveResponse(*this, shared);
     shared->status = Status::writing;
-    return ;
 }
 
 
@@ -128,7 +128,7 @@ std::string parseRequest::setValue(const std::string &line) {
     i = line.find_first_of(":", 1);
     i = line.find_first_not_of(" ", i + 1);
     endline = line.find_first_of("\r", i);
-    line.substr(i, endline - 1);
+    line.substr(i, endline - 1); //TODO ignoring return value
     if (i != std::string::npos)
         res.append(line, i, std::string::npos);
     return rmSpaces(res);
@@ -326,6 +326,7 @@ int parseRequest::parsePath(const std::string &line, size_t i, struct SharedData
         std::cerr << "Error: no HTTP version\n"; // do we want this here, should go further not?
         return _returnValue;
     }
+	//TODO set different path for redirection and for cgi??
     _path.assign(line, i + 1, j - i);
 
     // std::cout << GREEN << "segfaulting here" RESET << std::endl;
@@ -338,13 +339,14 @@ int parseRequest::parsePath(const std::string &line, size_t i, struct SharedData
     std::string current = std::filesystem::current_path(); // this can throw an error, if does, server crashes.
     std::size_t found = current.find_last_of("/");
     current.erase(found); // to rm after testing as the dir will be fine
-    abspath.erase(0, 1); // this will always be true
-    _absPathRoot = current + abspath;
-	if (_path[0] == '/' && _path.size() == 2) { // also check the potential favicon
-        _path = _absPathRoot + "/htmls/upload.html"; // TODO LOOK INTO THIS -- SHOULD BE index.html BUT FOR NOW TO TEST OTHER PAGES
+//    abspath.erase(0, 1); // this will always be true //TODO it doesn't make sense to keep spreading the dot so both domi and me need to remove it
+    _absPathRoot = current;
+	if (_path[0] == '/' && _path.size() == 2) {
+//		_path = shared.server_config->root_dir + "/htmls/upload.html";
+        _path = _absPathRoot + abspath + "/htmls/form.html"; // TODO LOOK INTO THIS -- SHOULD BE index.html BUT FOR NOW TO TEST OTHER PAGES
     }
     else {
-		_path = _absPathRoot + _path;
+		_path = current + _path; //TODO This is fot cgi, for redirect will be different
     }
     std::cout << "PATH HERE= " << _path << " ABS= " << _absPathRoot << "\n"; // to rm
     return parseVersion(line, j);

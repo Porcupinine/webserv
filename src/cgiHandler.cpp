@@ -51,7 +51,7 @@ namespace {
 		env[count] = new char[tmp.size()];
 		std::strcpy(env[count], tmp.data());
 		count++;
-		tmp = "UPLOAD_DIR=" + shared->server_config->upload_dir;
+		tmp = "UPLOAD_DIR=" + request.getAbsPath() + shared->server_config->upload_dir; //TODO remove fucking point??
 		env[count] = new char[tmp.size()];
 		std::strcpy(env[count], tmp.data());
 		count++;
@@ -78,9 +78,11 @@ namespace {
 	}
 
 	int runChild(parseRequest &request, int pipeRead, int pipeWrite, SharedData* shared) {
-		char* cgiPath = {};
-		std::strcpy(cgiPath, request.getPath().data());
-		char *argv[] = {cgiPath, nullptr}; //path and NULL
+//		char* cgiPath = {};
+//		std::strcpy(cgiPath, request.getPath().data());
+		std::string cgiPtah = request.getPath();
+		cgiPtah.pop_back(); //TODO Domi find out why path has extra space
+		char *argv[] = {cgiPtah.data(), nullptr}; //path and NULL
 		char **env = getEnv(request, shared);
 		int x = 0;
 		std::cout << "------env----\n";
