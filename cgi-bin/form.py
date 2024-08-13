@@ -4,11 +4,11 @@
 
 import os
 import cgi
+import cgitb
 import http.cookies
 import datetime
 
 # Enable CGI debugging
-import cgitb
 cgitb.enable()
 
 # Create instance of FieldStorage
@@ -21,7 +21,7 @@ intra_id = form.getvalue("iname")
 # Set cookies with the form data
 cookie = http.cookies.SimpleCookie()
 
-# Set a cookies
+# Set cookies
 if name:
     cookie["name"] = name
     expires = datetime.datetime.utcnow() + datetime.timedelta(days=30)
@@ -31,22 +31,34 @@ if intra_id:
     expires = datetime.datetime.utcnow() + datetime.timedelta(days=30)
     cookie["intra_id"]["expires"] = expires.strftime("%a, %d-%b-%Y %H:%M:%S GMT")
 
-# Output the HTTP headers
-print("Content-Type: text/html")
-if name or intra_id:
-    print(cookie.output())
-print()  # Blank line to end the headers
+# Get time and date
+x = datetime.datetime.now()
+date = x.strftime("%a, %d %b %Y %H:%M:%S GMT")
 
-# Output the HTML response
-print("<html>")
-print("<body>")
-print("<h1>Thank you for submitting your data!</h1>")
+status = 200
 
-if name:
-    print(f"<p>Name: {name}</p>")
-if intra_id:
-    print(f"<p>Intra ID: {intra_id}</p>")
+# Build body
+body = f"""<!DOCTYPE html>
+    <html>
+    <body>
+    
+    <h1>Thank you {name} for your precious data!!</h1>
+    <p><a href="/index.html">Back</a></p>
+    
+    </body>
+    </html>"""
 
-print("<p><a href='/index.html'>Back to the homepage</a></p>")
-print("</body>")
-print("</html>")
+# Build header
+header = f"""HTTP/1.1 {status} OK\r
+    Content-Length: {len(body)}\r
+    Content-type: text/html\r
+    Connection: close\r
+    {cookie.output()}\r
+    Date: {date}\r
+    Last-Modified: {date}\r
+    Server: {os.environ.get("SERVER")}\r\n\r"""
+
+# Output header and body
+print(header)
+print(body)
+print("\0")
