@@ -61,11 +61,8 @@ void WebServ::initErrorPages(SharedData* shared) {
 	"Content-Type: text/html\r\n\nContent-Length: 130\r\n\r\n "
 	"<!DOCTYPE html><html><head><title>403</title></head><body><h1> 403 Forbiden! </h1><p>This is top secret, sorry!</p></body></html>";
 	shared->errorPages[404] = "HTTP/1.1 404 Not Found\r\n"
-							"Content-Type: text/html\r\n\nContent-Length: 115\r\n\r\n "
-							"<!DOCTYPE html><html><head><title>404</title></head><body><h1> 404 Page not found! </h1><p>Puff!</p></body></html>";
-	// shared->errorPages[404] = "HTTP/1.1 404 Not Found\r\n\n"
-	// "Content-Type: text/html\r\n\nContent-Length: 115\r\n\r\n "
-	// "<!DOCTYPE html><html><head><title>404</title></head><body><h1> 404 Page not found! </h1><p>Puff!</p></body></html>";
+	"Content-Type: text/html\r\n\nContent-Length: 115\r\n\r\n "
+	"<!DOCTYPE html><html><head><title>404</title></head><body><h1> 404 Page not found! </h1><p>Puff!</p></body></html>";
 	shared->errorPages[405] = "HTTP/1.1 405 Method Not Allowed\r\n\n"
 	"Content-Type: text/html\r\n\nContent-Length: 139\r\n\r\n "
 	"<!DOCTYPE html><html><head><title>405</title></head><body><h1> 405 Method Not Allowed! </h1><p>We forgot how to do that!</p></body></html>";
@@ -78,7 +75,6 @@ void WebServ::initErrorPages(SharedData* shared) {
 }
 
 void WebServ::handleRequest(SharedData* shared) {
-	int clientFd = shared->fd;
 	std::cout << PURPLE << "Do I get here handleReq?" << RESET << std::endl;
 	std::cout << "Received request:\n" << shared->request << std::endl;
 	shared->response = "HTTP/1.1 200 OK\r\n"
@@ -223,7 +219,7 @@ void	WebServ::newConnection(SharedData* shared) {
 		return;
 	}
 
-	_sharedPtrs.push_back(clientShared);
+	_sharedPtrs_SharedData.push_back(clientShared);
 	std::cout << CYAN << "Registered client fd =" << clientFd << RESET << std::endl;
 }
 
@@ -245,6 +241,7 @@ void	WebServ::run() {
 				if (shared->status == Status::start_cgi) //TODO run cgi here, no please don't. this is ugly.
 					cgiHandler(shared, req);
 				shared->request.clear();
+				// shared->errorPages.clear();
 			}
 			if ((_events[idx].events & EPOLLHUP) && shared->status == Status::in_cgi){
 				std::cout << "in WebServ cgi\n"; //TODO read from cgi fd here
@@ -302,14 +299,15 @@ std::vector<VirtualHost> WebServ::_setUpHosts(Config& conf) {
 void WebServ::_initializeServers(Config& conf) {
 	std::vector<VirtualHost>  virtualHosts = _setUpHosts(conf);
 	for (const auto& vhost : virtualHosts) {
-		auto server = std::make_unique<Server>();
-		auto servConfig = std::shared_ptr(vhost.getConfig());
+		std::shared_ptr<Server> server = std::make_shared<Server>();
+		std::shared_ptr<ServerConfig> servConfig = std::shared_ptr(vhost.getConfig());
 
 		// std::cout << servConfig.root_dir << std::endl;
 		if (server->initServer(servConfig, _epollFd, SERVER_TIMEOUT, SERVER_MAX_NO_REQUEST) != 0) {
 			throw InitException("Failed to initialize server for host: " + servConfig->host);
 		}
-		_servers.push_back(std::move(server));
+		_servers.push_back(server);
+		_sharedPtrs_Servers.push_back(server);
 	}
 }
 
