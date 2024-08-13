@@ -17,8 +17,8 @@ Server::~Server() {
 	}
 }
 
-Server::std::shared_ptr<Server> getShared() {
-	
+std::shared_ptr<Server> Server::getShared() {
+	return shared_from_this();
 }
 
 // Dit kan netter, time ? doen : skip;
@@ -92,8 +92,7 @@ void Server::_registerWithEpoll(int epollFd, int fd, uint32_t events) {
 	_shared->epoll_fd = epollFd;
 
 	_shared->status = Status::listening;
-	_shared->server = this;
-	// _shared->server = std::make_shared<>();
+	_shared->server = this->getShared();
 	_shared->server_config = _configs;
 	_shared->connection_closed = false;
 
@@ -118,7 +117,9 @@ double Server::getTimeout() const {
 Locations* Server::getLocation(std::string &locationSpec) const {
 	if (_configs) {
 		auto it = std::find_if(_configs->locations.begin(), _configs->locations.end(),
-			[locationSpec](std::shared_ptr<struct Locations> const& loc) {return loc->specifier == locationSpec; });
+			[locationSpec](std::shared_ptr<struct Locations> const& loc) {
+				std::cout << "loc->spec: " << loc->specifier<< " vs " << locationSpec<< std::endl;
+				return (loc->specifier == locationSpec); });
 		std::cout << "Am I getting here?" << std::endl;
 		if (it != _configs->locations.end()) {
 			return it->get();
@@ -187,8 +188,8 @@ std::map<int, std::string> Server::getRedirect(const std::string &location) cons
 			[location](std::shared_ptr<struct Locations> const& loc) {return loc->specifier == location;});
 		if (it != _configs->locations.end()) {
 			if (!it->get()->redirect.empty()){
-				std::cout << RED << it->get()->redirect.begin()->first << RESET << std::endl;
-				return it->get()->redirect; // this line is causing me to segfault
+				// std::cout << RED << it->get()->redirect.begin()->first << RESET << std::endl;
+				return it->get()->redirect;
 			}
 		}
 	}
