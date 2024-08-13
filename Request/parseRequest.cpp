@@ -337,7 +337,7 @@ int parseRequest::parsePath(const std::string &line, size_t i, struct SharedData
     _absPathRoot = current;
 	if (_path[0] == '/' && _path.size() == 2) {
 //		_path = shared.server_config->root_dir + "/htmls/upload.html";
-        _path = _absPathRoot + abspath + "/htmls/upload.html"; // TODO LOOK INTO THIS -- SHOULD BE index.html BUT FOR NOW TO TEST OTHER PAGES
+        _path = _absPathRoot + abspath + "/htmls/form.html"; // TODO LOOK INTO THIS -- SHOULD BE index.html BUT FOR NOW TO TEST OTHER PAGES
     }
     else {
 		_path = current + _path; //TODO This is fot cgi, for redirect will be different
