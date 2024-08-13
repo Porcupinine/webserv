@@ -1,12 +1,12 @@
 /* ************************************************************************** */
 /*                                                                            */
-/*                                                        ::::::::            */
-/*   parseRequest.cpp                                   :+:    :+:            */
-/*                                                     +:+                    */
-/*   By: dmaessen <dmaessen@student.42.fr>            +#+                     */
-/*                                                   +#+                      */
-/*   Created: 2024/07/07 15:50:05 by dmaessen      #+#    #+#                 */
-/*   Updated: 2024/08/12 18:23:40 by ewehl         ########   odam.nl         */
+/*                                                        :::      ::::::::   */
+/*   parseRequest.cpp                                   :+:      :+:    :+:   */
+/*                                                    +:+ +:+         +:+     */
+/*   By: dmaessen <dmaessen@student.42.fr>          +#+  +:+       +#+        */
+/*                                                +#+#+#+#+#+   +#+           */
+/*   Created: 2024/07/07 15:50:05 by dmaessen          #+#    #+#             */
+/*   Updated: 2024/08/13 11:35:30 by dmaessen         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -81,7 +81,7 @@ void parseRequest::parseStr(std::string &info, struct SharedData* shared) {
     
     _cgiresponse = "";
     if (cgiInvolved(_path) == true) {
-        shared->status = Status::start_cgi; //TODO changed the arg
+        shared->status = Status::start_cgi; // TODO changed the arg
         std::cout << "going in cgi??\n";
         return ;
     }
