@@ -1,22 +1,23 @@
 /* ************************************************************************** */
 /*                                                                            */
-/*                                                        :::      ::::::::   */
-/*   utilsRequest.cpp                                   :+:      :+:    :+:   */
-/*                                                    +:+ +:+         +:+     */
-/*   By: dmaessen <dmaessen@student.42.fr>          +#+  +:+       +#+        */
-/*                                                +#+#+#+#+#+   +#+           */
-/*   Created: 2024/07/07 15:50:31 by dmaessen          #+#    #+#             */
-/*   Updated: 2024/08/05 14:49:24 by dmaessen         ###   ########.fr       */
+/*                                                        ::::::::            */
+/*   utilsRequest.cpp                                   :+:    :+:            */
+/*                                                     +:+                    */
+/*   By: dmaessen <dmaessen@student.42.fr>            +#+                     */
+/*                                                   +#+                      */
+/*   Created: 2024/07/07 15:50:31 by dmaessen      #+#    #+#                 */
+/*   Updated: 2024/08/13 09:50:47 by ewehl         ########   odam.nl         */
 /*                                                                            */
 /* ************************************************************************** */
 
 #include "parseRequest.hpp"
 
 std::string& parseRequest::capsOn(std::string &str) {
+    std::cout<< "Whats is str CapsON? " << str << std::endl;
     for (size_t i = 0; i < str.size(); i++) {
         if (str[0])
             str[0] = toupper(str[0]);
-        if (str[i - 1] == '-' && isalpha(str[i]))
+        else if (str[i - 1] == '-' && isalpha(str[i]))
             str[i] = toupper(str[i]);
     }
     return str;
