@@ -6,7 +6,7 @@
 /*   By: dmaessen <dmaessen@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2024/07/07 15:50:05 by dmaessen          #+#    #+#             */
-/*   Updated: 2024/08/13 11:49:48 by dmaessen         ###   ########.fr       */
+/*   Updated: 2024/08/13 11:54:16 by dmaessen         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -16,7 +16,6 @@
 parseRequest::parseRequest(struct SharedData* shared) :  _methodType(""), _version(""), _returnValue(shared->response_code),
                               _bodyMsg(""), _port(shared->server_config->port), _path(""), _query("") {
     initHeaders();
-	// std::cout << "req is " << shared->request << "\n";
     if (shared->request.empty())
         shared->status = Status::closing;
     std::cout << GREEN << "ServerConfig = " << shared->server_config->host << RESET << std::endl; // something up here.

@@ -1,12 +1,12 @@
 /* ************************************************************************** */
 /*                                                                            */
-/*                                                        ::::::::            */
-/*   header.cpp                                         :+:    :+:            */
-/*                                                     +:+                    */
-/*   By: dmaessen <dmaessen@student.42.fr>            +#+                     */
-/*                                                   +#+                      */
-/*   Created: 2024/07/07 15:50:08 by dmaessen      #+#    #+#                 */
-/*   Updated: 2024/08/10 19:15:43 by ewehl         ########   odam.nl         */
+/*                                                        :::      ::::::::   */
+/*   header.cpp                                         :+:      :+:    :+:   */
+/*                                                    +:+ +:+         +:+     */
+/*   By: dmaessen <dmaessen@student.42.fr>          +#+  +:+       +#+        */
+/*                                                +#+#+#+#+#+   +#+           */
+/*   Created: 2024/07/07 15:50:08 by dmaessen          #+#    #+#             */
+/*   Updated: 2024/08/13 12:03:47 by dmaessen         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -35,7 +35,7 @@ void Response::setHeaderValues(parseRequest& request) {
 	_allow = setAllow(request);
 	_contentLanguage = request.getLanguageStr();
 	_contentLength = _response.size();
-	std::cout << "setting contentLen = " << _response.size() << std::endl;
+	std::cout << "setting contentLen = " << _response.size() << std::endl; // to rm
 	_contentType = _type; // but what if empty??
 	_date = setDate(request);
 	_location = "";
@@ -85,7 +85,8 @@ std::string Response::getHeaderValues(parseRequest& request, std::string header,
 	if (_statusCode == 301 || _statusCode == 302 || _statusCode == 307 || _statusCode == 308){
 		int key = 1;
 		
-		auto redirectMap = shared->server->getRedirect("redir"); // Hier moet dus de location name in..
+		// auto redirectMap = shared->server->getRedirect("redir"); // Hier moet dus de location name in.
+		auto redirectMap = shared->server->getRedirect(shared->server_config->locations->path); // Hier moet dus de location name in..
 		auto it = redirectMap.find(key);
 		if (it != redirectMap.end()) {
        		header += "Location: " + it->second + "\r\n";

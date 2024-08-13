@@ -6,7 +6,7 @@
 /*   By: dmaessen <dmaessen@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2024/07/07 15:49:40 by dmaessen          #+#    #+#             */
-/*   Updated: 2024/08/05 14:26:19 by dmaessen         ###   ########.fr       */
+/*   Updated: 2024/08/13 11:58:40 by dmaessen         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -32,7 +32,7 @@ std::string Response::giveResponse(parseRequest& request, struct SharedData* sha
     _statusCode = request.getRetVal();
     _type = "";
 
-    std::cout << "test\t" << shared->server_config->auto_index << "\n" << shared->server_config->host << std::endl;
+    // std::cout << "test\t" << shared->server_config->auto_index << "\n" << shared->server_config->host << std::endl;
     _isAutoIndex = shared->server_config->auto_index;
     // _absrootpath = shared->server_config->root_dir;
     initErrorCodes();
@@ -199,7 +199,6 @@ std::string Response::getResponse(void) const {
 /* UTILS */
 bool Response::fileExists(const std::string& path) {
     struct stat buffer;
-//    std::string newpath = _absrootpath + path; // check if this is needed/correct
 
     if (stat(path.c_str(), &buffer) == 0)
         return true;
