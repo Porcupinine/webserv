@@ -1,12 +1,12 @@
 /* ************************************************************************** */
 /*                                                                            */
-/*                                                        ::::::::            */
-/*   cgiHandler.cpp                                     :+:    :+:            */
-/*                                                     +:+                    */
-/*   By: lpraca-l <lpraca-l@student.codam.nl>         +#+                     */
-/*                                                   +#+                      */
-/*   Created: 2024/07/31 15:50:10 by lpraca-l      #+#    #+#                 */
-/*   Updated: 2024/07/31 15:50:10 by lpraca-l      ########   odam.nl         */
+/*                                                        :::      ::::::::   */
+/*   cgiHandler.cpp                                     :+:      :+:    :+:   */
+/*                                                    +:+ +:+         +:+     */
+/*   By: dmaessen <dmaessen@student.42.fr>          +#+  +:+       +#+        */
+/*                                                +#+#+#+#+#+   +#+           */
+/*   Created: 2024/07/31 15:50:10 by lpraca-l          #+#    #+#             */
+/*   Updated: 2024/08/13 16:24:34 by dmaessen         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -81,7 +81,7 @@ namespace {
 //		char* cgiPath = {};
 //		std::strcpy(cgiPath, request.getPath().data());
 		std::string cgiPtah = request.getPath();
-		cgiPtah.pop_back(); //TODO Domi find out why path has extra space
+		// cgiPtah.pop_back(); //TODO Domi find out why path has extra space
 		char *argv[] = {cgiPtah.data(), nullptr}; //path and NULL
 		char **env = getEnv(request, shared);
 		int x = 0;
@@ -114,9 +114,12 @@ namespace {
 
 int cgiHandler(SharedData* shared, parseRequest& request) {
 //	(void) shared;
-	if (std::filesystem::exists(request.getPath())) {
-		std::cerr<<"Sorry, can't find this file! Stop wasting my time!\n";
-		return 1;
+	std::cout<<"file path: \'"<<request.getPath()<<"\'\n";
+	try {
+		(void)std::filesystem::exists(request.getPath());
+	}
+	catch (std::exception &ex) {
+		std::cerr<<"Error: "<<ex.what();
 	}
 	int pipeParentToChild[2]; // 0 - child parent read, 1 - parent write
 	int pipeChildToParent[2]; // 0 - parent read, 1 - child write
@@ -157,6 +160,7 @@ int cgiHandler(SharedData* shared, parseRequest& request) {
 			std::cerr<<"Failed to read!\n";
 		}
 		std::cout<<"------------response-------------\n"<<response<<"\n";
+		shared->response = response;
 		close(pipeParentToChild[0]); // Close the read end after reading
 		wait(nullptr); // Wait for child process to finish
 	}

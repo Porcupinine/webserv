@@ -44,7 +44,7 @@ class Response
         ~Response();
         Response& operator=(const Response &cpy);
 
-        std::string giveResponse(parseRequest& request, struct SharedData* shared);
+        std::string giveResponse(parseRequest& request, struct SharedData &shared);
 
         void getMethod(parseRequest& request, struct SharedData* shared);
         void postMethod(parseRequest& request, struct SharedData* shared);
@@ -61,8 +61,8 @@ class Response
         std::string buildResponseHeader(parseRequest& request, struct SharedData* shared); // check if args needed
         void initResponseHeaderFields();
         void setHeaderValues(parseRequest& request);
-        std::string setAllow(parseRequest& request);
-        std::string setDate(parseRequest& request);
+        std::string setAllow();
+        std::string setDate();
         std::string getHeaderValues(parseRequest& request, std::string header, struct SharedData* shared);
         std::string getMatchingCodeString(unsigned int code);
 

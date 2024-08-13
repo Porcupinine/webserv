@@ -6,7 +6,7 @@
 /*   By: dmaessen <dmaessen@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2024/07/07 15:50:08 by dmaessen          #+#    #+#             */
-/*   Updated: 2024/08/13 12:03:47 by dmaessen         ###   ########.fr       */
+/*   Updated: 2024/08/13 14:42:16 by dmaessen         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -32,19 +32,19 @@ void Response::initResponseHeaderFields() {
 
 /* HEADER SETTERS */
 void Response::setHeaderValues(parseRequest& request) {
-	_allow = setAllow(request);
+	_allow = setAllow();
 	_contentLanguage = request.getLanguageStr();
 	_contentLength = _response.size();
 	std::cout << "setting contentLen = " << _response.size() << std::endl; // to rm
 	_contentType = _type; // but what if empty??
-	_date = setDate(request);
+	_date = setDate();
 	_location = "";
 	_setcookies.clear();
 	if (request.getCookies().size() > 0)
 		_setcookies = createSetCookie(request.getCookies());
 }
 
-std::string Response::setAllow(parseRequest& request) {
+std::string Response::setAllow() {
 	std::ostringstream allowedMethods;
 
     for (auto it = _method.begin(); it != _method.end(); ++it) {
@@ -55,7 +55,7 @@ std::string Response::setAllow(parseRequest& request) {
     return allowedMethods.str();
 }
 
-std::string Response::setDate(parseRequest& request) {
+std::string Response::setDate() {
 	std::time_t now = std::time(nullptr);
 	std::tm* gmt = std::gmtime(&now);
 
@@ -82,12 +82,12 @@ std::string Response::getHeaderValues(parseRequest& request, std::string header,
 		header += "Content-Type: " + _contentType + LINE_ENDING;
 	if (_date != "")
 		header += "Date: " + _date + LINE_ENDING;
-	if (_statusCode == 301 || _statusCode == 302 || _statusCode == 307 || _statusCode == 308){
-		int key = 1;
-		
-		// auto redirectMap = shared->server->getRedirect("redir"); // Hier moet dus de location name in.
-		auto redirectMap = shared->server->getRedirect(shared->server_config->locations->path); // Hier moet dus de location name in..
-		auto it = redirectMap.find(key);
+	if (_statusCode == 301 || _statusCode == 302 || _statusCode == 307 || _statusCode == 308 || request.getRedirection() == true){
+		// int key = 1;
+		std::cout << "HERE IN LOCATION HEADER\n";
+		auto redirectMap = shared->server->getRedirect(request.getPath()); // Hier moet dus de location name in.
+		// auto redirectMap = shared->server->getRedirect(shared->server_config->locations->path); // Hier moet dus de location name in..
+		auto it = redirectMap.find(_statusCode);
 		if (it != redirectMap.end()) {
        		header += "Location: " + it->second + "\r\n";
     	}
