@@ -24,6 +24,7 @@ class parseRequest
     private:
         std::string _methodType;
         std::string _path;
+        // std::string _rawPath;
         std::string _version;
         std::string _bodyMsg; 
         unsigned int _port;
@@ -34,6 +35,7 @@ class parseRequest
         std::string _cgiresponse;
         std::map<std::string, std::string> _cookies;
         std::string _absPathRoot;
+        bool _redirection;
 
 
         void parseStr(std::string &info, struct SharedData* shared);

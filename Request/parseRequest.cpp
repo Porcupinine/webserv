@@ -6,7 +6,7 @@
 /*   By: dmaessen <dmaessen@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2024/07/07 15:50:05 by dmaessen          #+#    #+#             */
-/*   Updated: 2024/08/13 11:54:16 by dmaessen         ###   ########.fr       */
+/*   Updated: 2024/08/13 12:34:56 by dmaessen         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -14,7 +14,7 @@
 #include "Server.hpp"
 
 parseRequest::parseRequest(struct SharedData* shared) :  _methodType(""), _version(""), _returnValue(shared->response_code),
-                              _bodyMsg(""), _port(shared->server_config->port), _path(""), _query("") {
+                              _bodyMsg(""), _port(shared->server_config->port), _path(""), _query(""), _redirection(false) {
     initHeaders();
     if (shared->request.empty())
         shared->status = Status::closing;
@@ -45,6 +45,8 @@ parseRequest&	parseRequest::operator=(const parseRequest &cpy)
 	this->_path = cpy.getPath();
     this->_query = cpy._query;
 	this->_absPathRoot = cpy._absPathRoot;
+    // this->_rawPath = cpy._rawPath;
+    this->_redirection = cpy._redirection;
 	return (*this);
 }
 
@@ -342,7 +344,14 @@ int parseRequest::parsePath(const std::string &line, size_t i, struct SharedData
     _absPathRoot = current;
 	if (_path[0] == '/' && _path.size() == 2) {
 //		_path = shared.server_config->root_dir + "/htmls/upload.html";
-        _path = _absPathRoot + abspath + "/htmls/form.html"; // TODO LOOK INTO THIS -- SHOULD BE index.html BUT FOR NOW TO TEST OTHER PAGES
+        _path = _absPathRoot + abspath + shared.server_config->index; // this is the one to be used
+        // _path = _absPathRoot + abspath + "/htmls/form.html"; // TODO LOOK INTO THIS -- SHOULD BE index.html BUT FOR NOW TO TEST OTHER PAGES
+    } 
+    else if {
+        // PUT HERE THE THING TO LOOP THROUGH THE LOCATION SEE IF ITS MEANT TO BE A REDIR 
+        // THEN DO SOEMTHING TO THE PATH
+        // THEN ACTIVATE THE BOOL SAYING ITS A REDIRECT SO THAT LATER THE STATUS CODE WILL NEED TO CHANGED
+        // WRITE A GETTER FOR THE BOOL
     }
     else {
 		_path = current + _path; //TODO This is fot cgi, for redirect will be different
