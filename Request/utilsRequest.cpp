@@ -1,12 +1,12 @@
 /* ************************************************************************** */
 /*                                                                            */
-/*                                                        ::::::::            */
-/*   utilsRequest.cpp                                   :+:    :+:            */
-/*                                                     +:+                    */
-/*   By: dmaessen <dmaessen@student.42.fr>            +#+                     */
-/*                                                   +#+                      */
-/*   Created: 2024/07/07 15:50:31 by dmaessen      #+#    #+#                 */
-/*   Updated: 2024/08/13 13:13:00 by ewehl         ########   odam.nl         */
+/*                                                        :::      ::::::::   */
+/*   utilsRequest.cpp                                   :+:      :+:    :+:   */
+/*                                                    +:+ +:+         +:+     */
+/*   By: dmaessen <dmaessen@student.42.fr>          +#+  +:+       +#+        */
+/*                                                +#+#+#+#+#+   +#+           */
+/*   Created: 2024/07/07 15:50:31 by dmaessen          #+#    #+#             */
+/*   Updated: 2024/08/13 16:38:52 by dmaessen         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -42,12 +42,7 @@ std::vector<std::string> parseRequest::split(const std::string &str, char c) {
 
 bool cgiInvolved(const std::string& path) {
     std::size_t found = path.find("cgi-bin");
-    // std::size_t foundExtPy = path.find(".py");
-    // std::size_t foundExtSh = path.find(".sh");
-    // std::size_t foundExtPl = path.find(".pl");
-    
-    // if (found != std::string::npos && (foundExtPy != std::string::npos
-    // || foundExtPl != std::string::npos && foundExtSh != std::string::npos))
+
     if (found != std::string::npos)
         return true;
     return false;
