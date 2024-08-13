@@ -6,7 +6,7 @@
 /*   By: dmaessen <dmaessen@student.42.fr>            +#+                     */
 /*                                                   +#+                      */
 /*   Created: 2024/07/07 15:50:05 by dmaessen      #+#    #+#                 */
-/*   Updated: 2024/08/13 13:03:53 by ewehl         ########   odam.nl         */
+/*   Updated: 2024/08/13 13:46:34 by ewehl         ########   odam.nl         */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -332,6 +332,12 @@ int parseRequest::parsePath(const std::string &line, size_t i, struct SharedData
 
     std::cout << GREEN << "segfaulting here" RESET << std::endl;
     Locations *loc = shared.server->getLocation(_path);
+    if (loc == nullptr) {
+        shared.response = "HTTP/1.1 500 Internal Server Error\r\n\n"
+        "Content-Type: text/html\r\n\nContent-Length: 146\r\n\r\n "
+        "<!DOCTYPE html><html><head><title>500</title></head><body><h1> 500 Internal Server Error! </h1><p>I probably should study more!</p></body></html>";
+        return (_returnValue = 500);
+    }
     std::cout << loc->specifier << std::endl;
 
     std::map<int, std::string> redirMap = shared.server->getRedirect(_path);
