@@ -13,7 +13,7 @@
 # include "Config.hpp"
 # include "defines.hpp"
 
-class Server {
+class Server : public std::enable_shared_from_this<Server> {
 public:
 		Server();
 		Server(Server const & src) = delete;
@@ -21,8 +21,7 @@ public:
 		~Server();
 
 		int									initServer(std::shared_ptr<ServerConfig> configs, int epollFd, double timeout, int maxNrOfRequests);
-		void								setConnection(SharedData *shared);
-		// void								handleRequest(int clientFd);
+		std::shared_ptr<Server>				getShared();
 
 		// Getter methods
 		uint16_t							getPort() const;
@@ -31,6 +30,7 @@ public:
 		std::map<std::string, int>			getKnownClientIds() const;
 
 		// Content getters
+		Locations*							getLocation(std::string &locationSpec) const;
 		std::string							getIndex(const std::string &location) const;
 		bool								getDirListing(const std::string &location) const;
 		std::map<int, std::string>			getRedirect(const std::string &location) const;

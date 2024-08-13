@@ -79,10 +79,14 @@ void	Config::_parseLine(const std::string& line, ServerConfig& config, std::ifst
 			// std::cout << "index" << std::endl;
 			iss >> config.index;
 			break;
-		case ConfigKey::auto_index:
+		case ConfigKey::auto_index: {
 			// std::cout << "aidx" << std::endl;
-			iss >> config.auto_index;
-			break;
+			std::string val;
+			iss >> val;
+			std::transform(val.begin(), val.end(), val.begin(), 
+				[](unsigned char c){return std::tolower(c);});
+			config.auto_index = ((val == "on") ? true : false);
+			break; }
 		case ConfigKey::root_dir:
 			// std::cout << "root" << std::endl;
 			iss >> config.root_dir;
@@ -131,10 +135,10 @@ void Config::_handleErrorPages(ServerConfig& config, std::ifstream& configFile) 
 
 void Config::_handleLocation(ServerConfig& config, std::ifstream& configFile, std::string& spec) {
 	std::string	line;
-	Locations location;
+	std::shared_ptr<Locations> location = std::make_shared<struct Locations>();
 
-	location.specifier = spec.substr(0, spec.find_first_of('{'));
-	trim(location.specifier);
+	location->specifier = spec.substr(0, spec.find_first_of('{'));
+	trim(location->specifier);
 	while (getline(configFile, line)) {
 		_lineNum++;
 		trim(line);
@@ -148,25 +152,25 @@ void Config::_handleLocation(ServerConfig& config, std::ifstream& configFile, st
 		if (key == DIR_LISTING) {
 			std::string val;
 			iss >> val;
-			location.dir_listing = (val == "on");
-		} else if (key == LOCATIONS){
-			iss >> location.path;
-		} else if (key == ROOT_DIR) {
-			iss >> location.root_dir;
+			location->dir_listing = (val == "on");
+		} /*else if (key == LOCATIONS){
+			iss >> location->path;
+		}*/ else if (key == ROOT_DIR) {
+			iss >> location->root_dir;
 		} else if (key == UPLOAD_DIR) {
-			iss >> location.upload_dir;
+			iss >> location->upload_dir;
 		} else if (key == DEFAULT_FILE) {
-			iss >> location.default_file;
+			iss >> location->default_file;
 		} else if (key == ALLOWED_METH) {
 			std::string	method;
 			while (iss >> method)
-				location.allowed_methods.insert(method);
+				location->allowed_methods.insert(method);
 		} else if (key == REDIRECT) {
 			int			statusCode;
 			std::string	url;
 			if (!(iss >> statusCode >> url))
 				throw ParseException(INVALID_REDIR_FORMAT);
-			location.redirect[statusCode] = url;
+			location->redirect[statusCode] = url;
 		} else {
 			throw ParseException(UNKNOWN_KEY + key);
 		}
@@ -207,16 +211,16 @@ void Config::printConfigs() const {
 
 		std::cout << "\tLocation Count = " << config->locations.size() << std::endl;
 		for (const auto &location : config->locations) {
-			std::cout << "\tspecifier: " << location.specifier << std::endl;
-			std::cout << "\t\tpath: " << location.path << std::endl;
-			std::cout << "\t\tdir_listing: " << ((location.dir_listing == true) ? "on" : "off") << std::endl;
-			std::cout << "\t\troot: " << location.root_dir << std::endl;
-			std::cout << "\t\tupload_dir: " << location.upload_dir << std::endl;
-			std::cout << "\t\tdefault_file: " << location.default_file << std::endl;
-			for (const auto &method : location.allowed_methods) {
+			std::cout << "\tspecifier: " << location->specifier << std::endl;
+			std::cout << "\t\tpath: " << location->path << std::endl;
+			std::cout << "\t\tdir_listing: " << ((location->dir_listing == true) ? "on" : "off") << std::endl;
+			std::cout << "\t\troot: " << location->root_dir << std::endl;
+			std::cout << "\t\tupload_dir: " << location->upload_dir << std::endl;
+			std::cout << "\t\tdefault_file: " << location->default_file << std::endl;
+			for (const auto &method : location->allowed_methods) {
 				std::cout << "\t\tallow " << method << std::endl;
 			}
-			for (const auto &redir : location.redirect) {
+			for (const auto &redir : location->redirect) {
 				std::cout << "\t\treturn " << redir.first << " " << redir.second << std::endl;
 			}
 		}

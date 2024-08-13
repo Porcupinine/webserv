@@ -6,11 +6,12 @@
 /*   By: dmaessen <dmaessen@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2024/07/07 15:49:40 by dmaessen          #+#    #+#             */
-/*   Updated: 2024/08/05 14:26:19 by dmaessen         ###   ########.fr       */
+/*   Updated: 2024/08/13 14:40:03 by dmaessen         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
 #include "response.h"
+#include "Server.hpp"
 
 Response::Response(void) {
 }
@@ -28,26 +29,32 @@ Response&	Response::operator=(const Response &cpy) {
 }
 
 /* PROCESS RESPONSE */
-std::string Response::giveResponse(parseRequest& request, struct SharedData* shared) {
-    _statusCode = request.getRetVal();
+std::string Response::giveResponse(parseRequest& request, struct SharedData &shared) {
+    if (request.getRedirection() == true) {
+        std::map<int, std::string> redirMap = shared.server->getRedirect(request.getPath());
+        _statusCode = redirMap.begin()->first;
+    }
+    else
+        _statusCode = request.getRetVal();
     _type = "";
-
-    std::cout << "test\t" << shared->server_config->auto_index << "\n" << shared->server_config->host << std::endl;
-    _isAutoIndex = shared->server_config->auto_index;
+    std::cout << "AM I OVER HERE??? " << _statusCode << "\n"; // to rm
+    // std::cout << "test\t" << shared->server_config->auto_index << "\n" << shared->server_config->host << std::endl;
+    _isAutoIndex = shared.server_config->auto_index;
     // _absrootpath = shared->server_config->root_dir;
     initErrorCodes();
+    htmlErrorCodesMap();
     initMethods();
-    if (shared->server_config->max_client_body_size < request.getBodyMsg().size())
+    if (shared.server_config->max_client_body_size < request.getBodyMsg().size())
         _statusCode = 413;
         
     std::map<std::string, ResponseCallback>::iterator it = _method.find(request.getMethod());
     if (it != _method.end())
-        (this->*(it->second))(request, shared);
+        (this->*(it->second))(request, &shared);
     else
         _statusCode = 405;
     if (_statusCode == 405 || _statusCode == 413) {
         _response = errorHtml(_statusCode);
-        _response = buildResponseHeader(request, shared);
+        _response = buildResponseHeader(request, &shared);
     }
     
     return _response;
@@ -69,8 +76,13 @@ std::map<std::string, Response::ResponseCallback> Response::_method = Response::
 
 /* METHOD FUNCTIONS */
 void Response::getMethod(parseRequest& request, struct SharedData* shared) {
+    std::cout << "AM I OVER HERE??? " << _statusCode << "\n"; // to rm
     if (_statusCode == 200) {
         readContent(request);
+        _response = buildResponseHeader(request, shared);
+    }
+    else if (request.getRedirection() == true) {
+        _response = errorHtml(_statusCode);
         _response = buildResponseHeader(request, shared);
     }
     else
@@ -199,7 +211,6 @@ std::string Response::getResponse(void) const {
 /* UTILS */
 bool Response::fileExists(const std::string& path) {
     struct stat buffer;
-//    std::string newpath = _absrootpath + path; // check if this is needed/correct
 
     if (stat(path.c_str(), &buffer) == 0)
         return true;

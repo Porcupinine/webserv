@@ -25,7 +25,7 @@ WebServ::WebServ(int argc, char **argv) {
 		Config config(filePath);
 		if (config.hasErrorOccurred())
 			throw	InitException(config.buildErrorMessage(config.getError()));
-		// config.printConfigs();  //sTesting purposes.
+		config.printConfigs();  //Testing purposes.
 		if ((_epollFd = epoll_create1(0)) == -1) {
 			throw	std::runtime_error("epoll_create1: " + std::string(strerror(errno)));
 		}
@@ -61,11 +61,8 @@ void WebServ::initErrorPages(SharedData* shared) {
 	"Content-Type: text/html\r\n\nContent-Length: 130\r\n\r\n "
 	"<!DOCTYPE html><html><head><title>403</title></head><body><h1> 403 Forbiden! </h1><p>This is top secret, sorry!</p></body></html>";
 	shared->errorPages[404] = "HTTP/1.1 404 Not Found\r\n"
-							"Content-Type: text/html\r\n\nContent-Length: 115\r\n\r\n "
-							"<!DOCTYPE html><html><head><title>404</title></head><body><h1> 404 Page not found! </h1><p>Puff!</p></body></html>";
-	// shared->errorPages[404] = "HTTP/1.1 404 Not Found\r\n\n"
-	// "Content-Type: text/html\r\n\nContent-Length: 115\r\n\r\n "
-	// "<!DOCTYPE html><html><head><title>404</title></head><body><h1> 404 Page not found! </h1><p>Puff!</p></body></html>";
+	"Content-Type: text/html\r\n\nContent-Length: 115\r\n\r\n "
+	"<!DOCTYPE html><html><head><title>404</title></head><body><h1> 404 Page not found! </h1><p>Puff!</p></body></html>";
 	shared->errorPages[405] = "HTTP/1.1 405 Method Not Allowed\r\n\n"
 	"Content-Type: text/html\r\n\nContent-Length: 139\r\n\r\n "
 	"<!DOCTYPE html><html><head><title>405</title></head><body><h1> 405 Method Not Allowed! </h1><p>We forgot how to do that!</p></body></html>";
@@ -78,7 +75,6 @@ void WebServ::initErrorPages(SharedData* shared) {
 }
 
 void WebServ::handleRequest(SharedData* shared) {
-	int clientFd = shared->fd;
 	std::cout << PURPLE << "Do I get here handleReq?" << RESET << std::endl;
 	std::cout << "Received request:\n" << shared->request << std::endl;
 	shared->response = "HTTP/1.1 200 OK\r\n"
@@ -105,45 +101,48 @@ void	WebServ::writeData(SharedData* shared) {
 		shared->response = shared->response.substr(len, shared->response.npos);
 		shared->status = Status::writing;
 	} else {
-		std::cerr << "Does this ever happen? count " << RED << count++ << RESET << std::endl;
+		std::cerr << "We wrote, now what? count " << RED << count++ << RESET << std::endl;
 		shared->response.clear();
 		shared->status = shared->connection_closed ? Status::closing : Status::reading;
 	}
 	std::cout << PURPLE << "Am I here?\n" << RESET << std::endl;
 }
 
+bool requestIsComplete(const std::string& buffer) {
+	size_t headers_end = buffer.find("\r\n\r\n");
+	if (headers_end == std::string::npos) {
+		return false;
+	}
 
-// bool hasCompleteRequest(const std::string& request) {
-//     size_t headerEnd = request.find("\r\n\r\n");
-//     if (headerEnd == std::string::npos) {
-//         return false;
-//     }
+	size_t content_length_pos = buffer.find("Content-Length:");
+	if (content_length_pos != std::string::npos && content_length_pos < headers_end) {
+		size_t start = buffer.find_first_of("0123456789", content_length_pos);
+		if (start != std::string::npos) {
+			size_t end = buffer.find(LINE_ENDING, start);
+			if (end != std::string::npos) {
+				int content_length = std::stoi(buffer.substr(start, end - start));
+				size_t total_request_size = headers_end + 4 + content_length; // 4 for "\r\n\r\n"
+				std::cout << total_request_size << "vs " << buffer.size() << std::endl;
+				return buffer.size() >= total_request_size;
+			}
+		}
+	} else {
+		// No Content-Length header found, assume no body expected
+		return true; // The headers are complete, and no body is expected
+	}
 
-//     size_t contentLengthPos = request.find("Content-Length: ");
-//     if (contentLengthPos != std::string::npos) {
-//         size_t valueStart = contentLengthPos + 16;
-//         size_t valueEnd = request.find("\r\n", valueStart);
-//         std::string contentLengthStr = request.substr(valueStart, valueEnd - valueStart);
-//         size_t contentLength = std::stoul(contentLengthStr);
-//         size_t bodyStart = headerEnd + 4;
-//         return request.size() >= bodyStart + contentLength;
-//     }
-
-//     return true;
-// }
-
-
+	return false;
+}
 
 void WebServ::readData(SharedData* shared) {
 	char buffer[BUFFER_SIZE];
 	int bytesRead;
 
-	shared->request.clear();
 	while (true) {
 		bytesRead = recv(shared->fd, buffer, BUFFER_SIZE - 1, MSG_DONTWAIT);
-		// std::cout << "kutzooi: " << std::to_string(bytesRead) << std::endl;
-		// bytesRead = recv(shared->fd, buffer, BUFFER_SIZE - 1, 0);
 
+		// std::cout << RED << " BYTES READ: "<< bytesRead << RESET << std::endl;
+		// std::cout << buffer << std::endl;
 		if (bytesRead > 0) {
 			buffer[bytesRead] = '\0';
 			shared->request.append(buffer, bytesRead);
@@ -155,6 +154,7 @@ void WebServ::readData(SharedData* shared) {
 		} else {
 			if (shared->fd != -1) {
 				shared->status = Status::handling_request;
+				// shared->status = (requestIsComplete(buffer) ? Status::handling_request : Status::reading);
 				break;
 			} else {
 				// Assuming an error that we need to handle as a critical failure
@@ -169,42 +169,6 @@ void WebServ::readData(SharedData* shared) {
 			}
 		}
 	}
-
-
-	// char buffer[BUFFER_SIZE];
-    // int bytesRead;
-
-    // while (true) {
-    //     bytesRead = recv(shared->fd, buffer, BUFFER_SIZE - 1, MSG_DONTWAIT);
-    //     if (bytesRead > 0) {
-    //         buffer[bytesRead] = '\0';
-    //         shared->request.append(buffer);
-    //         std::time(&(shared->timestamp_last_request));
-
-    //         if (hasCompleteRequest(shared->request)) {
-    //             shared->status = Status::handling_request;
-    //             break;
-    //         }
-    //     } else if (bytesRead == 0) {
-    //         shared->status = Status::closing;
-    //         break;
-    //     } else {
-    //         if (errno == EAGAIN || errno == EWOULDBLOCK) {
-    //             // No more data to read at the moment
-    //             break;
-    //         } else {
-    //             std::cerr << "Critical error reading from socket: " << strerror(errno) << "\n";
-    //             shared->response_code = 500;
-    //             shared->status = Status::writing;
-    //             auto pos = shared->errorPages.find(shared->response_code);
-    //             if (pos != shared->errorPages.end()) {
-    //                 shared->response = pos->second;
-    //             }
-    //             break;
-    //         }
-    //     }
-    // }
-
 
 	if (shared->status == Status::handling_request) {
 //		std::cerr << "fd = " << shared->fd << std::endl;
@@ -237,7 +201,7 @@ void	WebServ::newConnection(SharedData* shared) {
 	clientShared->request = "";
 	clientShared->response = "";
 	clientShared->response_code = 200; // TODO check on this
-	// clientShared->server = shared->server;
+	clientShared->server = shared->server;
 	clientShared->server_config = shared->server_config;
 	std::cout << shared->server_config->root_dir << std::endl;
 	// std::cout << "IN LOU " << shared->server_config->root_dir << " and " << shared->server_config->auto_index << "\n";
@@ -255,7 +219,7 @@ void	WebServ::newConnection(SharedData* shared) {
 		return;
 	}
 
-	_sharedPtrs.push_back(clientShared);
+	_sharedPtrs_SharedData.push_back(clientShared);
 	std::cout << CYAN << "Registered client fd =" << clientFd << RESET << std::endl;
 }
 
@@ -272,15 +236,17 @@ void	WebServ::run() {
 				readData(shared);
 			if (shared->status == Status::handling_request){
 				// handleRequest(shared);
-				std::cout << "SHARED->SERVCONFIG" << std::endl;
-//				std::cout << shared->server_config->root_dir << std::endl;
+				std::cout << "Location test = " << shared->server_config->locations[1]->specifier << std::endl;
 				req = parseRequest(shared);
-				if (shared->status == Status::in_cgi) //TODO run cgi here
+				if (shared->status == Status::start_cgi) //TODO run cgi here, no please don't. this is ugly.
 					cgiHandler(shared, req);
+				shared->request.clear();
+				// shared->errorPages.clear();
 			}
 			if ((_events[idx].events & EPOLLHUP) && shared->status == Status::in_cgi){
 				std::cout << "in WebServ cgi\n"; //TODO read from cgi fd here
-//				cgiHandler(shared, req);
+				// readCgi();
+				//cgiHandler(shared, req);
 			}
 			if ((_events[idx].events & EPOLLOUT) && shared->status == Status::writing)
 				writeData(shared);
@@ -288,6 +254,7 @@ void	WebServ::run() {
 				std::cout << RED << "HERE" << std::endl;
 				closeCGIfds(shared);
 				closeConnection(shared);
+				shared->request.clear(); // might introduce complications.. Guess well find out.
 			}
 		}
 	}
@@ -319,27 +286,28 @@ void	WebServ::_setNonBlocking(int fd) {
 }
 
 std::vector<VirtualHost> WebServ::_setUpHosts(Config& conf) {
-    std::vector<VirtualHost> virtualHosts;
-    auto serverConfigs = conf.getServerConfigs();  // Now returns std::vector<std::shared_ptr<ServerConfig>>
+	std::vector<VirtualHost> virtualHosts;
+	auto serverConfigs = conf.getServerConfigs();  // Now returns std::vector<std::shared_ptr<ServerConfig>>
 
-    for (const auto& configPtr : serverConfigs) {
-        VirtualHost vhost(configPtr->host, configPtr);
-        virtualHosts.push_back(vhost);
-    }
-    return virtualHosts;
+	for (const auto& configPtr : serverConfigs) {
+		VirtualHost vhost(configPtr->host, configPtr);
+		virtualHosts.push_back(vhost);
+	}
+	return virtualHosts;
 }
 
 void WebServ::_initializeServers(Config& conf) {
 	std::vector<VirtualHost>  virtualHosts = _setUpHosts(conf);
 	for (const auto& vhost : virtualHosts) {
-		auto server = std::make_unique<Server>();
-		auto servConfig = std::shared_ptr(vhost.getConfig());
+		std::shared_ptr<Server> server = std::make_shared<Server>();
+		std::shared_ptr<ServerConfig> servConfig = std::shared_ptr(vhost.getConfig());
 
 		// std::cout << servConfig.root_dir << std::endl;
 		if (server->initServer(servConfig, _epollFd, SERVER_TIMEOUT, SERVER_MAX_NO_REQUEST) != 0) {
 			throw InitException("Failed to initialize server for host: " + servConfig->host);
 		}
-		_servers.push_back(std::move(server));
+		_servers.push_back(server);
+		_sharedPtrs_Servers.push_back(server);
 	}
 }
 

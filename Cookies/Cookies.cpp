@@ -6,7 +6,7 @@
 /*   By: dmaessen <dmaessen@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2024/07/08 13:18:59 by dmaessen          #+#    #+#             */
-/*   Updated: 2024/07/23 12:55:29 by dmaessen         ###   ########.fr       */
+/*   Updated: 2024/08/13 13:52:56 by dmaessen         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -40,7 +40,6 @@ std::string parseRequest::getAbsPath(void) const {
 
 /* create Set-Cookies for the response header */
 std::vector<std::string> Response::createSetCookie(const std::map<std::string, std::string> &cookieMap) {
-    int expDays = 30;
     std::vector<std::string> header;
     
     for (const auto& cookie : cookieMap) {

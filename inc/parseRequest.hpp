@@ -34,6 +34,7 @@ class parseRequest
         std::string _cgiresponse;
         std::map<std::string, std::string> _cookies;
         std::string _absPathRoot;
+        bool _redirection; // needed??
 
 
         void parseStr(std::string &info, struct SharedData* shared);
@@ -73,6 +74,7 @@ class parseRequest
         std::string getVersion(void) const;
         unsigned int getPort(void) const;
         int getRetVal(void) const;
+        bool getRedirection(void) const;
         std::string getBodyMsg(void) const;
         const std::map<std::string, std::string>& getHeaders(void) const;
         std::string getLanguageStr(void) const;

@@ -1,4 +1,5 @@
 #include "Server.hpp"
+#include <vector>
 #include <sys/epoll.h>
 #include <algorithm>
 
@@ -14,6 +15,10 @@ Server::~Server() {
 	if (_fd != -1) {
 		close(_fd);
 	}
+}
+
+std::shared_ptr<Server> Server::getShared() {
+	return shared_from_this();
 }
 
 // Dit kan netter, time ? doen : skip;
@@ -45,7 +50,8 @@ int Server::initServer(std::shared_ptr<ServerConfig> config, int epollFd, double
 		throw e.what();
 	}
 	
-	std::cout << GREEN << "Server initialized on port " << config->port << RESET << std::endl;
+	std::cout << "this too? " << this->getRedirect("/redir").begin()->first << std:: endl;
+	std::cout << GREEN << "Server initialized on port " << _configs->port << RESET << std::endl;
 	return 0;
 }
 
@@ -71,10 +77,10 @@ void Server::_listenSocket(int backlog) {
 		throw ServerException("Failed to listen on socket");
 }
 
-#include <cstdio>
+// #include <cstdio>
 void Server::_registerWithEpoll(int epollFd, int fd, uint32_t events) {
 	epoll_event	event;
-	
+
 	_shared->cgi_fd = -1;	//Laura??
 	_shared->cgi_pid = -1;	//Laura??
 
@@ -86,24 +92,19 @@ void Server::_registerWithEpoll(int epollFd, int fd, uint32_t events) {
 	_shared->epoll_fd = epollFd;
 
 	_shared->status = Status::listening;
-	// _shared->server = this;
+	_shared->server = this->getShared();
 	_shared->server_config = _configs;
-	_shared->connection_closed = false; // Should I set this..? No I think domi..
+	_shared->connection_closed = false;
 
 	_shared->timestamp_last_request = std::time(nullptr);
 
 	event.data.fd = fd;
 	event.events = events;
 	event.data.ptr = _shared.get();
-	// printf("--------------- %p ----------------\n", event.data.ptr);
-	// printf("--------------- %p ----------------\n", _shared.get());
+	// std::cout << "see if this works\n\t" << _configs.get()->locations[1]->redirect.begin()->first << std::endl;
 	if (epoll_ctl(epollFd, EPOLL_CTL_ADD, fd, &event) < 0)
 		throw ServerException("Failed to register with epoll");
 }
-
-// void Server::setConnection(SharedData *shared) {
-// 	_shared = shared;
-// }
 
 uint16_t Server::getPort() const {
 	return ntohs(_serverAddr.sin_port);
@@ -111,6 +112,21 @@ uint16_t Server::getPort() const {
 
 double Server::getTimeout() const {
 	return _timeout;
+}
+
+Locations* Server::getLocation(std::string &locationSpec) const {
+	if (_configs) {
+		auto it = std::find_if(_configs->locations.begin(), _configs->locations.end(),
+			[locationSpec](std::shared_ptr<struct Locations> const& loc) {
+				std::cout << "loc->spec: " << loc->specifier<< " vs " << locationSpec<< std::endl;
+				return (loc->specifier == locationSpec); });
+		std::cout << "Am I getting here?" << std::endl;
+		if (it != _configs->locations.end()) {
+			return it->get();
+		}
+	}
+	std::cout << "Or am I getting here?" << std::endl;
+	return nullptr;
 }
 
 int Server::getMaxNrOfRequests() const {
@@ -124,9 +140,9 @@ std::map<std::string, int> Server::getKnownClientIds() const {
 std::string Server::getIndex(const std::string &location) const {
 	if (_configs) {
 		auto it = std::find_if(_configs->locations.begin(), _configs->locations.end(),
-			[&location](const Locations& loc) { return loc.path == location; });
+			[location](std::shared_ptr<struct Locations> const& loc) { return loc->specifier == location; });
 		if (it != _configs->locations.end()) {
-			return it->default_file;
+			return it->get()->default_file;
 		}
 		return _configs->index;
 	}
@@ -136,9 +152,9 @@ std::string Server::getIndex(const std::string &location) const {
 bool Server::getDirListing(const std::string &location) const {
 	if (_configs) {
 		auto it = std::find_if(_configs->locations.begin(), _configs->locations.end(),
-			[&location](const Locations& loc) { return loc.path == location; });
+			[location](std::shared_ptr<struct Locations> const& loc) { return loc->specifier == location; });
 		if (it != _configs->locations.end()) {
-			return it->dir_listing;
+			return it->get()->dir_listing;
 		}
 	}
 	return false; // Dit had ik afgesproken met Domi, right?
@@ -147,9 +163,9 @@ bool Server::getDirListing(const std::string &location) const {
 std::string Server::getRootFolder(const std::string &location) const {
 	if (_configs) {
 		auto it = std::find_if(_configs->locations.begin(), _configs->locations.end(),
-							   [&location](const Locations& loc) { return loc.path == location; });
+			[location](std::shared_ptr<struct Locations> const& loc) { return loc->specifier == location; });
 		if (it != _configs->locations.end()) {
-			return it->root_dir.empty() ? _configs->root_dir : it->root_dir; // Use location-specific or fallback to general
+			return it->get()->root_dir.empty() ? _configs->root_dir : it->get()->root_dir; // Use location-specific or fallback to general
 		}
 	}
 	return "/";
@@ -158,9 +174,9 @@ std::string Server::getRootFolder(const std::string &location) const {
 std::set<std::string> Server::getAllowedMethods(const std::string &location) const {
 	if (_configs) {
 		auto it = std::find_if(_configs->locations.begin(), _configs->locations.end(),
-							   [&location](const Locations& loc) { return loc.path == location; });
-		if (it != _configs->locations.end() && !it->allowed_methods.empty()) {
-			return it->allowed_methods;
+			[location](std::shared_ptr<struct Locations> const& loc) { return loc->specifier == location; });
+		if (it != _configs->locations.end() && !it->get()->allowed_methods.empty()) {
+			return it->get()->allowed_methods;
 		}
 	}
 	return {"GET", "POST"};
@@ -168,10 +184,13 @@ std::set<std::string> Server::getAllowedMethods(const std::string &location) con
 
 std::map<int, std::string> Server::getRedirect(const std::string &location) const {
 	if (_configs) {
-		auto it = std::find_if(_configs->locations.begin(), _configs->locations.end(),
-							   [&location](const Locations& loc) { return loc.path == location; });
+		std::vector<std::shared_ptr<Locations>>::iterator it = std::find_if(_configs->locations.begin(), _configs->locations.end(),
+			[location](std::shared_ptr<struct Locations> const& loc) {return loc->specifier == location;});
 		if (it != _configs->locations.end()) {
-			return it->redirect;
+			if (!it->get()->redirect.empty()){
+				// std::cout << RED << it->get()->redirect.begin()->first << RESET << std::endl;
+				return it->get()->redirect;
+			}
 		}
 	}
 	return std::map<int, std::string>();
@@ -187,9 +206,9 @@ size_t Server::getMaxBodySize() const {
 std::string Server::getUploadDir(const std::string &location) const {
 	if (_configs) {
 		for (auto it = _configs->locations.rbegin(); it != _configs->locations.rend(); ++it) {
-			if (location.find(it->path) == 0) {
-				if (!it->upload_dir.empty()) {
-					return it->upload_dir;
+			if (location.find(it->get()->specifier) == 0) {
+				if (!it->get()->upload_dir.empty()) {
+					return it->get()->upload_dir;
 				}
 			}
 		}

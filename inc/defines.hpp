@@ -66,6 +66,8 @@
 #define INVALID_ERROR_PAGE		"invalid error page format"
 #define SEPARATOR				"********************************************************"
 
+class Server;
+
 //Enum class > enum, because of typesafety, readability (scoped access, so you know exactly what its used for.), also reducing risk of namecollisions.
 enum class ConfigKey {
 	host, port, server_name, index, auto_index, root_dir, upload_dir,
@@ -73,7 +75,7 @@ enum class ConfigKey {
 };
 
 enum class Status	{
-	listening, reading, handling_request, in_cgi, writing, closing
+	listening, reading, handling_request, start_cgi, in_cgi, writing, closing
 };
 
 struct Locations {
@@ -93,20 +95,20 @@ struct Locations {
 };
 
 struct ServerConfig {
-	std::string						host;
-	int								port;
-	std::string						server_name;
+	std::string										host;
+	int												port;
+	std::string										server_name;
 
-	std::string						index;
-	bool							auto_index;
+	std::string										index;
+	bool											auto_index;
 
-	std::string						root_dir;
-	std::string						upload_dir;
-	std::string						cgi_dir;
-	size_t							max_client_body_size;
+	std::string										root_dir;
+	std::string										upload_dir;
+	std::string										cgi_dir;
+	size_t											max_client_body_size;
 
-	std::map<int, std::string>		error_pages;
-	std::vector<struct Locations>	locations;
+	std::map<int, std::string>						error_pages;
+	std::vector<std::shared_ptr<struct Locations>>	locations;
 
 	bool operator==(const std::unique_ptr<ServerConfig>& other) const;
 };
@@ -117,6 +119,8 @@ struct ConfigError {
 };
 
 struct SharedData {
+	std::shared_ptr<Server>				server;
+
 	int									cgi_fd;
 	pid_t								cgi_pid;
 
