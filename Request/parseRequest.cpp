@@ -6,7 +6,7 @@
 /*   By: dmaessen <dmaessen@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2024/07/07 15:50:05 by dmaessen          #+#    #+#             */
-/*   Updated: 2024/08/13 12:34:56 by dmaessen         ###   ########.fr       */
+/*   Updated: 2024/08/13 13:36:25 by dmaessen         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -329,10 +329,12 @@ int parseRequest::parsePath(const std::string &line, size_t i, struct SharedData
     }
 	//TODO set different path for redirection and for cgi??
     _path.assign(line, i + 1, j - i);
+    trim(_path);
+    std::cout << "path = " << _path << std::endl;
 
-    // std::cout << GREEN << "segfaulting here" RESET << std::endl;
-    // Locations *loc = shared.server->getLocation(_path);
-    // std::cout << loc->specifier << std::endl;
+    std::cout << GREEN << "segfaulting here" RESET << std::endl;
+    Locations *loc = shared.server->getLocation(_path);
+    std::cout << loc->specifier << std::endl;
 
     std::map<int, std::string> redirMap = shared.server->getRedirect(_path);
     std::cout << "url = " <<  redirMap.begin()->second << std::endl;
