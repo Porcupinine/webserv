@@ -6,7 +6,7 @@
 /*   By: dmaessen <dmaessen@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2024/07/07 15:49:40 by dmaessen          #+#    #+#             */
-/*   Updated: 2024/08/13 17:29:18 by dmaessen         ###   ########.fr       */
+/*   Updated: 2024/08/14 10:23:27 by dmaessen         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -32,17 +32,23 @@ Response&	Response::operator=(const Response &cpy) {
 std::string Response::giveResponse(parseRequest& request, struct SharedData &shared) {
     if (request.getRedirection() == true) {
         std::map<int, std::string> redirMap = shared.server->getRedirect(request.getPath());
-        _statusCode = redirMap.begin()->first;
+        if (redirMap.begin()->first == 0)
+            _statusCode = request.getRetVal();
+        else
+            _statusCode = redirMap.begin()->first;
     }
     else
         _statusCode = request.getRetVal();
     _type = "";
-
-    // if (request.getRedirection() == true) {
-    //     _isAutoIndex = shared.server->getDirListing(request.getPath());
-    // }
-    // else
+    
     _isAutoIndex = shared.server_config->auto_index;
+    if (request.getRedirection() == true) {
+        _isAutoIndex = shared.server->getDirListing(request.getPath());
+        std::cout << "AM I OVER HERE??? HELOOOO " << _isAutoIndex << "\n"; // to rm
+        if (_isAutoIndex == false && (_statusCode != 301 && _statusCode != 302 && _statusCode != 307 && _statusCode != 308))
+            _statusCode = 403;
+    }
+        
     initErrorCodes();
     htmlErrorCodesMap();
     initMethods();
@@ -54,7 +60,7 @@ std::string Response::giveResponse(parseRequest& request, struct SharedData &sha
         (this->*(it->second))(request, &shared);
     else
         _statusCode = 405;
-    if (_statusCode == 405 || _statusCode == 413) {
+    if (_statusCode == 405 || _statusCode == 413 || _statusCode == 403) {
         _response = errorHtml(_statusCode, &shared, request);
         _response = buildResponseHeader(request, &shared);
     }
@@ -83,8 +89,11 @@ void Response::getMethod(parseRequest& request, struct SharedData* shared) {
         readContent(request, shared);
         _response = buildResponseHeader(request, shared);
     }
-    else if (request.getRedirection() == true) {
-        _response = errorHtml(_statusCode, shared, request);
+    else if (request.getRedirection() == true) { // check on this as could be a dir listing
+        if (_statusCode == 301 || _statusCode == 302 || _statusCode == 307 || _statusCode == 308)
+            _response = errorHtml(_statusCode, shared, request);
+        else
+            readContent(request, shared);
         _response = buildResponseHeader(request, shared);
     }
     else

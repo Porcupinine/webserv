@@ -10,6 +10,7 @@
 #include <list>
 #include <utility>
 #include <functional>
+#include <set>
 
 #include "response.h"
 #include "defines.hpp"
@@ -45,8 +46,8 @@ class parseRequest
 
         int parseFirstline(const std::string &info, struct SharedData* shared);
         int parsePath(const std::string &line, size_t i, struct SharedData &shared);
-        int parseVersion(const std::string &line, size_t i);
-        int validateMethodType();
+        int parseVersion(const std::string &line, size_t i, struct SharedData &shared);
+        int validateMethodType(struct SharedData &shared);
 
         std::string setKey(const std::string &line);
         std::string setValue(const std::string &line);

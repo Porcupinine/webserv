@@ -6,7 +6,7 @@
 /*   By: dmaessen <dmaessen@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2024/07/07 15:50:05 by dmaessen          #+#    #+#             */
-/*   Updated: 2024/08/13 17:05:20 by dmaessen         ###   ########.fr       */
+/*   Updated: 2024/08/14 10:11:25 by dmaessen         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -342,6 +342,7 @@ int parseRequest::parsePath(const std::string &line, size_t i, struct SharedData
         std::cout << loc->specifier << std::endl;
         std::map<int, std::string> redirMap = shared.server->getRedirect(_path);
         std::cout << "url = " <<  redirMap.begin()->second << std::endl;
+        std::cout << "int = " <<  redirMap.begin()->first << std::endl;
     }
 
     std::string abspath = shared.server_config->root_dir;
@@ -367,8 +368,9 @@ int parseRequest::parsePath(const std::string &line, size_t i, struct SharedData
     else if (loc != nullptr) {
 		if (loc->specifier == _path)
 			_redirection = true;
-		else
-			_path = _absPathRoot + abspath + _path;
+        std::map<int, std::string> redirMap2 = shared.server->getRedirect(_path);
+		if (loc->specifier == _path && redirMap2.begin()->first == 0) // or else if??
+		    _path = _absPathRoot + abspath + _path;
     }
     else if (cgiInvolved(_path) == true) {
 		_path = current + _path;
@@ -377,10 +379,10 @@ int parseRequest::parsePath(const std::string &line, size_t i, struct SharedData
         _path = _absPathRoot + abspath + _path;
     }
     std::cout << "PATH HERE= " << _path << " ABS= " << _absPathRoot << "\n"; // to rm
-    return parseVersion(line, j);
+    return parseVersion(line, j, shared);
 }
 
-int parseRequest::parseVersion(const std::string &line, size_t i) {
+int parseRequest::parseVersion(const std::string &line, size_t i, struct SharedData &shared) {
     if ((i = line.find_first_not_of(' ', i)) == std::string::npos) {
         _returnValue = 400;
         std::cerr << "Error: no HTTP version\n";
@@ -394,7 +396,7 @@ int parseRequest::parseVersion(const std::string &line, size_t i) {
         std::cerr << "Error: wrong HTTP version\n";
         return _returnValue;
     }
-    return validateMethodType();
+    return validateMethodType(shared);
 }
 
 /* METHOD */
@@ -412,11 +414,14 @@ std::string initMethodString(Method method)
 	return "DONE INITING METHOD STRING";
 }
 
-int parseRequest::validateMethodType() {
-    // Check welke in de config toegestaan is.
-    // std::set allowedMethods = shared->getAllowedMethods(_path);
-    // check if _methodType is one of the allowedMethods.
-    if (_methodType == initMethodString(Method::GET) 
+int parseRequest::validateMethodType(struct SharedData &shared) {
+    if (_redirection == true) {
+        std::set<std::string> allowedMethods = shared.server->getAllowedMethods(_path);
+        if (allowedMethods.find(_methodType) == allowedMethods.end())
+            _returnValue = 405;
+        return _returnValue;
+    }
+    else if (_methodType == initMethodString(Method::GET) 
     || _methodType == initMethodString(Method::POST) 
     || _methodType == initMethodString(Method::DELETE))
           return _returnValue;
