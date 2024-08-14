@@ -234,9 +234,9 @@ void	WebServ::run() {
 				readData(shared);
 			if (shared->status == Status::handling_request){
 				// handleRequest(shared);
-				std::cout << "Location test = " << shared->server_config->locations[1]->specifier << std::endl;
+				// std::cout << "Location test = " << shared->server_config->locations[1]->specifier << std::endl;
 				req = parseRequest(shared);
-				if (shared->status == Status::start_cgi) //TODO run cgi here, no please don't. this is ugly.
+				if (shared->status == Status::start_cgi)
 					cgiHandler(shared, req);
 				shared->request.clear();
 				// shared->errorPages.clear();

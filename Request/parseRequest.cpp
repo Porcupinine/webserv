@@ -6,7 +6,7 @@
 /*   By: dmaessen <dmaessen@student.42.fr>            +#+                     */
 /*                                                   +#+                      */
 /*   Created: 2024/07/07 15:50:05 by dmaessen      #+#    #+#                 */
-/*   Updated: 2024/08/14 14:03:25 by ewehl         ########   odam.nl         */
+/*   Updated: 2024/08/14 14:16:26 by ewehl         ########   odam.nl         */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -333,11 +333,9 @@ int parseRequest::parsePath(const std::string &line, size_t i, struct SharedData
     trim(_path);
 	
     if (_path == "/favicon.ico")
-		return _returnValue;
-    
-    std::cout << "path = " << _path << std::endl; // to rm
+		return _returnValue; //What is return value here?
 
-    std::cout << GREEN << "segfaulting here" RESET << std::endl; // to rm
+    std::cout << GREEN << "getting here" RESET << std::endl; // to rm
     Locations *loc = shared.server->getLocation(_path);
     if (loc == nullptr) {
         shared.response = "HTTP/1.1 500 Internal Server Error\r\n\n"
@@ -345,12 +343,8 @@ int parseRequest::parsePath(const std::string &line, size_t i, struct SharedData
         "<!DOCTYPE html><html><head><title>500</title></head><body><h1> 500 Internal Server Error! </h1><p>I probably should study more!</p></body></html>";
         return (_returnValue = 500);
     }
-    std::cout << loc->specifier << std::endl;
 
-    std::map<int, std::string> redirMap = shared.server->getRedirect(_path);
-    std::cout << "url = " <<  redirMap.begin()->second << std::endl;
     std::string abspath = shared.server_config->root_dir;
-    // std::string current = std::filesystem::current_path(); // this can throw an error, if does, server crashes.
     std::string current = "";
 	try {
 		current = std::filesystem::current_path(); // this can throw an error, if does, server crashes.
@@ -369,11 +363,11 @@ int parseRequest::parsePath(const std::string &line, size_t i, struct SharedData
 	if ((_path[0] == '/' && _path.size() == 2) || _path == "/") {
         _path = _absPathRoot + abspath + "/" + shared.server_config->index;
     }
-    else if (loc != nullptr) {
+    else if (loc != nullptr) { // Wot?
 		if (loc->specifier == _path)
-			_redirection = true;
-        std::map<int, std::string> redirMap2 = shared.server->getRedirect(_path);
-		if (loc->specifier == _path && redirMap2.begin()->first == 0) // or else if??
+			_redirection = true; // Wot?
+        std::map<int, std::string> redirMap = shared.server->getRedirect(_path);
+		if (loc->specifier == _path && redirMap.begin()->first == 0) // or else if?? loc->spec has to be _path, so redundant
 		    _path = _absPathRoot + abspath + _path;
     }
     else if (cgiInvolved(_path) == true) {
