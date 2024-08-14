@@ -6,7 +6,7 @@
 /*   By: dmaessen <dmaessen@student.42.fr>            +#+                     */
 /*                                                   +#+                      */
 /*   Created: 2024/07/07 15:50:05 by dmaessen      #+#    #+#                 */
-/*   Updated: 2024/08/13 13:46:34 by ewehl         ########   odam.nl         */
+/*   Updated: 2024/08/14 13:55:12 by ewehl         ########   odam.nl         */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -16,14 +16,13 @@
 parseRequest::parseRequest(struct SharedData* shared) :  _methodType(""), _version(""), _returnValue(shared->response_code),
                               _bodyMsg(""), _port(shared->server_config->port), _path(""), _query("") {
     initHeaders();
-	// std::cout << "req is " << shared->request << "\n";
     if (shared->request.empty())
         shared->status = Status::closing;
     std::cout << GREEN << "ServerConfig = " << shared->server_config->host << RESET << std::endl; // something up here.
-//    std::cout << GREEN << "ServerConfig = " << shared->server_config->root_dir << RESET << std::endl; // something up here.
+    //  std::cout << GREEN << "ServerConfig = " << shared->server_config->root_dir << RESET << std::endl; // something up here.
     parseStr(shared->request, shared);
     if (cgiInvolved(_path) == false)
-        shared->status = Status::writing;
+		shared->status = Status::writing;
 	std::cout << "response is " << shared->response << "\n";
 }
 
@@ -45,6 +44,8 @@ parseRequest&	parseRequest::operator=(const parseRequest &cpy)
 	this->_port = cpy.getPort();
 	this->_path = cpy.getPath();
     this->_query = cpy._query;
+	this->_absPathRoot = cpy._absPathRoot;
+    this->_redirection = cpy._redirection;
 	return (*this);
 }
 
@@ -61,6 +62,7 @@ void parseRequest::parseStr(std::string &info, struct SharedData* shared) {
     std::string value;
     std::string key;
 
+    _port = shared->server_config->port;
     parseFirstline(readLine(info, i), shared);
     while ((line = readLine(info, i)) != "\r" && line != "" && _returnValue != 400) {
         key = setKey(line);
@@ -71,7 +73,6 @@ void parseRequest::parseStr(std::string &info, struct SharedData* shared) {
     }
 	size_t startBody = info.find("\r\n\r\n") + 4;
 	_bodyMsg = info.substr(startBody, std::string::npos);
-
     setPort(_headers["Host"]);
     setQuery();
     setLanguage();
@@ -81,14 +82,14 @@ void parseRequest::parseStr(std::string &info, struct SharedData* shared) {
     
     _cgiresponse = "";
     if (cgiInvolved(_path) == true) {
-        shared->status = Status::start_cgi; //TODO changed the arg
+        shared->status = Status::start_cgi; // TODO changed the arg
         std::cout << "going in cgi??\n";
         return ;
     }
+	
     Response res;
-    shared->response = res.giveResponse(*this, shared);
+    shared->response = res.giveResponse(*this, *shared);
     shared->status = Status::writing;
-    return ;
 }
 
 
@@ -128,7 +129,7 @@ std::string parseRequest::setValue(const std::string &line) {
     i = line.find_first_of(":", 1);
     i = line.find_first_not_of(" ", i + 1);
     endline = line.find_first_of("\r", i);
-    line.substr(i, endline - 1);
+    line.substr(i, endline - 1); //TODO ignoring return value
     if (i != std::string::npos)
         res.append(line, i, std::string::npos);
     return rmSpaces(res);
@@ -164,11 +165,10 @@ void parseRequest::setLanguage() {
 std::string parseRequest::readBody(const std::string &str, size_t &i) {
     std::string res;
 
-    if (i == std::string::npos)
+    if (i == std::string::npos || i >= str.size())
         return "";
-    for (size_t j = 0; str[i] != std::string::npos; i++) {
-        res[j] = str[i];
-        j++;
+    for (; i < str.size(); i++) {
+        res += str[i];
     }
     return res;
 }
@@ -261,6 +261,10 @@ std::string parseRequest::getCgiResponse(void) const {
     return _cgiresponse;
 }
 
+bool parseRequest::getRedirection(void) const {
+	return _redirection;
+}
+
 /* HEADERS */
 void parseRequest::initHeaders() {
     _headers.clear();
@@ -326,8 +330,12 @@ int parseRequest::parsePath(const std::string &line, size_t i, struct SharedData
         std::cerr << "Error: no HTTP version\n"; // do we want this here, should go further not?
         return _returnValue;
     }
+	//TODO set different path for redirection and for cgi??
     _path.assign(line, i + 1, j - i);
     trim(_path);
+	if (_path == "/favicon.ico") { // to ignore it
+		return _returnValue;
+	}
     std::cout << "path = " << _path << std::endl;
 
     std::cout << GREEN << "segfaulting here" RESET << std::endl;
@@ -344,15 +352,32 @@ int parseRequest::parsePath(const std::string &line, size_t i, struct SharedData
     std::cout << "url = " <<  redirMap.begin()->second << std::endl;
     std::string abspath = shared.server_config->root_dir;
     std::string current = std::filesystem::current_path(); // this can throw an error, if does, server crashes.
+
+    //make if statement if its build/
+    
     std::size_t found = current.find_last_of("/");
     current.erase(found); // to rm after testing as the dir will be fine
-    abspath.erase(0, 1); // this will always be true
-    _absPathRoot = current + abspath;
-	if (_path[0] == '/' && _path.size() == 2) { // also check the potential favicon
-        _path = _absPathRoot + "/htmls/upload.html"; // TODO LOOK INTO THIS -- SHOULD BE index.html BUT FOR NOW TO TEST OTHER PAGES
+//    abspath.erase(0, 1); // this will always be true //TODO it doesn't make sense to keep spreading the dot so both domi and me need to remove it
+    _absPathRoot = current;
+	if ((_path[0] == '/' && _path.size() == 2) || _path == "/") {
+        _path = _absPathRoot + abspath + "/" + shared.server_config->index;
+    }
+    else if (loc != nullptr) {
+		if (loc->specifier == _path)
+			_redirection = true;
+		// _returnValue = redirMap.begin()->first;
+		// std::cout << "redir is true\n"; // to rm
+        // PUT HERE THE THING TO LOOP THROUGH THE LOCATION SEE IF ITS MEANT TO BE A REDIR 
+        // THEN DO SOEMTHING TO THE PATH
+
+		else
+			_path = _absPathRoot + abspath + _path; 
+    }
+    else if (cgiInvolved(_path) == true){
+		_path = current + _path; //TODO This is fot cgi, for redirect will be different
     }
     else {
-		_path = _absPathRoot + _path;
+        _path = _absPathRoot + abspath + _path;
     }
     std::cout << "PATH HERE= " << _path << " ABS= " << _absPathRoot << "\n"; // to rm
     return parseVersion(line, j);

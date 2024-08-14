@@ -44,7 +44,7 @@ class Response
         ~Response();
         Response& operator=(const Response &cpy);
 
-        std::string giveResponse(parseRequest& request, struct SharedData* shared);
+        std::string giveResponse(parseRequest& request, struct SharedData &shared);
 
         void getMethod(parseRequest& request, struct SharedData* shared);
         void postMethod(parseRequest& request, struct SharedData* shared);
@@ -61,8 +61,8 @@ class Response
         std::string buildResponseHeader(parseRequest& request, struct SharedData* shared); // check if args needed
         void initResponseHeaderFields();
         void setHeaderValues(parseRequest& request);
-        std::string setAllow(parseRequest& request);
-        std::string setDate(parseRequest& request);
+        std::string setAllow();
+        std::string setDate();
         std::string getHeaderValues(parseRequest& request, std::string header, struct SharedData* shared);
         std::string getMatchingCodeString(unsigned int code);
 
@@ -79,8 +79,9 @@ class Response
         bool fileExists(const std::string& path);
 
         /* STATIC */
-        static std::map<std::string, void (Response::*)(parseRequest&, struct SharedData* shared)>	_method;
-	    static std::map<std::string, void (Response::*)(parseRequest&, struct SharedData* shared)>	initMethods();
+		using ResponseCallback = void (Response::*)(parseRequest&, struct SharedData* shared);
+        static std::map<std::string, ResponseCallback>	_method;
+	    static std::map<std::string, ResponseCallback>	initMethods();
 
         /* UTILS FOR AUTO INDEX */
         std::string autoIndexPageListing(const std::string& path);

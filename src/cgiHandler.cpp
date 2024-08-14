@@ -1,12 +1,12 @@
 /* ************************************************************************** */
 /*                                                                            */
-/*                                                        ::::::::            */
-/*   cgiHandler.cpp                                     :+:    :+:            */
-/*                                                     +:+                    */
-/*   By: lpraca-l <lpraca-l@student.codam.nl>         +#+                     */
-/*                                                   +#+                      */
-/*   Created: 2024/07/31 15:50:10 by lpraca-l      #+#    #+#                 */
-/*   Updated: 2024/07/31 15:50:10 by lpraca-l      ########   odam.nl         */
+/*                                                        :::      ::::::::   */
+/*   cgiHandler.cpp                                     :+:      :+:    :+:   */
+/*                                                    +:+ +:+         +:+     */
+/*   By: dmaessen <dmaessen@student.42.fr>          +#+  +:+       +#+        */
+/*                                                +#+#+#+#+#+   +#+           */
+/*   Created: 2024/07/31 15:50:10 by lpraca-l          #+#    #+#             */
+/*   Updated: 2024/08/13 16:24:34 by dmaessen         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -25,6 +25,10 @@
 //TODO need the server info
 
 namespace {
+	void addToEpoll(SharedData* shared, int fd){
+
+	}
+
 	char **getEnv(parseRequest &request, SharedData* shared) {
 		auto copy = request.getHeaders();
 		char **env = new char *[copy.size() + 4];
@@ -51,7 +55,7 @@ namespace {
 		env[count] = new char[tmp.size()];
 		std::strcpy(env[count], tmp.data());
 		count++;
-		tmp = "UPLOAD_DIR=" + shared->server_config->upload_dir;
+		tmp = "UPLOAD_DIR=" + request.getAbsPath() + shared->server_config->upload_dir; //TODO remove fucking point??
 		env[count] = new char[tmp.size()];
 		std::strcpy(env[count], tmp.data());
 		count++;
@@ -70,17 +74,10 @@ namespace {
 		delete[] env;
 	}
 
-	std::string getCgiPath(parseRequest &request, SharedData *shared) {
-		if (shared->server_config->cgi_dir.empty())
-			return request.getPath();
-//			return request.getAbsPath() + request.getPath();
-		return shared->server_config->cgi_dir + "/" + request.getPath();
-	}
-
 	int runChild(parseRequest &request, int pipeRead, int pipeWrite, SharedData* shared) {
-		char* cgiPath = {};
-		std::strcpy(cgiPath, request.getPath().data());
-		char *argv[] = {cgiPath, nullptr}; //path and NULL
+		std::string cgiPtah = request.getPath();
+//		cgiPtah.pop_back(); //TODO Domi find out why path has extra space upload.py but not for form.py
+		char *argv[] = {cgiPtah.data(), nullptr}; //path and NULL
 		char **env = getEnv(request, shared);
 		int x = 0;
 		std::cout << "------env----\n";
@@ -89,8 +86,8 @@ namespace {
 			x++;
 		}
 		std::cout << "------endv----\n";
-		std::cout << "FROM INSIDE the kids\n" << "body: " << request.getBodyMsg() << "\n";
-		std::cout << "ARGV HERE IS " << argv[0] << "\n";
+//		std::cout << "FROM INSIDE the kids\n" << "body: " << request.getBodyMsg() << "\n";
+//		std::cout << "ARGV HERE IS " << argv[0] << "\n";
 		if (dup2(pipeRead, STDIN_FILENO) == -1 || dup2(pipeWrite, STDOUT_FILENO) == -1) {
 			std::cerr << "Leave the kids alone!\n";
 			close(pipeRead); // Close unused read end
@@ -112,10 +109,17 @@ namespace {
 
 int cgiHandler(SharedData* shared, parseRequest& request) {
 //	(void) shared;
-	if (std::filesystem::exists(request.getPath())) {
-		std::cerr<<"Sorry, can't find this file! Stop wasting my time!\n";
-		return 1;
+	std::cout<<"file path: \'"<<request.getPath()<<"\'\n";
+	try {
+		(void)std::filesystem::exists(request.getPath());
 	}
+	catch (std::exception &ex) {
+		std::cerr<<"Error: "<<ex.what();
+	}
+//	if (std::filesystem::exists(request.getPath())) {
+//		std::cerr<<"Sorry, can't find this file! Stop wasting my time!\n";
+//		return 1;
+//	}
 	int pipeParentToChild[2]; // 0 - child parent read, 1 - parent write
 	int pipeChildToParent[2]; // 0 - parent read, 1 - child write
 
@@ -155,6 +159,7 @@ int cgiHandler(SharedData* shared, parseRequest& request) {
 			std::cerr<<"Failed to read!\n";
 		}
 		std::cout<<"------------response-------------\n"<<response<<"\n";
+		shared->response = response;
 		close(pipeParentToChild[0]); // Close the read end after reading
 		wait(nullptr); // Wait for child process to finish
 	}
