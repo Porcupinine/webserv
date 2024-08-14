@@ -83,7 +83,7 @@ class Response
 	    static std::map<std::string, ResponseCallback>	initMethods();
 
         /* UTILS FOR AUTO INDEX */
-        std::string autoIndexPageListing(const std::string& path);
+        std::string autoIndexPageListing(const std::string& path, const std::string& dir);
 };
 
 

@@ -6,7 +6,7 @@
 /*   By: dmaessen <dmaessen@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2024/07/07 15:49:40 by dmaessen          #+#    #+#             */
-/*   Updated: 2024/08/14 11:46:48 by dmaessen         ###   ########.fr       */
+/*   Updated: 2024/08/14 16:05:39 by dmaessen         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -30,6 +30,15 @@ Response&	Response::operator=(const Response &cpy) {
 
 /* PROCESS RESPONSE */
 std::string Response::giveResponse(parseRequest& request, struct SharedData &shared) {
+    if (request.getPath() == "/favicon.ico") {
+        _statusCode = 200;
+        _response = "HTTP/1.1 200 OK\r\n"
+        "Content-Language: en, en\r\n"
+        "Connection: closed\r\n\r\n";
+        shared.response = _response;
+        return _response;
+    }
+    
     if (request.getRedirection() == true) {
         std::map<int, std::string> redirMap = shared.server->getRedirect(request.getPath());
         if (redirMap.begin()->first == 0)
@@ -84,7 +93,6 @@ std::map<std::string, Response::ResponseCallback> Response::_method = Response::
 
 /* METHOD FUNCTIONS */
 void Response::getMethod(parseRequest& request, struct SharedData* shared) {
-    std::cout << "AM I OVER HERE??? " << _statusCode << "\n"; // to rm
     if (_statusCode == 200) {
         readContent(request, shared);
         _response = buildResponseHeader(request, shared);
@@ -206,7 +214,7 @@ void Response::readContent(parseRequest& request, struct SharedData* shared) {
     else if (_isAutoIndex == true) {
         std::cout << "HERE2\n";
         std::stringstream buffer;
-        buffer << autoIndexPageListing(request.getPath());
+        buffer << autoIndexPageListing(request.getPath(), request.getRawPath());
         _response = buffer.str();
         _type = "text/html";
     }

@@ -6,7 +6,7 @@
 /*   By: dmaessen <dmaessen@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2024/07/07 15:50:05 by dmaessen          #+#    #+#             */
-/*   Updated: 2024/08/14 12:02:18 by dmaessen         ###   ########.fr       */
+/*   Updated: 2024/08/14 16:13:28 by dmaessen         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -49,8 +49,36 @@ parseRequest&	parseRequest::operator=(const parseRequest &cpy)
 
 void parseRequest::parseStr(std::string &info, struct SharedData* shared) {
     if (shared->response_code != 200) { // but check if there is a dedicated page first
-        shared->response = "HTTP/1.1 500 Internal Server Error\r\n\n"
-        "Content-Type: text/html\r\n\nContent-Length: 146\r\n\r\n "
+        // std::map<int, std::string>::iterator it = shared->server_config->error_pages.find(500);
+        // if (it != shared->server_config->error_pages.end()) {
+        //     std::string current = "";
+        //     try {
+        //         current = std::filesystem::current_path();
+        //     }
+        //     catch (std::exception &ex) {
+        //         std::cerr << "Error: " << ex.what();
+        //     }
+        //     if (current.find("/build") != std::string::npos) {
+        //         std::size_t found = current.find_last_of("/");
+        //         current.erase(found);
+        //     }
+        //     std::ifstream file(current + shared->server_config->root_dir + it->second);
+        //     if (file) {
+        //         std::stringstream buffer;
+        //         buffer << file.rdbuf();
+        //         shared->response = "HTTP/1.1 500 Internal Server Error\r\n"
+        //         "Content-Type: text/html\r\nContent-Length: ";
+        //         // size_t len = buffer.str()
+        //         // shared->response += buffer.;
+        //         shared->response += "\r\nConnection: closed\r\n\r\n";
+        //         shared->response += buffer.str();
+        //         return ;
+        //     } else {
+        //         std::cerr << "Failed to open error page file: " << it->second << std::endl;
+        //     }
+        // }
+        shared->response = "HTTP/1.1 500 Internal Server Error\r\n"
+        "Content-Type: text/html\r\nContent-Length: 146\r\nConnection: closed\r\n\r\n"
         "<!DOCTYPE html><html><head><title>500</title></head><body><h1> 500 Internal Server Error! </h1><p>I probably should study more!</p></body></html>";
         return ;
     }
@@ -350,14 +378,14 @@ int parseRequest::parsePath(const std::string &line, size_t i, struct SharedData
         std::cout << "int = " <<  redirMap.begin()->first << std::endl;
     }
 
-    std::string abspath = shared.server_config->root_dir;
-    // std::string current = std::filesystem::current_path(); // this can throw an error, if does, server crashes.
+    std::string abspath = shared.server->getRootFolder(_path);
     std::string current = "";
 	try {
 		current = std::filesystem::current_path(); // this can throw an error, if does, server crashes.
 	}
 	catch (std::exception &ex) {
 		std::cerr << "Error: " << ex.what();
+        _returnValue = 500;
         return 500; // or something?
 	}
 
@@ -370,6 +398,7 @@ int parseRequest::parsePath(const std::string &line, size_t i, struct SharedData
 	if ((_path[0] == '/' && _path.size() == 2) || _path == "/") {
         _path = _absPathRoot + abspath + "/" + shared.server_config->index;
     }
+    // ADD SOMETHING THAT IF IT ENDS ON / LOOK FOR THE INDEX FILE
     else if (loc != nullptr) {
 		if (loc->specifier == _path)
 			_redirection = true;
