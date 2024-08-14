@@ -6,7 +6,7 @@
 /*   By: dmaessen <dmaessen@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2024/07/07 15:50:08 by dmaessen          #+#    #+#             */
-/*   Updated: 2024/08/13 14:42:16 by dmaessen         ###   ########.fr       */
+/*   Updated: 2024/08/14 10:18:53 by dmaessen         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -68,7 +68,7 @@ std::string Response::setDate() {
 /* HEADER GETTERS */
 std::string Response::getHeaderValues(parseRequest& request, std::string header, struct SharedData* shared) {
 	header += "HTTP/" + request.getVersion() + " " + std::to_string(_statusCode) + " " + getMatchingCodeString(_statusCode) + LINE_ENDING;
-	if (_allow != "")
+	if (_allow != "" && request.getRedirection() == false)
 		header += "Allow: " + _allow + LINE_ENDING;
 	if (request.getCookies().size() > 0) {
 		for (const auto& cookie : _setcookies)
@@ -78,11 +78,11 @@ std::string Response::getHeaderValues(parseRequest& request, std::string header,
 		header += "Content-Language: " + _contentLanguage + LINE_ENDING;
 	if (_contentLength != 0)
 		header += "Content-Length: " + std::to_string(_contentLength) + LINE_ENDING;
-		if (_contentType != "")
+	if (_contentType != "")
 		header += "Content-Type: " + _contentType + LINE_ENDING;
 	if (_date != "")
 		header += "Date: " + _date + LINE_ENDING;
-	if (_statusCode == 301 || _statusCode == 302 || _statusCode == 307 || _statusCode == 308 || request.getRedirection() == true){
+	if (_statusCode == 301 || _statusCode == 302 || _statusCode == 307 || _statusCode == 308){
 		// int key = 1;
 		std::cout << "HERE IN LOCATION HEADER\n";
 		auto redirectMap = shared->server->getRedirect(request.getPath()); // Hier moet dus de location name in.
