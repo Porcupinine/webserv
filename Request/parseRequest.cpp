@@ -6,14 +6,14 @@
 /*   By: dmaessen <dmaessen@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2024/07/07 15:50:05 by dmaessen          #+#    #+#             */
-/*   Updated: 2024/08/14 10:11:25 by dmaessen         ###   ########.fr       */
+/*   Updated: 2024/08/14 12:02:18 by dmaessen         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
 #include "parseRequest.hpp"
 #include "Server.hpp"
 
-parseRequest::parseRequest(struct SharedData* shared) : _methodType(""), _path(""), _version(""), _bodyMsg(""), _port(0), _returnValue(200), _query(""), _redirection(false) {
+parseRequest::parseRequest(struct SharedData* shared) : _methodType(""), _path(""), _version(""), _bodyMsg(""), _port(0), _returnValue(200), _query(""), _redirection(false), _rawPath("") {
     initHeaders();
     if (shared->request.empty())
         shared->status = Status::closing;
@@ -43,6 +43,7 @@ parseRequest&	parseRequest::operator=(const parseRequest &cpy)
     this->_query = cpy._query;
 	this->_absPathRoot = cpy._absPathRoot;
     this->_redirection = cpy.getRedirection();
+    this->_rawPath = cpy.getRawPath();
 	return (*this);
 }
 
@@ -262,6 +263,10 @@ bool parseRequest::getRedirection(void) const {
 	return _redirection;
 }
 
+std::string parseRequest::getRawPath(void) const {
+    return _rawPath;
+}
+
 /* HEADERS */
 void parseRequest::initHeaders() {
     _headers.clear();
@@ -369,8 +374,10 @@ int parseRequest::parsePath(const std::string &line, size_t i, struct SharedData
 		if (loc->specifier == _path)
 			_redirection = true;
         std::map<int, std::string> redirMap2 = shared.server->getRedirect(_path);
-		if (loc->specifier == _path && redirMap2.begin()->first == 0) // or else if??
+		if (loc->specifier == _path && redirMap2.begin()->first == 0){
+            _rawPath = _path;
 		    _path = _absPathRoot + abspath + _path;
+        }
     }
     else if (cgiInvolved(_path) == true) {
 		_path = current + _path;
@@ -416,7 +423,8 @@ std::string initMethodString(Method method)
 
 int parseRequest::validateMethodType(struct SharedData &shared) {
     if (_redirection == true) {
-        std::set<std::string> allowedMethods = shared.server->getAllowedMethods(_path);
+        std::set<std::string> allowedMethods = shared.server->getAllowedMethods(_rawPath);
+        // std::cout << "METHOD IS " << allowedMethods.find(_methodType) << "\n";
         if (allowedMethods.find(_methodType) == allowedMethods.end())
             _returnValue = 405;
         return _returnValue;
