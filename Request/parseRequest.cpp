@@ -6,15 +6,14 @@
 /*   By: dmaessen <dmaessen@student.42.fr>            +#+                     */
 /*                                                   +#+                      */
 /*   Created: 2024/07/07 15:50:05 by dmaessen      #+#    #+#                 */
-/*   Updated: 2024/08/14 14:16:26 by ewehl         ########   odam.nl         */
+/*   Updated: 2024/08/14 15:45:32 by ewehl         ########   odam.nl         */
 /*                                                                            */
 /* ************************************************************************** */
 
 #include "parseRequest.hpp"
 #include "Server.hpp"
 
-parseRequest::parseRequest(struct SharedData* shared) :  _methodType(""), _version(""), _returnValue(shared->response_code),
-                              _bodyMsg(""), _port(shared->server_config->port), _path(""), _query("") {
+parseRequest::parseRequest::parseRequest(struct SharedData* shared) : _methodType(""), _path(""), _version(""), _bodyMsg(""), _port(0), _returnValue(200), _query(""), _redirection(false), _rawPath("") {
     initHeaders();
     if (shared->request.empty())
         shared->status = Status::closing;
@@ -44,6 +43,7 @@ parseRequest&	parseRequest::operator=(const parseRequest &cpy)
     this->_query = cpy._query;
 	this->_absPathRoot = cpy._absPathRoot;
     this->_redirection = cpy.getRedirection();
+    this->_rawPath = cpy.getRawPath();
 	return (*this);
 }
 
@@ -259,6 +259,10 @@ std::string parseRequest::getCgiResponse(void) const {
     return _cgiresponse;
 }
 
+std::string parseRequest::getRawPath(void) const {
+    return _rawPath;
+}
+
 bool parseRequest::getRedirection(void) const {
 	return _redirection;
 }
@@ -337,12 +341,6 @@ int parseRequest::parsePath(const std::string &line, size_t i, struct SharedData
 
     std::cout << GREEN << "getting here" RESET << std::endl; // to rm
     Locations *loc = shared.server->getLocation(_path);
-    if (loc == nullptr) {
-        shared.response = "HTTP/1.1 500 Internal Server Error\r\n\n"
-        "Content-Type: text/html\r\n\nContent-Length: 146\r\n\r\n "
-        "<!DOCTYPE html><html><head><title>500</title></head><body><h1> 500 Internal Server Error! </h1><p>I probably should study more!</p></body></html>";
-        return (_returnValue = 500);
-    }
 
     std::string abspath = shared.server_config->root_dir;
     std::string current = "";
@@ -350,8 +348,8 @@ int parseRequest::parsePath(const std::string &line, size_t i, struct SharedData
 		current = std::filesystem::current_path(); // this can throw an error, if does, server crashes.
 	}
 	catch (std::exception &ex) {
-		std::cerr << "Error: " << ex.what();
-        return 500; // or something?
+		std::cerr << "Errorssss: " << ex.what();
+        return (_returnValue = 500); // or something?
 	}
 
     if (current.find("/build") != std::string::npos) {
@@ -368,7 +366,8 @@ int parseRequest::parsePath(const std::string &line, size_t i, struct SharedData
 			_redirection = true; // Wot?
         std::map<int, std::string> redirMap = shared.server->getRedirect(_path);
 		if (loc->specifier == _path && redirMap.begin()->first == 0) // or else if?? loc->spec has to be _path, so redundant
-		    _path = _absPathRoot + abspath + _path;
+		    _rawPath = _path;
+            _path = _absPathRoot + abspath + _path;
     }
     else if (cgiInvolved(_path) == true) {
 		_path = current + _path;

@@ -36,6 +36,7 @@ class parseRequest
         std::map<std::string, std::string> _cookies;
         std::string _absPathRoot;
         bool _redirection; // needed??
+        std::string _rawPath;
 
 
         void parseStr(std::string &info, struct SharedData* shared);
@@ -82,6 +83,7 @@ class parseRequest
         std::string getQuery(void) const;
         std::string getCgiResponse(void) const;
         const std::map<std::string, std::string>& getCookies(void) const;
+        std::string getRawPath(void) const;
 
         /* SETTERS */
         void setMethod(std::string type);
