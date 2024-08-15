@@ -151,21 +151,10 @@ int cgiHandler(SharedData* shared, parseRequest& request) {
 		close(pipeParentToChild[1]);
 		std::cout<<"body done!\n";
 
-		int buffLen = 0;
+		ssize_t buffLen = 0;
 		std::string response;
 		std::string buffer(BUFFER_SIZE, '\0');
 		while ((buffLen = ::read(pipeChildToParent[0], buffer.data(), BUFFER_SIZE)) > 0) {
-//			std::cout << "Parent: " << buffer.substr(0, buffLen) << "\nEND\n";
-
-//			std::ofstream outfile("replaceName");
-//			if(!outfile.is_open()) {
-//				std::cout<<"can't open outfile\n";
-//				return 2;
-//			}
-//			std::string line;
-//			while (std::getline(pipeChildToParent[0], line)){
-//
-//			}
 			response.append(buffer.data(), buffer.length());
 		}
 		if (buffLen < 0) {
