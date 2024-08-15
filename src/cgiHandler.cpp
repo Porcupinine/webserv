@@ -19,14 +19,22 @@
 #include <filesystem>
 #include <cctype>
 #include "defines.hpp"
-#include <errno.h>
-#include <stdio.h>
+#include <cerrno>
+#include <cstdio>
+#include <sys/epoll.h>
 
 //TODO need the server info
 
 namespace {
 	void addToEpoll(SharedData* shared, int fd){
+		epoll_event newEvent {};
 
+		newEvent.data.fd = fd;
+		newEvent.events = EPOLLHUP;
+		newEvent.data.ptr = shared;
+		if (epoll_ctl(shared->epoll_fd, EPOLL_CTL_ADD, fd, &newEvent) < 0)
+			std::cerr<<"Failed to poll\n"; //TODO error handle
+//			throw ServerException("Failed to register with epoll");
 	}
 
 	char **getEnv(parseRequest &request, SharedData* shared) {
@@ -51,7 +59,7 @@ namespace {
 		env[count] = new char[tmp.size()];
 		std::strcpy(env[count], tmp.data());
 		count++;
-		tmp = "QUERRY_STRING=" + request.getQuery();
+		tmp = "QUERY_STRING=" + request.getQuery();
 		env[count] = new char[tmp.size()];
 		std::strcpy(env[count], tmp.data());
 		count++;
@@ -76,7 +84,6 @@ namespace {
 
 	int runChild(parseRequest &request, int pipeRead, int pipeWrite, SharedData* shared) {
 		std::string cgiPtah = request.getPath();
-//		cgiPtah.pop_back(); //TODO Domi find out why path has extra space upload.py but not for form.py
 		char *argv[] = {cgiPtah.data(), nullptr}; //path and NULL
 		char **env = getEnv(request, shared);
 		int x = 0;
@@ -86,8 +93,6 @@ namespace {
 			x++;
 		}
 		std::cout << "------endv----\n";
-//		std::cout << "FROM INSIDE the kids\n" << "body: " << request.getBodyMsg() << "\n";
-//		std::cout << "ARGV HERE IS " << argv[0] << "\n";
 		if (dup2(pipeRead, STDIN_FILENO) == -1 || dup2(pipeWrite, STDOUT_FILENO) == -1) {
 			std::cerr << "Leave the kids alone!\n";
 			close(pipeRead); // Close unused read end
@@ -116,10 +121,6 @@ int cgiHandler(SharedData* shared, parseRequest& request) {
 	catch (std::exception &ex) {
 		std::cerr<<"Error: "<<ex.what();
 	}
-//	if (std::filesystem::exists(request.getPath())) {
-//		std::cerr<<"Sorry, can't find this file! Stop wasting my time!\n";
-//		return 1;
-//	}
 	int pipeParentToChild[2]; // 0 - child parent read, 1 - parent write
 	int pipeChildToParent[2]; // 0 - parent read, 1 - child write
 
@@ -131,6 +132,8 @@ int cgiHandler(SharedData* shared, parseRequest& request) {
 		std::cerr<<"Pipe child failed, you gotta call Mario!\n";
 		return 1;
 	}
+	addToEpoll(shared, pipeParentToChild[1]);
+	addToEpoll(shared, pipeChildToParent[1]);
 	int pid = fork();
 	if (pid == -1) {
 		std::cerr<<"There are no forks, you can try the philos!\n";
@@ -153,12 +156,22 @@ int cgiHandler(SharedData* shared, parseRequest& request) {
 		std::string buffer(BUFFER_SIZE, '\0');
 		while ((buffLen = ::read(pipeChildToParent[0], buffer.data(), BUFFER_SIZE)) > 0) {
 //			std::cout << "Parent: " << buffer.substr(0, buffLen) << "\nEND\n";
+
+//			std::ofstream outfile("replaceName");
+//			if(!outfile.is_open()) {
+//				std::cout<<"can't open outfile\n";
+//				return 2;
+//			}
+//			std::string line;
+//			while (std::getline(pipeChildToParent[0], line)){
+//
+//			}
 			response.append(buffer.data(), buffer.length());
 		}
 		if (buffLen < 0) {
 			std::cerr<<"Failed to read!\n";
 		}
-		std::cout<<"------------response-------------\n"<<response<<"\n";
+		std::cout<<"------------response-------------\n\'"<<response<<"\'\n";
 		shared->response = response;
 		close(pipeParentToChild[0]); // Close the read end after reading
 		wait(nullptr); // Wait for child process to finish

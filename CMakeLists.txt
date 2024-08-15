@@ -4,7 +4,9 @@ project(webserver)
 set(CMAKE_CXX_STANDARD 17)
 
 # add_compile_options(-fstandalone-debug)
-add_compile_options(-Wall -Wextra -g)
+# add_compile_options(-Wall -Wextra -Werror -g)
+#add_compile_options(-fsanitize=address -fsanitize=leak -g3)
+#add_link_options(-fsanitize=address -fsanitize=leak)
 
 set(SRCTEST
 		test/main.cpp

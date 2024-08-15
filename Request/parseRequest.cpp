@@ -342,7 +342,7 @@ int parseRequest::parsePath(const std::string &line, size_t i, struct SharedData
     if (loc != nullptr) { // to rm
         std::cout << loc->specifier << std::endl; // segf on this
         std::map<int, std::string> redirMap = shared.server->getRedirect(_path);
-        std::cout << "url = " <<  redirMap.begin()->second << std::endl;
+//        std::cout << "url = " <<  redirMap.begin()->second << std::endl; //TODO started segfaulting here?
     }
 
     std::string abspath = shared.server_config->root_dir;

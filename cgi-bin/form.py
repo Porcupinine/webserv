@@ -13,7 +13,6 @@ cgitb.enable()
 
 # Create instance of FieldStorage
 form = cgi.FieldStorage()
-
 # Get data from fields
 name = form.getvalue("fname")
 intra_id = form.getvalue("iname")
