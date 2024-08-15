@@ -6,7 +6,7 @@
 /*   By: dmaessen <dmaessen@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2024/07/07 15:49:40 by dmaessen          #+#    #+#             */
-/*   Updated: 2024/08/15 09:58:08 by dmaessen         ###   ########.fr       */
+/*   Updated: 2024/08/15 13:51:47 by dmaessen         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -52,7 +52,7 @@ std::string Response::giveResponse(parseRequest& request, struct SharedData &sha
     
     _isAutoIndex = shared.server_config->auto_index;
     if (request.getRedirection() == true) {
-        _isAutoIndex = shared.server->getDirListing(request.getRawRawPath());
+        _isAutoIndex = shared.server->getDirListing(request.getRawPath());
         std::cout << "AM I OVER HERE??? HELOOOO " << _isAutoIndex << "\n"; // to rm
         if (_isAutoIndex == false && (_statusCode != 301 && _statusCode != 302 && _statusCode != 307 && _statusCode != 308))
             _statusCode = 403;
@@ -204,15 +204,32 @@ void Response::readContent(parseRequest& request, struct SharedData* shared) {
             _response = errorHtml(_statusCode, shared, request);
             return ; // or break ??
         }
-        std::cout << "HERE1\n";
         std::stringstream buffer;
         buffer << file.rdbuf();
         std::string content = buffer.str();
         _response = content;
         file.close();
     }
+    // else if (_isAutoIndex == false && request.getDir() == true && fileExists(request.getPath() + "/" + shared->server->getIndex(request.getRawPath()))) {
+    else if (_isAutoIndex == false && request.getDir() == true && fileExists(request.getPath() + "/index.html")) {
+        // CHEK IF THERE IS ALREADY A BACK SLASH OR NOT IF NOT ADD ELSE TRIM OR SOMETHING TO NOT HAVE A BUG THERE
+        
+        // std::string f = request.getPath() + "/" + shared->server->getIndex(request.getRawPath()); // put this back when fixed
+        std::string f = request.getPath() + "/index.html";
+        file.open(f.c_str(), std::ifstream::in);
+        if (!file.is_open()) {
+            _statusCode = 403;
+            _response = errorHtml(_statusCode, shared, request);
+            return ; // or break ??
+        }
+        std::stringstream buffer;
+        buffer << file.rdbuf();
+        std::string content = buffer.str();
+        _response = content;
+        _statusCode = 200;
+        file.close();
+    }
     else if (_isAutoIndex == true) {
-        std::cout << "HERE2\n";
         std::stringstream buffer;
         buffer << autoIndexPageListing(request.getPath(), request.getRawPath());
         _response = buffer.str();
@@ -242,7 +259,7 @@ std::string Response::getResponse(void) const {
 /* UTILS */
 bool Response::fileExists(const std::string& path) {
     struct stat buffer;
-
+    std::cout << "PATH:"<<path<<"\n"; // to rm
     if (stat(path.c_str(), &buffer) == 0)
         return true;
     return false;

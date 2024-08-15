@@ -168,7 +168,7 @@ std::string Server::getRootFolder(const std::string &location) const {
 			return it->get()->root_dir.empty() ? _configs->root_dir : it->get()->root_dir; // Use location-specific or fallback to general
 		}
 	}
-	return "/";
+	return _configs->root_dir;
 }
 
 std::set<std::string> Server::getAllowedMethods(const std::string &location) const {

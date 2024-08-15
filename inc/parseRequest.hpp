@@ -35,7 +35,8 @@ class parseRequest
         std::string _cgiresponse;
         std::map<std::string, std::string> _cookies;
         std::string _absPathRoot;
-        bool _redirection; // needed??
+        bool _redirection;
+        bool _dir;
         std::string _rawPath;
 
 
@@ -47,6 +48,7 @@ class parseRequest
 
         int parseFirstline(const std::string &info, struct SharedData* shared);
         int parsePath(const std::string &line, size_t i, struct SharedData &shared);
+        std::string isolateDir(std::string &path);
         int parseVersion(const std::string &line, size_t i, struct SharedData &shared);
         int validateMethodType(struct SharedData &shared);
 
@@ -77,6 +79,7 @@ class parseRequest
         unsigned int getPort(void) const;
         int getRetVal(void) const;
         bool getRedirection(void) const;
+        bool getDir(void) const;
         std::string getBodyMsg(void) const;
         const std::map<std::string, std::string>& getHeaders(void) const;
         std::string getLanguageStr(void) const;

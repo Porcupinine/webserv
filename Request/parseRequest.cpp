@@ -6,14 +6,14 @@
 /*   By: dmaessen <dmaessen@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2024/07/07 15:50:05 by dmaessen          #+#    #+#             */
-/*   Updated: 2024/08/15 09:57:30 by dmaessen         ###   ########.fr       */
+/*   Updated: 2024/08/15 13:05:23 by dmaessen         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
 #include "parseRequest.hpp"
 #include "Server.hpp"
 
-parseRequest::parseRequest::parseRequest(struct SharedData* shared) : _methodType(""), _path(""), _version(""), _bodyMsg(""), _port(0), _returnValue(200), _query(""), _redirection(false), _rawPath(""), _rawPath("") {
+parseRequest::parseRequest::parseRequest(struct SharedData* shared) : _methodType(""), _path(""), _version(""), _bodyMsg(""), _port(0), _returnValue(200), _query(""), _redirection(false), _dir(false), _rawPath("") {
     initHeaders();
     if (shared->request.empty())
         shared->status = Status::closing;
@@ -48,40 +48,41 @@ parseRequest&	parseRequest::operator=(const parseRequest &cpy)
 }
 
 void parseRequest::parseStr(std::string &info, struct SharedData* shared) {
-    if (shared->response_code != 200) { // but check if there is a dedicated page first
-        // std::map<int, std::string>::iterator it = shared->server_config->error_pages.find(500);
-        // if (it != shared->server_config->error_pages.end()) {
-        //     std::string current = "";
-        //     try {
-        //         current = std::filesystem::current_path();
-        //     }
-        //     catch (std::exception &ex) {
-        //         std::cerr << "Error: " << ex.what();
-        //     }
-        //     if (current.find("/build") != std::string::npos) {
-        //         std::size_t found = current.find_last_of("/");
-        //         current.erase(found);
-        //     }
-        //     std::ifstream file(current + shared->server_config->root_dir + it->second);
-        //     if (file) {
-        //         std::stringstream buffer;
-        //         buffer << file.rdbuf();
-        //         shared->response = "HTTP/1.1 500 Internal Server Error\r\n"
-        //         "Content-Type: text/html\r\nContent-Length: ";
-        //         // size_t len = buffer.str()
-        //         // shared->response += buffer.;
-        //         shared->response += "\r\nConnection: closed\r\n\r\n";
-        //         shared->response += buffer.str();
-        //         return ;
-        //     } else {
-        //         std::cerr << "Failed to open error page file: " << it->second << std::endl;
-        //     }
-        // }
+    if (shared->response_code != 200) {
+        std::map<int, std::string>::iterator it = shared->server_config->error_pages.find(500);
+        if (it != shared->server_config->error_pages.end()) {
+            std::string current = "";
+            try {
+                current = std::filesystem::current_path();
+            }
+            catch (std::exception &ex) {
+                std::cerr << "Error: " << ex.what();
+            }
+            if (current.find("/build") != std::string::npos) {
+                std::size_t found = current.find_last_of("/");
+                current.erase(found);
+            }
+            std::ifstream file(current + shared->server_config->root_dir + it->second);
+            if (file) {
+                std::stringstream buffer;
+                buffer << file.rdbuf();
+                std::string content = buffer.str();
+                size_t len = content.length();
+                shared->response = "HTTP/1.1 500 Internal Server Error\r\n"
+                                "Content-Type: text/html\r\n"
+                                "Content-Length: " + std::to_string(len) + 
+                                "\r\nConnection: closed\r\n\r\n" + content;
+                return ;
+            } else {
+                std::cerr << "Failed to open error page file: " << it->second << std::endl;
+            }
+        }
         shared->response = "HTTP/1.1 500 Internal Server Error\r\n"
         "Content-Type: text/html\r\nContent-Length: 146\r\nConnection: closed\r\n\r\n"
         "<!DOCTYPE html><html><head><title>500</title></head><body><h1> 500 Internal Server Error! </h1><p>I probably should study more!</p></body></html>";
         return ;
     }
+    
     size_t i = 0;
     std::string line;
     std::string bodyLine;
@@ -295,8 +296,8 @@ bool parseRequest::getRedirection(void) const {
 	return _redirection;
 }
 
-std::string parseRequest::getRawPath(void) const {
-    return _rawPath;
+bool parseRequest::getDir(void) const {
+	return _dir;
 }
 
 /* HEADERS */
@@ -344,24 +345,37 @@ int parseRequest::parseFirstline(const std::string &info, struct SharedData* sha
     
     if (i == std::string::npos) {
         _returnValue = 400;
-        std::cerr << "Error: wrong syntax of HTTP method\n"; // OR WHAT??
+        std::cerr << "Error: wrong syntax of HTTP method\n";
         return _returnValue;
     }
     _methodType.assign(line, 0, i);
     return parsePath(line, i, *shared);
 }
 
+// std::string parseRequest::isolateDir(std::string &path) {
+//     int count = std::count(path.begin(), path.end(), "/");
+//     std::cout << "HOW MAYBE DASH = " << count << "\n";
+    
+
+//     // DO TWO THINGS:
+//         // IF ITS TWO AND INDEX 0 AND END OF STRING THEN SEARCH FOR INDEX (AND DO 404 IF NOT FOUND)
+//         // ITS MORE THAN 1 AND NOT THE ABOVE THEN ISOLATE FROM INDEX 0 UNTIL FIND NEXT /
+
+
+//     return path; 
+// }
+
 int parseRequest::parsePath(const std::string &line, size_t i, struct SharedData &shared) {
     size_t j;
 
     if ((j = line.find_first_not_of(' ', i)) == std::string::npos) {
         _returnValue = 400;
-        std::cerr << "Error: no path\n"; // do we want this here, should go further not?
+        std::cerr << "Error: no path\n";
         return _returnValue;
     }
     if ((j = line.find_first_of(' ', j)) == std::string::npos) {
         _returnValue = 400;
-        std::cerr << "Error: no HTTP version\n"; // do we want this here, should go further not?
+        std::cerr << "Error: no HTTP version\n";
         return _returnValue;
     }
 
@@ -369,22 +383,22 @@ int parseRequest::parsePath(const std::string &line, size_t i, struct SharedData
     trim(_path);
 	
     if (_path == "/favicon.ico")
-		return _returnValue; //What is return value here?
+		return _returnValue;
 
     std::cout << GREEN << "getting here" RESET << std::endl; // to rm
+    // Locations *loc = shared.server->getLocation(isolateDir(_path));
     Locations *loc = shared.server->getLocation(_path);
 
     std::string abspath = shared.server->getRootFolder(_path);
     std::string current = "";
 	try {
-		current = std::filesystem::current_path(); // this can throw an error, if does, server crashes.
+		current = std::filesystem::current_path();
 	}
 	catch (std::exception &ex) {
 		std::cerr << "Error: " << ex.what();
         _returnValue = 500;
-        return 500; // or something?
+        return 500;
 	}
-
     if (current.find("/build") != std::string::npos) {
         std::size_t found = current.find_last_of("/");
         current.erase(found);
@@ -393,13 +407,18 @@ int parseRequest::parsePath(const std::string &line, size_t i, struct SharedData
     _absPathRoot = current;
 	if ((_path[0] == '/' && _path.size() == 2) || _path == "/") {
         _path = _absPathRoot + abspath + "/" + shared.server_config->index;
+        // std::cout << "this one1 " << shared.server->getIndex(_path) <<  "\n";
+        // _path = _absPathRoot + abspath + "/" + shared.server->getIndex(_path); // to use later
     }
     // ADD SOMETHING THAT IF IT ENDS ON / LOOK FOR THE INDEX FILE
     else if (loc != nullptr) {
+        std::cout << "this one2\n";
 		if (loc->specifier == _path)
 			_redirection = true;
         std::map<int, std::string> redirMap2 = shared.server->getRedirect(_path);
 		if (loc->specifier == _path && redirMap2.begin()->first == 0){
+            _dir = true;
+            std::cout << "this one3\n";
             _rawPath = _path;
 		    _path = _absPathRoot + abspath + _path;
         }
@@ -449,7 +468,6 @@ std::string initMethodString(Method method)
 int parseRequest::validateMethodType(struct SharedData &shared) {
     if (_redirection == true) {
         std::set<std::string> allowedMethods = shared.server->getAllowedMethods(_rawPath);
-        // std::cout << "METHOD IS " << allowedMethods.find(_methodType) << "\n";
         if (allowedMethods.find(_methodType) == allowedMethods.end())
             _returnValue = 405;
         return _returnValue;
