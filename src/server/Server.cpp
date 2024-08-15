@@ -28,7 +28,7 @@ int Server::initServer(std::shared_ptr<ServerConfig> config, int epollFd, double
 
 	_serverAddr.sin_family = AF_INET;
 	_serverAddr.sin_addr.s_addr = INADDR_ANY;
-	// _serverAddr.sin_addr.s_addr = inet_addr(config->host.c_str()); voor de echte host?
+	// _serverAddr.sin_addr.s_addr = inet_addr(config->host.c_str()); voor de echte host
 	_serverAddr.sin_port = htons(config->port);
 
 	_configs = config;
@@ -45,7 +45,7 @@ int Server::initServer(std::shared_ptr<ServerConfig> config, int epollFd, double
 		_bindSocket();
 		_listenSocket(BACKLOG);
 
-		_registerWithEpoll(epollFd, _fd, EPOLLIN); // Should I use edge-triggered?
+		_registerWithEpoll(epollFd, _fd, EPOLLIN);
 	} catch (std::exception & e) {
 		throw e.what();
 	}

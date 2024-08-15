@@ -6,7 +6,7 @@
 /*   By: dmaessen <dmaessen@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2024/07/07 15:49:40 by dmaessen          #+#    #+#             */
-/*   Updated: 2024/08/14 16:05:39 by dmaessen         ###   ########.fr       */
+/*   Updated: 2024/08/15 09:58:08 by dmaessen         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -52,7 +52,7 @@ std::string Response::giveResponse(parseRequest& request, struct SharedData &sha
     
     _isAutoIndex = shared.server_config->auto_index;
     if (request.getRedirection() == true) {
-        _isAutoIndex = shared.server->getDirListing(request.getRawPath());
+        _isAutoIndex = shared.server->getDirListing(request.getRawRawPath());
         std::cout << "AM I OVER HERE??? HELOOOO " << _isAutoIndex << "\n"; // to rm
         if (_isAutoIndex == false && (_statusCode != 301 && _statusCode != 302 && _statusCode != 307 && _statusCode != 308))
             _statusCode = 403;
@@ -197,7 +197,7 @@ std::string Response::errorHtml(unsigned int error, struct SharedData* shared, p
 void Response::readContent(parseRequest& request, struct SharedData* shared) {
     std::ifstream file;
 
-    if (fileExists(request.getPath()) == true && request.getRawPath() == "") {
+    if (fileExists(request.getPath()) == true && request.getRawPath() == "" && request.getRawPath() == "") {
         file.open((request.getPath().c_str()), std::ifstream::in);
         if (!file.is_open()) {
             _statusCode = 403;

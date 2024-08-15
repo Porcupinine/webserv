@@ -59,7 +59,7 @@ body = f"""<!DOCTYPE html>
     
     <h1>Welcome to the ______ webserv!!</h1>
     
-    <p>Now give us your best picture!</p>
+    <p>Thank you for your file!</p>
     <p> {message}</p>
        <p><a href="/upload.html">Upload another picture</a></p>
     <p><a href="/index.html">Back</a></p>

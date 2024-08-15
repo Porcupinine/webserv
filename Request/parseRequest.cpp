@@ -6,14 +6,14 @@
 /*   By: dmaessen <dmaessen@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2024/07/07 15:50:05 by dmaessen          #+#    #+#             */
-/*   Updated: 2024/08/15 09:54:04 by dmaessen         ###   ########.fr       */
+/*   Updated: 2024/08/15 09:57:30 by dmaessen         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
 #include "parseRequest.hpp"
 #include "Server.hpp"
 
-parseRequest::parseRequest(struct SharedData* shared) : _methodType(""), _path(""), _version(""), _bodyMsg(""), _port(0), _returnValue(200), _query(""), _redirection(false), _rawPath("") {
+parseRequest::parseRequest::parseRequest(struct SharedData* shared) : _methodType(""), _path(""), _version(""), _bodyMsg(""), _port(0), _returnValue(200), _query(""), _redirection(false), _rawPath(""), _rawPath("") {
     initHeaders();
     if (shared->request.empty())
         shared->status = Status::closing;
@@ -287,6 +287,10 @@ std::string parseRequest::getCgiResponse(void) const {
     return _cgiresponse;
 }
 
+std::string parseRequest::getRawPath(void) const {
+    return _rawPath;
+}
+
 bool parseRequest::getRedirection(void) const {
 	return _redirection;
 }
@@ -365,18 +369,10 @@ int parseRequest::parsePath(const std::string &line, size_t i, struct SharedData
     trim(_path);
 	
     if (_path == "/favicon.ico")
-		return _returnValue;
-    
-    std::cout << "path = " << _path << std::endl; // to rm
+		return _returnValue; //What is return value here?
 
-    std::cout << GREEN << "segfaulting here" RESET << std::endl; // to rm
+    std::cout << GREEN << "getting here" RESET << std::endl; // to rm
     Locations *loc = shared.server->getLocation(_path);
-    if (loc != nullptr) { // to rm
-        std::cout << loc->specifier << std::endl;
-        std::map<int, std::string> redirMap = shared.server->getRedirect(_path);
-        std::cout << "url = " <<  redirMap.begin()->second << std::endl;
-        std::cout << "int = " <<  redirMap.begin()->first << std::endl;
-    }
 
     std::string abspath = shared.server->getRootFolder(_path);
     std::string current = "";
