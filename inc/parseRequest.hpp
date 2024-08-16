@@ -10,6 +10,7 @@
 #include <list>
 #include <utility>
 #include <functional>
+#include <set>
 
 #include "response.h"
 #include "defines.hpp"
@@ -34,7 +35,9 @@ class parseRequest
         std::string _cgiresponse;
         std::map<std::string, std::string> _cookies;
         std::string _absPathRoot;
-        bool _redirection; // needed??
+        bool _redirection;
+        bool _dir;
+        std::string _rawPath;
 
 
         void parseStr(std::string &info, struct SharedData* shared);
@@ -45,8 +48,9 @@ class parseRequest
 
         int parseFirstline(const std::string &info, struct SharedData* shared);
         int parsePath(const std::string &line, size_t i, struct SharedData &shared);
-        int parseVersion(const std::string &line, size_t i);
-        int validateMethodType();
+        std::string isolateDir(std::string &path);
+        int parseVersion(const std::string &line, size_t i, struct SharedData &shared);
+        int validateMethodType(struct SharedData &shared);
 
         std::string setKey(const std::string &line);
         std::string setValue(const std::string &line);
@@ -75,12 +79,14 @@ class parseRequest
         unsigned int getPort(void) const;
         int getRetVal(void) const;
         bool getRedirection(void) const;
+        bool getDir(void) const;
         std::string getBodyMsg(void) const;
         const std::map<std::string, std::string>& getHeaders(void) const;
         std::string getLanguageStr(void) const;
         std::string getQuery(void) const;
         std::string getCgiResponse(void) const;
         const std::map<std::string, std::string>& getCookies(void) const;
+        std::string getRawPath(void) const;
 
         /* SETTERS */
         void setMethod(std::string type);

@@ -11,6 +11,4 @@ int main(int argc, char **argv){
 	} catch (std::exception &e) {
 		std::cout << "Fuck#2 " << e.what() << std::endl;
 	}
-
-
 }

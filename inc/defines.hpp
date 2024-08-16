@@ -127,13 +127,12 @@ struct SharedData {
 	std::string							request;
 	std::string							response;
 	int									response_code;
-	std::map<unsigned int, std::string>	errorPages;
+	// std::map<unsigned int, std::string>	errorPages;
 
 	int									fd;
 	int									epoll_fd; // check newConnection or initServer
 
 	Status								status; // does this work like this? iT does :D
-	// std::list<ServerConfig *>		server_config;
 	std::shared_ptr<ServerConfig>		server_config;
 	bool								connection_closed;
 

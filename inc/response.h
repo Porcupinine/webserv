@@ -27,7 +27,6 @@ class Response
         bool            _isAutoIndex;
         std::map<unsigned int, std::string> _errorCodes;
         std::map<unsigned int, std::string> _errorCodesHtml;
-        std::string      _absrootpath;
 
         /*RESPONSE HEADER FIELDS*/
         std::string					_allow;
@@ -58,7 +57,7 @@ class Response
         std::string getFormattedTime(time_t rawtime);
 
         /* RESPONSE HEADER BUIDLING RELATED */
-        std::string buildResponseHeader(parseRequest& request, struct SharedData* shared); // check if args needed
+        std::string buildResponseHeader(parseRequest& request, struct SharedData* shared);
         void initResponseHeaderFields();
         void setHeaderValues(parseRequest& request);
         std::string setAllow();
@@ -67,8 +66,8 @@ class Response
         std::string getMatchingCodeString(unsigned int code);
 
         /* HTML RELATED */
-        std::string errorHtml(unsigned int error);
-        void readContent(parseRequest& request);
+        std::string errorHtml(unsigned int error, struct SharedData* shared, parseRequest &request);
+        void readContent(parseRequest& request, struct SharedData* shared);
 
         /* GETTERS */
         std::string getResponse(void) const; 
@@ -84,7 +83,7 @@ class Response
 	    static std::map<std::string, ResponseCallback>	initMethods();
 
         /* UTILS FOR AUTO INDEX */
-        std::string autoIndexPageListing(const std::string& path);
+        std::string autoIndexPageListing(const std::string& path, const std::string& dir);
 };
 
 

@@ -6,7 +6,7 @@
 /*   By: dmaessen <dmaessen@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2024/07/07 15:49:40 by dmaessen          #+#    #+#             */
-/*   Updated: 2024/08/13 14:40:03 by dmaessen         ###   ########.fr       */
+/*   Updated: 2024/08/15 13:51:47 by dmaessen         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -30,17 +30,34 @@ Response&	Response::operator=(const Response &cpy) {
 
 /* PROCESS RESPONSE */
 std::string Response::giveResponse(parseRequest& request, struct SharedData &shared) {
+    if (request.getPath() == "/favicon.ico") {
+        _statusCode = 200;
+        _response = "HTTP/1.1 200 OK\r\n"
+        "Content-Language: en, en\r\n"
+        "Connection: closed\r\n\r\n";
+        shared.response = _response;
+        return _response;
+    }
+    
     if (request.getRedirection() == true) {
         std::map<int, std::string> redirMap = shared.server->getRedirect(request.getPath());
-        _statusCode = redirMap.begin()->first;
+        if (redirMap.begin()->first == 0)
+            _statusCode = request.getRetVal();
+        else
+            _statusCode = redirMap.begin()->first;
     }
     else
         _statusCode = request.getRetVal();
     _type = "";
-    std::cout << "AM I OVER HERE??? " << _statusCode << "\n"; // to rm
-    // std::cout << "test\t" << shared->server_config->auto_index << "\n" << shared->server_config->host << std::endl;
+    
     _isAutoIndex = shared.server_config->auto_index;
-    // _absrootpath = shared->server_config->root_dir;
+    if (request.getRedirection() == true) {
+        _isAutoIndex = shared.server->getDirListing(request.getRawPath());
+        std::cout << "AM I OVER HERE??? HELOOOO " << _isAutoIndex << "\n"; // to rm
+        if (_isAutoIndex == false && (_statusCode != 301 && _statusCode != 302 && _statusCode != 307 && _statusCode != 308))
+            _statusCode = 403;
+    }
+        
     initErrorCodes();
     htmlErrorCodesMap();
     initMethods();
@@ -52,8 +69,8 @@ std::string Response::giveResponse(parseRequest& request, struct SharedData &sha
         (this->*(it->second))(request, &shared);
     else
         _statusCode = 405;
-    if (_statusCode == 405 || _statusCode == 413) {
-        _response = errorHtml(_statusCode);
+    if (_statusCode == 405 || _statusCode == 413 || _statusCode == 403) {
+        _response = errorHtml(_statusCode, &shared, request);
         _response = buildResponseHeader(request, &shared);
     }
     
@@ -76,27 +93,29 @@ std::map<std::string, Response::ResponseCallback> Response::_method = Response::
 
 /* METHOD FUNCTIONS */
 void Response::getMethod(parseRequest& request, struct SharedData* shared) {
-    std::cout << "AM I OVER HERE??? " << _statusCode << "\n"; // to rm
     if (_statusCode == 200) {
-        readContent(request);
+        readContent(request, shared);
         _response = buildResponseHeader(request, shared);
     }
-    else if (request.getRedirection() == true) {
-        _response = errorHtml(_statusCode);
+    else if (request.getRedirection() == true) { // check on this as could be a dir listing
+        if (_statusCode == 301 || _statusCode == 302 || _statusCode == 307 || _statusCode == 308)
+            _response = errorHtml(_statusCode, shared, request);
+        else
+            readContent(request, shared);
         _response = buildResponseHeader(request, shared);
     }
     else
-        _response = errorHtml(_statusCode);
+        _response = errorHtml(_statusCode, shared, request);
 }
 
 void Response::postMethod(parseRequest& request, struct SharedData* shared) {
     if (cgiInvolved(request.getPath()) == false) {
-        _statusCode = 204; // no content
+        _statusCode = 204;
         _response = "";
         _response = buildResponseHeader(request, shared);
     }
     if (_statusCode == 500) {
-        _response = errorHtml(_statusCode);
+        _response = errorHtml(_statusCode, shared, request);
         _response = buildResponseHeader(request, shared);
     }
 }
@@ -114,7 +133,7 @@ void Response::deleteMethod(parseRequest& request, struct SharedData* shared) {
         _statusCode = 404;
 
     if (_statusCode == 404 || _statusCode == 403)
-        _response = errorHtml(_statusCode);
+        _response = errorHtml(_statusCode, shared, request);
     _response = buildResponseHeader(request, shared);
 }
 
@@ -155,41 +174,70 @@ void Response::htmlErrorCodesMap() {
 
 
 /* HTML RELATED */
-std::string Response::errorHtml(unsigned int error) {
-    std::map<unsigned int, std::string>::iterator it = _errorCodesHtml.find(error);
+std::string Response::errorHtml(unsigned int error, struct SharedData* shared, parseRequest& request) {
+    std::map<int, std::string>::iterator it = shared->server_config->error_pages.find(error);
+    if (it != shared->server_config->error_pages.end()) {
+        std::ifstream file(request.getAbsPath() + shared->server_config->root_dir + it->second);
+        if (file) {
+            std::stringstream buffer;
+            buffer << file.rdbuf();
+            return buffer.str();
+        } else {
+            std::cerr << "Failed to open error page file: " << it->second << std::endl;
+        }
+    }
 
-    if (it == _errorCodesHtml.end())
+    std::map<unsigned int, std::string>::iterator it2 = _errorCodesHtml.find(error);
+    if (it2 == _errorCodesHtml.end())
         return ("<!DOCTYPE html><body><h1> 404 </h1><p> Error Page Not Found </p></body></html>");
     else
-        return (it->second);
+        return (it2->second);
 }
 
-void Response::readContent(parseRequest& request) {
+void Response::readContent(parseRequest& request, struct SharedData* shared) {
     std::ifstream file;
 
-    if (fileExists(request.getPath()) == true) {
+    if (fileExists(request.getPath()) == true && request.getRawPath() == "" && request.getRawPath() == "") {
         file.open((request.getPath().c_str()), std::ifstream::in);
         if (!file.is_open()) {
             _statusCode = 403;
-            _response = errorHtml(_statusCode);
+            _response = errorHtml(_statusCode, shared, request);
             return ; // or break ??
         }
-
         std::stringstream buffer;
         buffer << file.rdbuf();
         std::string content = buffer.str();
         _response = content;
         file.close();
     }
+    // else if (_isAutoIndex == false && request.getDir() == true && fileExists(request.getPath() + "/" + shared->server->getIndex(request.getRawPath()))) {
+    else if (_isAutoIndex == false && request.getDir() == true && fileExists(request.getPath() + "/index.html")) {
+        // CHEK IF THERE IS ALREADY A BACK SLASH OR NOT IF NOT ADD ELSE TRIM OR SOMETHING TO NOT HAVE A BUG THERE
+        
+        // std::string f = request.getPath() + "/" + shared->server->getIndex(request.getRawPath()); // put this back when fixed
+        std::string f = request.getPath() + "/index.html";
+        file.open(f.c_str(), std::ifstream::in);
+        if (!file.is_open()) {
+            _statusCode = 403;
+            _response = errorHtml(_statusCode, shared, request);
+            return ; // or break ??
+        }
+        std::stringstream buffer;
+        buffer << file.rdbuf();
+        std::string content = buffer.str();
+        _response = content;
+        _statusCode = 200;
+        file.close();
+    }
     else if (_isAutoIndex == true) {
         std::stringstream buffer;
-        buffer << autoIndexPageListing(request.getPath());
+        buffer << autoIndexPageListing(request.getPath(), request.getRawPath());
         _response = buffer.str();
         _type = "text/html";
     }
     else {
         _statusCode = 404; // not found
-        _response = errorHtml(_statusCode);
+        _response = errorHtml(_statusCode, shared, request);
     }
 }
 
@@ -211,7 +259,7 @@ std::string Response::getResponse(void) const {
 /* UTILS */
 bool Response::fileExists(const std::string& path) {
     struct stat buffer;
-
+    std::cout << "PATH:"<<path<<"\n"; // to rm
     if (stat(path.c_str(), &buffer) == 0)
         return true;
     return false;
