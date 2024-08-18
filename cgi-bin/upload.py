@@ -5,11 +5,15 @@ import os
 import cgi
 import cgitb
 
+import logging
+logger = logging.getLogger(__name__)
+logging.basicConfig(filename='logs/upload.log', encoding='utf-8', level=logging.DEBUG)
+
 cgitb.enable()
 cgitb.enable(display=0, logdir="logdir")  # for debugging
 
 
-def uploadFile(upDir) -> (int, str):
+def uploadFile() -> (int, str):
     # Set lodgir for debugging purposes
     if not os.path.isdir("logdir"):
         os.mkdir("logdir")
@@ -34,13 +38,17 @@ def uploadFile(upDir) -> (int, str):
     except:
         return 500, "Ooopsie!!!\n"
 
-def uploadCGI() :
+# def uploadCGI() :
+try:
     message = ""
     status = 0
     upDir = os.environ["UPLOAD_DIR"]
 
+    logger.info("will upload data")
+
     #Check if folder ecxists, if not, create such folder
     if not os.path.isdir(upDir):
+        logger.error("folder does not exist")
         os.mkdir(upDir)
     # files = os.listdir(os.environ.get("UPLOAD_DIR"))
 
@@ -77,6 +85,11 @@ def uploadCGI() :
         Last-Modified: {date}\r
         Server: {os.environ.get("SERVER")}\r\n\r"""
 
+    logger.info(f'header: {header}')
+    logger.info(f'body: {body}')
     print(header)
     print(body)
+except:
+    logger.error("Your script failed!!")
+finally:
     print("\0")

@@ -1,8 +1,8 @@
-# get the folder to serch from the env, check if folder exists, if not, error
-#if folder exists, use ls to get all files inside the folder
-#fill html page with the path/name for each item and a delete button that calls the delete script
-
 #!/bin/bash
+
+ # get the folder to serch from the env, check if folder exists, if not, error
+ #if folder exists, use ls to get all files inside the folder
+ #fill html page with the path/name for each item and a delete button that calls the delete script
 
 #TODO error headers
 
@@ -34,7 +34,7 @@ if [ -d "$DIRECTORY" ]; then
             FILENAME=$(basename "$FILE")
             BODY+="<li>"
             BODY+="<a href=\"$DIRECTORY/$FILENAME\" target=\"_blank\">$FILENAME               </a>"
-            BODY+="<form style=\"display:inline;\" method=\"post\" action=\"/cgi-bin/delete_file.cgi\">"
+            BODY+="<form style=\"display:inline;\" method=\"delete\" action=\"/cgi-bin/delete_file.cgi\">"
             BODY+="<input type=\"hidden\" name=\"file\" value=\"$FILENAME\" />"
             BODY+="<input type=\"submit\" value=\"Delete\" />"
             BODY+="</form>"
@@ -49,6 +49,7 @@ else
 fi
 
 # End HTML output
+BODY+="<p><a href="/index.html">Back</a></p>"
 BODY+="</body>"
 BODY+="</html>"
 
@@ -56,10 +57,13 @@ BODY+="</html>"
 BODYLEN=$(echo -n "$BODY" | wc -c)
 
 # Build header
-HEADER="HTTP/1.1 200\r
-  Content-length: $BODYLEN\r
-  Content-type: text/html\r\n\r"
+HEADER="HTTP/1.1 200\r\n
+Connection: close\r\n
+Content-length: $BODYLEN\r\n
+Content-type: text/html\r\n\r\n
+"
 
-# Output
-echo $HEADER
-echo $BODY
+# Output -e so the backslash is interpreted
+echo -e $HEADER
+echo -e $BODY
+

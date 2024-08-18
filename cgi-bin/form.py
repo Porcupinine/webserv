@@ -7,8 +7,13 @@ import http.cookies
 import datetime
 import sys
 
+import logging
+logger = logging.getLogger(__name__)
+logging.basicConfig(filename='logs/form.log', encoding='utf-8', level=logging.DEBUG)
+
 def fillForm():
     # Enable CGI debugging
+    logger.info("Will start decoding")
     cgitb.enable()
 
     # Create instance of FieldStorage
@@ -20,6 +25,7 @@ def fillForm():
     # Set cookies with the form data
     cookie = http.cookies.SimpleCookie()
 
+    logger.info("will check name")
     # Set cookies
     if name:
         cookie["name"] = name
@@ -58,6 +64,13 @@ Last-Modified: {date}\r
 Server: {os.environ.get("SERVER")}\r\n\r"""
 
     # Output header and body as bytes
-    sys.stdout.buffer.write(header.encode('utf-8'))
-    sys.stdout.buffer.write(body.encode('utf-8'))
+    print(header)
+    print(body)
+
+try:
+    fillForm()
+except:
+    logger.error("Fill form failed!")
+finally:
+    logger.info("closing the script")
     sys.stdout.buffer.write(b"\0")  # Null terminator for testing

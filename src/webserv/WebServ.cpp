@@ -106,7 +106,8 @@ void	WebServ::writeData(SharedData* shared) {
 	} else {
 		std::cerr << "We wrote, now what? count " << RED << count++ << RESET << std::endl;
 		shared->response.clear();
-		shared->status = shared->connection_closed ? Status::closing : Status::reading;
+//		shared->status = shared->connection_closed ? Status::closing : Status::reading;
+		shared->status = Status::closing; // TODO: this is not closing connections after writing!
 	}
 	std::cout << PURPLE << "Am I here?\n" << RESET << std::endl;
 }
