@@ -39,7 +39,7 @@ namespace {
 
 	char **getEnv(parseRequest &request, SharedData* shared) {
 		auto copy = request.getHeaders();
-		char **env = new char *[copy.size() + 4];
+		char **env = new char *[copy.size() + 5];
 		size_t count = 0;
 		for (const auto &copy: copy) {
 			std::string reform = copy.first;
@@ -133,7 +133,7 @@ int cgiHandler(SharedData* shared, parseRequest& request) {
 		return 1;
 	}
 	addToEpoll(shared, pipeParentToChild[1]);
-	addToEpoll(shared, pipeChildToParent[1]);
+	addToEpoll(shared, pipeChildToParent[0]);
 	int pid = fork();
 	if (pid == -1) {
 		std::cerr<<"There are no forks, you can try the philos!\n";
@@ -155,13 +155,14 @@ int cgiHandler(SharedData* shared, parseRequest& request) {
 		std::string response;
 		std::string buffer(BUFFER_SIZE, '\0');
 		while ((buffLen = ::read(pipeChildToParent[0], buffer.data(), BUFFER_SIZE)) > 0) {
-			response.append(buffer.data(), buffer.length());
+			response.append(buffer.data(), buffLen);
 		}
 		if (buffLen < 0) {
 			std::cerr<<"Failed to read!\n";
 		}
 		std::cout<<"------------response-------------\n\'"<<response<<"\'\n";
 		shared->response = response;
+		shared->status = Status::writing;
 		close(pipeParentToChild[0]); // Close the read end after reading
 		wait(nullptr); // Wait for child process to finish
 	}

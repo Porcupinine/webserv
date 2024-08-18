@@ -1,0 +1,63 @@
+
+<body bgcolor="#f0f0f8">
+<table width="100%" cellspacing=0 cellpadding=2 border=0 summary="heading">
+<tr bgcolor="#6622aa">
+<td valign=bottom>&nbsp;<br>
+<font color="#ffffff" face="helvetica, arial">&nbsp;<br>
+<big><big><strong>KeyError</strong></big></big></font></td>
+<td align=right valign=bottom>
+<font color="#ffffff" face="helvetica, arial">Python 3.12.3: /usr/bin/python3.12<br>Sun Aug 18 10:51:55 2024</font></td>
+</tr></table>
+<p>A problem occurred in a Python script.  Here is the sequence of
+function calls leading up to the error, in the order they occurred.</p>
+<table width="100%" cellspacing=0 cellpadding=0 border=0>
+<tr><td bgcolor="#d8bbff"><big>&nbsp;</big><a href="file:///sam/Codam/webserv/cgi-bin/test.py">/sam/Codam/webserv/cgi-bin/test.py</a> in <strong>&lt;module&gt;</strong></td></tr>
+<tr><td><font color="#909090"><tt>&nbsp;&nbsp;<small>&nbsp;&nbsp;&nbsp;&nbsp;9</small>&nbsp;import&nbsp;cgi<br>
+</tt></font></td></tr>
+<tr><td><font color="#909090"><tt>&nbsp;&nbsp;<small>&nbsp;&nbsp;&nbsp;10</small>&nbsp;import&nbsp;http.cookies<br>
+</tt></font></td></tr>
+<tr><td bgcolor="#ffccee"><tt>=&gt;<small>&nbsp;&nbsp;&nbsp;11</small>&nbsp;from&nbsp;upload&nbsp;import&nbsp;*<br>
+</tt></td></tr>
+<tr><td><font color="#909090"><tt>&nbsp;&nbsp;<small>&nbsp;&nbsp;&nbsp;12</small>&nbsp;from&nbsp;form&nbsp;import&nbsp;*<br>
+</tt></font></td></tr>
+<tr><td><font color="#909090"><tt>&nbsp;&nbsp;<small>&nbsp;&nbsp;&nbsp;13</small>&nbsp;<br>
+</tt></font></td></tr>
+<tr><td><small><font color="#909090">upload <em>undefined</em></font></small></td></tr></table>
+<table width="100%" cellspacing=0 cellpadding=0 border=0>
+<tr><td bgcolor="#d8bbff"><big>&nbsp;</big><a href="file:///sam/Codam/webserv/cgi-bin/upload.py">/sam/Codam/webserv/cgi-bin/upload.py</a> in <strong>&lt;module&gt;</strong></td></tr>
+<tr><td><font color="#909090"><tt>&nbsp;&nbsp;<small>&nbsp;&nbsp;&nbsp;37</small>&nbsp;message&nbsp;=&nbsp;""<br>
+</tt></font></td></tr>
+<tr><td><font color="#909090"><tt>&nbsp;&nbsp;<small>&nbsp;&nbsp;&nbsp;38</small>&nbsp;status&nbsp;=&nbsp;0<br>
+</tt></font></td></tr>
+<tr><td bgcolor="#ffccee"><tt>=&gt;<small>&nbsp;&nbsp;&nbsp;39</small>&nbsp;upDir&nbsp;=&nbsp;os.environ["UPLOAD_DIR"]<br>
+</tt></td></tr>
+<tr><td><font color="#909090"><tt>&nbsp;&nbsp;<small>&nbsp;&nbsp;&nbsp;40</small>&nbsp;<br>
+</tt></font></td></tr>
+<tr><td><font color="#909090"><tt>&nbsp;&nbsp;<small>&nbsp;&nbsp;&nbsp;41</small>&nbsp;#Check&nbsp;if&nbsp;folder&nbsp;ecxists,&nbsp;if&nbsp;not,&nbsp;create&nbsp;such&nbsp;folder<br>
+</tt></font></td></tr>
+<tr><td><small><font color="#909090">upDir <em>undefined</em>, <strong>os</strong>&nbsp;= &lt;module 'os' (frozen)&gt;, os.<strong>environ</strong>&nbsp;= environ({'PATH': '/home/laura/.local/bin:/usr/lo...KQIM5c_7MOXQvWcT-rqYh__', 'HOME': '/home/laura'})</font></small></td></tr></table>
+<table width="100%" cellspacing=0 cellpadding=0 border=0>
+<tr><td bgcolor="#d8bbff"><big>&nbsp;</big><a href="file:///sam/Codam/webserv/<frozen os>">/sam/Codam/webserv/&lt;frozen os&gt;</a> in <strong>__getitem__</strong>(self=environ({'PATH': '/home/laura/.local/bin:/usr/lo...KQIM5c_7MOXQvWcT-rqYh__', 'HOME': '/home/laura'}), key='UPLOAD_DIR')</td></tr>
+<tr><td></td></tr></table><p><strong>KeyError</strong>: 'UPLOAD_DIR'
+<br><tt><small>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;</small>&nbsp;</tt>add_note&nbsp;=
+&lt;built-in method add_note of KeyError object&gt;
+<br><tt><small>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;</small>&nbsp;</tt>args&nbsp;=
+('UPLOAD_DIR',)
+<br><tt><small>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;</small>&nbsp;</tt>with_traceback&nbsp;=
+&lt;built-in method with_traceback of KeyError object&gt;
+
+
+<!-- The above is a description of an error in a Python program, formatted
+     for a web browser because the 'cgitb' module was enabled.  In case you
+     are not reading this in a web browser, here is the original traceback:
+
+Traceback (most recent call last):
+  File "/sam/Codam/webserv/cgi-bin/test.py", line 11, in &lt;module&gt;
+    from upload import *
+  File "/sam/Codam/webserv/cgi-bin/upload.py", line 39, in &lt;module&gt;
+    upDir = os.environ["UPLOAD_DIR"]
+            ~~~~~~~~~~^^^^^^^^^^^^^^
+  File "&lt;frozen os&gt;", line 685, in __getitem__
+KeyError: 'UPLOAD_DIR'
+
+-->

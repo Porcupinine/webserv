@@ -9,7 +9,7 @@ cgitb.enable()
 cgitb.enable(display=0, logdir="logdir")  # for debugging
 
 
-def uploadFile() -> (int, str):
+def uploadFile(upDir) -> (int, str):
     # Set lodgir for debugging purposes
     if not os.path.isdir("logdir"):
         os.mkdir("logdir")
@@ -34,48 +34,49 @@ def uploadFile() -> (int, str):
     except:
         return 500, "Ooopsie!!!\n"
 
-message = ""
-status = 0
-upDir = os.environ["UPLOAD_DIR"]
+def uploadCGI() :
+    message = ""
+    status = 0
+    upDir = os.environ["UPLOAD_DIR"]
 
-#Check if folder ecxists, if not, create such folder
-if not os.path.isdir(upDir):
-    os.mkdir(upDir)
-# files = os.listdir(os.environ.get("UPLOAD_DIR"))
+    #Check if folder ecxists, if not, create such folder
+    if not os.path.isdir(upDir):
+        os.mkdir(upDir)
+    # files = os.listdir(os.environ.get("UPLOAD_DIR"))
 
-if os.environ.get("REQUEST_METHOD") == "POST":
-    status, message = uploadFile()
-else:
-    message = "Sorry, can't do!\n"
+    if os.environ.get("REQUEST_METHOD") == "POST":
+        status, message = uploadFile()
+    else:
+        message = "Sorry, can't do!\n"
 
-# Get time and date
-x = datetime.datetime.now()
-date = x.strftime("%a, %d %b %Y %H:%M:%S GMT")
+    # Get time and date
+    x = datetime.datetime.now()
+    date = x.strftime("%a, %d %b %Y %H:%M:%S GMT")
 
-# Build body
-body = f"""<!DOCTYPE html>
-    <html>
-    <body>
-    
-    <h1>Welcome to the ______ webserv!!</h1>
-    
-    <p>Thank you for your file!</p>
-    <p> {message}</p>
-       <p><a href="/upload.html">Upload another picture</a></p>
-    <p><a href="/index.html">Back</a></p>
-    
-    </body>
-    </html>"""
+    # Build body
+    body = f"""<!DOCTYPE html>
+        <html>
+        <body>
+        
+        <h1>Welcome to the ______ webserv!!</h1>
+        
+        <p>Thank you for your file!</p>
+        <p> {message}</p>
+           <p><a href="/upload.html">Upload another picture</a></p>
+        <p><a href="/index.html">Back</a></p>
+        
+        </body>
+        </html>"""
 
-# Build header
-header = f"""HTTP/1.1 {status}\r
-    Content-Length: {len(body)}\r
-    Content-type: text/html\r
-    Connection: close\r
-    Date: {date}\r
-    Last-Modified: {date}\r
-    Server: {os.environ.get("SERVER")}\r\n\r"""
+    # Build header
+    header = f"""HTTP/1.1 {status}\r
+        Content-Length: {len(body)}\r
+        Content-type: text/html\r
+        Connection: close\r
+        Date: {date}\r
+        Last-Modified: {date}\r
+        Server: {os.environ.get("SERVER")}\r\n\r"""
 
-print(header)
-print(body)
-print("\0")
+    print(header)
+    print(body)
+    print("\0")

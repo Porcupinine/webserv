@@ -94,7 +94,7 @@ void	WebServ::writeData(SharedData* shared) {
 	int clientFd = shared->fd;
 	std::cout << PURPLE << "Am I here @start?\n" << RESET << std::endl;
 	// std::cout << "resp = " << shared->response << std::endl;
-	int len = std::min(static_cast<int>(shared->response.length()), BUFFER_SIZE);
+	ssize_t len = std::min(static_cast<int>(shared->response.length()), BUFFER_SIZE);
 	len = send(clientFd, shared->response.c_str(), len, MSG_NOSIGNAL);
 	if (len == -1) {
 		std::cerr << "Some error occured trying to send. Reason " << RED << strerror(errno) << RESET << std::endl;
