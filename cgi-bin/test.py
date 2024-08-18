@@ -1,15 +1,10 @@
 #!/usr/bin/env python3
-import datetime
 import io
 import sys
-import cgitb
+import os
 import unittest
 from unittest.mock import patch
-import os
-import cgi
-import http.cookies
-from upload import *
-from form import *
+from form import fillForm
 
 class BytesIOWithBuffer(io.BytesIO):
     @property
@@ -54,14 +49,14 @@ class TestCGIScript(unittest.TestCase):
         # Call the function under test
         fillForm()
 
-        # # Check the output
-        # output = mock_stdout.getvalue().decode()
-        #
-        # # Assertions to ensure the correct response is generated
-        # self.assertIn("HTTP/1.1 200 OK", output)
-        # self.assertIn("Thank you ser for your precious data!!", output)
-        # self.assertIn('Set-Cookie: name=ser', output)
-        # self.assertIn('Set-Cookie: intra_id=wer', output)
+        # Check the output
+        output = mock_stdout.getvalue().decode('utf-8')
+
+        # Assertions to ensure the correct response is generated
+        self.assertIn("HTTP/1.1 200 OK", output)
+        self.assertIn("Thank you ser for your precious data!!", output)
+        self.assertIn('Set-Cookie: name=ser', output)
+        self.assertIn('Set-Cookie: intra_id=wer', output)
 
 if __name__ == '__main__':
     unittest.main()

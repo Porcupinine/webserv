@@ -147,7 +147,11 @@ int cgiHandler(SharedData* shared, parseRequest& request) {
 		close(pipeParentToChild[0]);
 		close(pipeChildToParent[1]);
 		auto body = request.getBodyMsg();
-		write(pipeParentToChild[1], body.data(), body.size());
+		if(write(pipeParentToChild[1], body.data(), body.size()) == -1){
+			if (errno == EPIPE) {
+				std::cerr << "Broken pipe while writing to child process!\n";
+			}
+		}
 		close(pipeParentToChild[1]);
 		std::cout<<"body done!\n";
 
@@ -164,7 +168,12 @@ int cgiHandler(SharedData* shared, parseRequest& request) {
 		shared->response = response;
 		shared->status = Status::writing;
 		close(pipeParentToChild[0]); // Close the read end after reading
-		wait(nullptr); // Wait for child process to finish
+		int status;
+		if (waitpid(pid, &status, 0) == -1) {
+			std::cerr << "Failed to wait for child process\n";
+		} else if (WIFEXITED(status)) {
+			std::cout << "Child exited with status " << WEXITSTATUS(status) << "\n";
+		}
 	}
 	return 0;
 }

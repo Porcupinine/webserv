@@ -1,14 +1,13 @@
 #!/usr/bin/env python3
 
-#get information from query string, set the variables and send the cookie (Set-Cookie) header
-
 import os
 import cgi
 import cgitb
 import http.cookies
 import datetime
+import sys
 
-def fillForm() :
+def fillForm():
     # Enable CGI debugging
     cgitb.enable()
 
@@ -50,15 +49,15 @@ def fillForm() :
 
     # Build header
     header = f"""HTTP/1.1 {status} OK\r
-        Content-Length: {len(body)}\r
-        Content-type: text/html\r
-        Connection: close\r
-        {cookie.output()}\r
-        Date: {date}\r
-        Last-Modified: {date}\r
-        Server: {os.environ.get("SERVER")}\r\n\r"""
+Content-Length: {len(body)}\r
+Content-type: text/html\r
+Connection: close\r
+{cookie.output()}\r
+Date: {date}\r
+Last-Modified: {date}\r
+Server: {os.environ.get("SERVER")}\r\n\r"""
 
-    # Output header and body
-    print(header)
-    print(body)
-    print("\0")
+    # Output header and body as bytes
+    sys.stdout.buffer.write(header.encode('utf-8'))
+    sys.stdout.buffer.write(body.encode('utf-8'))
+    sys.stdout.buffer.write(b"\0")  # Null terminator for testing
