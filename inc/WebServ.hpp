@@ -57,7 +57,7 @@ class WebServ {
 		
 		void										_setNonBlocking(int fd);
 
-		void										_checkHanging(SharedData *data); //Figure out some implementation for this. and an errorResponse.
+		void										_checkHangingSockets(SharedData *data);
 		void										_closeConnections();
 
 };
