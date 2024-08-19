@@ -1,12 +1,12 @@
 /* ************************************************************************** */
 /*                                                                            */
-/*                                                        :::      ::::::::   */
-/*   WebServ.cpp                                        :+:      :+:    :+:   */
-/*                                                    +:+ +:+         +:+     */
-/*   By: dmaessen <dmaessen@student.42.fr>          +#+  +:+       +#+        */
-/*                                                +#+#+#+#+#+   +#+           */
-/*   Created: 2024/08/19 12:55:16 by dmaessen          #+#    #+#             */
-/*   Updated: 2024/08/19 14:42:23 by dmaessen         ###   ########.fr       */
+/*                                                        ::::::::            */
+/*   WebServ.cpp                                        :+:    :+:            */
+/*                                                     +:+                    */
+/*   By: dmaessen <dmaessen@student.42.fr>            +#+                     */
+/*                                                   +#+                      */
+/*   Created: 2024/08/19 12:55:16 by dmaessen      #+#    #+#                 */
+/*   Updated: 2024/08/19 16:18:10 by ewehl         ########   odam.nl         */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -56,16 +56,16 @@ WebServ::~WebServ() {
 	// _closeConnections();
 }
 
-void WebServ::handleRequest(SharedData* shared) {
-	std::cout << PURPLE << "Do I get here handleReq?" << RESET << std::endl;
-	std::cout << "Received request:\n" << shared->request << std::endl;
-	shared->response = "HTTP/1.1 200 OK\r\n"
-	"Content-Type: text/plain\r\n"
-	"Content-Length: 13\r\n"
-	"\r\n"
-	"Hello, world!";
-	shared->status = Status::writing;
-}
+// void WebServ::handleRequest(SharedData* shared) {
+// 	std::cout << PURPLE << "Do I get here handleReq?" << RESET << std::endl;
+// 	std::cout << "Received request:\n" << shared->request << std::endl;
+// 	shared->response = "HTTP/1.1 200 OK\r\n"
+// 	"Content-Type: text/plain\r\n"
+// 	"Content-Length: 13\r\n"
+// 	"\r\n"
+// 	"Hello, world!";
+// 	shared->status = Status::writing;
+// }
 
 void	WebServ::writeData(SharedData* shared) {
 	std::cout << PURPLE << "Inside WriteData" << RESET << std::endl;
@@ -213,16 +213,14 @@ void	WebServ::run() {
 			if (shared->status == Status::handling_request){
 				// handleRequest(shared);
 				std::cout << PURPLE << "Inside ParseReq" << RESET << std::endl;
-				req = parseRequest(shared);
+				req = ParseRequest(shared);
 				if (shared->status == Status::start_cgi)
 					cgiHandler(shared, req);
 				shared->request.clear();
-				// shared->errorPages.clear();
 			}
 			if ((_events[idx].events & EPOLLHUP) && shared->status == Status::in_cgi){
 				std::cout << "in WebServ cgi\n"; //TODO read from cgi fd here
 				// readCgi();
-				//cgiHandler(shared, req);
 			}
 			if ((_events[idx].events & EPOLLOUT) && shared->status == Status::writing)
 				writeData(shared);
@@ -241,7 +239,7 @@ void	WebServ::_closeConnections() {
 	int numEvents =  epoll_wait(_epollFd, _events, MAX_EVENTS, 0);
 	for (int idx = 0; idx < numEvents; idx++) {
 		SharedData *shared = static_cast<SharedData*>(_events[idx].data.ptr);
-		if (_events[idx].events && shared->status != Status::listening) {
+		if (_events[idx].events && shared->status != Status::listening) { // is de status check necessary?
 			closeCGIfds(shared);
 			closeConnection(shared);
 		}
@@ -249,7 +247,7 @@ void	WebServ::_closeConnections() {
 }
 
 void WebServ::_checkHangingSockets(SharedData *data) {
-    double timeout = data->server->getTimeout();
+    double timeout = (data->status == Status::in_cgi) ? CGI_TIMEOUT : data->server->getTimeout();
     time_t currentTime = std::time(nullptr);
     double diff = std::difftime(currentTime, data->timestamp_last_request);
 
@@ -261,12 +259,12 @@ void WebServ::_checkHangingSockets(SharedData *data) {
     if (diff >= timeout) {
         std::cout << "Do I get in CheckHanging?" << std::endl;
         switch (data->status) {
-            // case Status::listening:
-            //     std::cout << "for testing purposes.." << std::endl;
+            case Status::listening:
+                std::cout << "for testing purposes.." << std::endl;
             //     data->response_code = 404;
-			// 	std::time(&(data->timestamp_last_request));
+				std::time(&(data->timestamp_last_request));
 			// 	data->status = Status::handling_request;
-            //     break;
+                break;
             case Status::reading:
                 std::cout << "reading.." << std::endl;
                 data->response_code = 408;

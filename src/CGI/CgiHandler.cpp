@@ -1,12 +1,12 @@
 /* ************************************************************************** */
 /*                                                                            */
-/*                                                        :::      ::::::::   */
-/*   CgiHandler.cpp                                     :+:      :+:    :+:   */
-/*                                                    +:+ +:+         +:+     */
-/*   By: dmaessen <dmaessen@student.42.fr>          +#+  +:+       +#+        */
-/*                                                +#+#+#+#+#+   +#+           */
-/*   Created: 2024/07/31 15:50:10 by lpraca-l          #+#    #+#             */
-/*   Updated: 2024/08/19 12:56:48 by dmaessen         ###   ########.fr       */
+/*                                                        ::::::::            */
+/*   CgiHandler.cpp                                     :+:    :+:            */
+/*                                                     +:+                    */
+/*   By: dmaessen <dmaessen@student.42.fr>            +#+                     */
+/*                                                   +#+                      */
+/*   Created: 2024/07/31 15:50:10 by lpraca-l      #+#    #+#                 */
+/*   Updated: 2024/08/19 16:08:38 by ewehl         ########   odam.nl         */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -32,6 +32,9 @@ namespace {
 		newEvent.data.fd = fd;
 		newEvent.events = EPOLLHUP;
 		newEvent.data.ptr = shared;
+		// if (close(shared->fd) != -1)
+		// 	shared->fd = -1;
+		shared->cgi_fd = fd;
 		if (epoll_ctl(shared->epoll_fd, EPOLL_CTL_ADD, fd, &newEvent) < 0)
 			std::cerr<<"Failed to poll\n"; //TODO error handle
 //			throw ServerException("Failed to register with epoll");
@@ -133,6 +136,9 @@ int cgiHandler(SharedData* shared, ParseRequest& request) {
 		return 1;
 	}
 
+	// printf("pPtC[0] = %d\t pPtC[1] = %d\n", pipeParentToChild[0], pipeParentToChild[1]);
+	// printf("pCtP[0] = %d\t pCtP[1] = %d\n", pipeChildToParent[0], pipeChildToParent[1]);
+
 	int pid = fork();
 	if (pid == -1) {
 		std::cerr<<"There are no forks, you can try the philos!\n";
@@ -153,7 +159,7 @@ int cgiHandler(SharedData* shared, ParseRequest& request) {
 				std::cerr << "Broken pipe while writing to child process!\n";
 			}
 		}
-		close(pipeParentToChild[1]);
+		// close(pipeParentToChild[1]);
 		std::cout<<"body done!\n";
 
 		ssize_t buffLen = 0;
