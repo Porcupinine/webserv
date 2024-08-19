@@ -154,7 +154,8 @@ std::string Server::getIndex(const std::string &location) const {
 		auto it = std::find_if(_configs->locations.begin(), _configs->locations.end(),
 			[location](std::shared_ptr<struct Locations> const& loc) { return loc->specifier == location; });
 		if (it != _configs->locations.end()) {
-			return it->get()->default_file;
+			if (it->get()->default_file.empty() == false)
+				return it->get()->default_file;
 		}
 		return _configs->index;
 	}
