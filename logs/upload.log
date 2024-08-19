@@ -1,0 +1,23 @@
+INFO:__main__:will upload data
+INFO:__main__:header: HTTP/1.1 201
+        Content-Length: 337
+        Content-type: text/html
+        Connection: close
+        Date: Mon, 19 Aug 2024 13:01:58 GMT
+        Last-Modified: Mon, 19 Aug 2024 13:01:58 GMT
+        Server: 
+
+INFO:__main__:body: <!DOCTYPE html>
+        <html>
+        <body>
+        
+        <h1>Welcome to the ______ webserv!!</h1>
+        
+        <p>Thank you for your file!</p>
+        <p> Well done!!!
+</p>
+           <p><a href="/upload.html">Upload another picture</a></p>
+        <p><a href="/index.html">Back</a></p>
+        
+        </body>
+        </html>

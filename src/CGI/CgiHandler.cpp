@@ -1,24 +1,24 @@
 /* ************************************************************************** */
 /*                                                                            */
 /*                                                        :::      ::::::::   */
-/*   cgiHandler.cpp                                     :+:      :+:    :+:   */
+/*   CgiHandler.cpp                                     :+:      :+:    :+:   */
 /*                                                    +:+ +:+         +:+     */
 /*   By: dmaessen <dmaessen@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2024/07/31 15:50:10 by lpraca-l          #+#    #+#             */
-/*   Updated: 2024/08/13 16:24:34 by dmaessen         ###   ########.fr       */
+/*   Updated: 2024/08/19 12:56:48 by dmaessen         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
-#include "parseRequest.hpp"
-#include "cgiHandler.h"
+#include "../../inc/ParseRequest.hpp"
+#include "../../inc/CgiHandler.hpp"
 #include <unistd.h>
 #include <sys/wait.h>
 #include <string>
 #include <cstring>
 #include <filesystem>
 #include <cctype>
-#include "defines.hpp"
+#include "../../inc/defines.hpp"
 #include <cerrno>
 #include <cstdio>
 #include <sys/epoll.h>
@@ -37,7 +37,7 @@ namespace {
 //			throw ServerException("Failed to register with epoll");
 	}
 
-	char **getEnv(parseRequest &request, SharedData* shared) {
+	char **getEnv(ParseRequest &request, SharedData* shared) {
 		auto copy = request.getHeaders();
 		char **env = new char *[copy.size() + 5];
 		size_t count = 0;
@@ -82,7 +82,7 @@ namespace {
 		delete[] env;
 	}
 
-	int runChild(parseRequest &request, int pipeRead, int pipeWrite, SharedData* shared) {
+	int runChild(ParseRequest &request, int pipeRead, int pipeWrite, SharedData* shared) {
 		std::string cgiPtah = request.getPath();
 		char *argv[] = {cgiPtah.data(), nullptr}; //path and NULL
 		char **env = getEnv(request, shared);
@@ -112,7 +112,7 @@ namespace {
 	}
 }
 
-int cgiHandler(SharedData* shared, parseRequest& request) {
+int cgiHandler(SharedData* shared, ParseRequest& request) {
 //	(void) shared;
 	std::cout<<"file path: \'"<<request.getPath()<<"\'\n";
 	try {
@@ -145,8 +145,8 @@ int cgiHandler(SharedData* shared, parseRequest& request) {
 	} else {
 		close(pipeParentToChild[0]);
 		close(pipeChildToParent[1]);
-//		addToEpoll(shared, pipeParentToChild[1]);
-//		addToEpoll(shared, pipeChildToParent[0]);
+		addToEpoll(shared, pipeParentToChild[1]);
+		addToEpoll(shared, pipeChildToParent[0]);
 		auto body = request.getBodyMsg();
 		if(write(pipeParentToChild[1], body.data(), body.size()) == -1){
 			if (errno == EPIPE) {

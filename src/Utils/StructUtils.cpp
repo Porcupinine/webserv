@@ -1,4 +1,16 @@
-#include "defines.hpp"
+/* ************************************************************************** */
+/*                                                                            */
+/*                                                        :::      ::::::::   */
+/*   StructUtils.cpp                                    :+:      :+:    :+:   */
+/*                                                    +:+ +:+         +:+     */
+/*   By: dmaessen <dmaessen@student.42.fr>          +#+  +:+       +#+        */
+/*                                                +#+#+#+#+#+   +#+           */
+/*   Created: 2024/08/19 12:55:08 by dmaessen          #+#    #+#             */
+/*   Updated: 2024/08/19 12:55:09 by dmaessen         ###   ########.fr       */
+/*                                                                            */
+/* ************************************************************************** */
+
+#include "../../inc/defines.hpp"
 
 template<typename Map>
 bool map_compare(Map const& lhs, Map const& rhs) {

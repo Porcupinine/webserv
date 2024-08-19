@@ -2,7 +2,7 @@
 #include "webSocket.h"
 #include "defines.h"
 #include <poll.h>
-#include "../Request/parseRequest.hpp"
+#include "../Request/ParseRequest.hpp"
 #include "../includes/cgiHandler.h"
 #include <unistd.h>
 
@@ -73,7 +73,7 @@ int main() {
 //					 "\"status\": \"active\""
 //					 "}");
 	std::cout<<"parsing request \n";
-	parseRequest request(message);
+	ParseRequest request(message);
 //	std::cout << "version: " << request.getVersion() << '\n';
 //	std::cout << "ret value: " << request.getRetVal() << '\n';
 //	std::cout << "body: " << request.getBodyMsg() << '\n';

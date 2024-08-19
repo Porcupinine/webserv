@@ -1,6 +1,18 @@
-#include "WebServ.hpp"
-#include "VirtualHost.hpp"
-#include "utils.hpp"
+/* ************************************************************************** */
+/*                                                                            */
+/*                                                        :::      ::::::::   */
+/*   WebServ.cpp                                        :+:      :+:    :+:   */
+/*                                                    +:+ +:+         +:+     */
+/*   By: dmaessen <dmaessen@student.42.fr>          +#+  +:+       +#+        */
+/*                                                +#+#+#+#+#+   +#+           */
+/*   Created: 2024/08/19 12:55:16 by dmaessen          #+#    #+#             */
+/*   Updated: 2024/08/19 12:55:17 by dmaessen         ###   ########.fr       */
+/*                                                                            */
+/* ************************************************************************** */
+
+#include "../../inc/WebServ.hpp"
+#include "../../inc/VirtualHost.hpp"
+#include "../../inc/Utils.hpp"
 #include <fcntl.h>
 #include <ctime>
 
@@ -225,7 +237,7 @@ void	WebServ::newConnection(SharedData* shared) {
 void	WebServ::run() {
 	while (_serverShutdown == false) {
 		int numEvents = epoll_wait(_epollFd, _events, MAX_EVENTS, -1);
-		parseRequest req;
+		ParseRequest req;
 		for (int idx = 0; idx < numEvents; idx++) {
 			SharedData* shared = static_cast<SharedData*>(_events[idx].data.ptr);
 			// _checkHanging(); Still need to figure something out here.
@@ -236,7 +248,7 @@ void	WebServ::run() {
 			if (shared->status == Status::handling_request){
 				// handleRequest(shared);
 				// std::cout << "Location test = " << shared->server_config->locations[1]->specifier << std::endl;
-				req = parseRequest(shared);
+				req = ParseRequest(shared);
 				if (shared->status == Status::start_cgi)
 					cgiHandler(shared, req);
 				shared->request.clear();

@@ -6,12 +6,12 @@
 /*   By: dmaessen <dmaessen@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2024/07/07 15:49:40 by dmaessen          #+#    #+#             */
-/*   Updated: 2024/08/15 13:51:47 by dmaessen         ###   ########.fr       */
+/*   Updated: 2024/08/19 13:30:44 by dmaessen         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
-#include "response.h"
-#include "Server.hpp"
+#include "../../inc/Response.hpp"
+#include "../../inc/Server.hpp"
 
 Response::Response(void) {
 }
@@ -29,7 +29,7 @@ Response&	Response::operator=(const Response &cpy) {
 }
 
 /* PROCESS RESPONSE */
-std::string Response::giveResponse(parseRequest& request, struct SharedData &shared) {
+std::string Response::giveResponse(ParseRequest& request, struct SharedData &shared) {
     if (request.getPath() == "/favicon.ico") {
         _statusCode = 200;
         _response = "HTTP/1.1 200 OK\r\n"
@@ -92,7 +92,7 @@ std::map<std::string, Response::ResponseCallback> Response::_method = Response::
 
 
 /* METHOD FUNCTIONS */
-void Response::getMethod(parseRequest& request, struct SharedData* shared) {
+void Response::getMethod(ParseRequest& request, struct SharedData* shared) {
     if (_statusCode == 200) {
         readContent(request, shared);
         _response = buildResponseHeader(request, shared);
@@ -108,7 +108,7 @@ void Response::getMethod(parseRequest& request, struct SharedData* shared) {
         _response = errorHtml(_statusCode, shared, request);
 }
 
-void Response::postMethod(parseRequest& request, struct SharedData* shared) {
+void Response::postMethod(ParseRequest& request, struct SharedData* shared) {
     if (cgiInvolved(request.getPath()) == false) {
         _statusCode = 204;
         _response = "";
@@ -120,7 +120,7 @@ void Response::postMethod(parseRequest& request, struct SharedData* shared) {
     }
 }
 
-void Response::deleteMethod(parseRequest& request, struct SharedData* shared) {
+void Response::deleteMethod(ParseRequest& request, struct SharedData* shared) {
     _response = "";
 
     if (fileExists(request.getPath()) == true){
@@ -151,8 +151,10 @@ void Response::initErrorCodes()
 	_errorCodes[403] = "Forbidden";
 	_errorCodes[404] = "Not Found";
 	_errorCodes[405] = "Method Not Allowed";
+    _errorCodes[408] = "Request Timeout";
 	_errorCodes[413] = "Payload Too Large";
 	_errorCodes[500] = "Internal Server Error";
+    _errorCodes[504] = "Gateway Timeout";
 }
 
 void Response::htmlErrorCodesMap() {
@@ -164,17 +166,19 @@ void Response::htmlErrorCodesMap() {
     _errorCodesHtml[403] = "<!DOCTYPE html><html><head><title>403</title></head><body><h1> 403 Forbiden! </h1><p>This is top secret, sorry!</p></body></html>";
     _errorCodesHtml[404] = "<!DOCTYPE html><html><head><title>404</title></head><body><h1> 404 Page not found! </h1><p>Puff!</p></body></html>";
     _errorCodesHtml[405] = "<!DOCTYPE html><html><head><title>405</title></head><body><h1> 405 Method Not Allowed! </h1><p>We forgot how to do that!</p></body></html>";
+    _errorCodesHtml[408] = "<!DOCTYPE html><html><head><title>408</title></head><body><h1> 408 Request Timeout! </h1></body></html>";
     _errorCodesHtml[413] = "<!DOCTYPE html><html><head><title>413</title></head><body><h1> 413 Payload Too Large! </h1><p>We are too busy right now, please try again later!</p></body></html>";
     _errorCodesHtml[500] = "<!DOCTYPE html><html><head><title>500</title></head><body><h1> 500 Internal Server Error! </h1><p>I probably should study more!</p></body></html>";
+    _errorCodesHtml[504] = "<!DOCTYPE html><html><head><title>504</title></head><body><h1> 504 Gateway Timeout! </h1></body></html>";
     if (_statusCode == 301  || _statusCode == 302 || _statusCode == 307 || _statusCode == 308 ||
-    _statusCode == 400 || _statusCode == 403 || _statusCode == 404 ||
-    _statusCode == 405 || _statusCode == 413 || _statusCode == 500)
+    _statusCode == 400 || _statusCode == 403 || _statusCode == 404 || _statusCode == 405 ||
+    _statusCode == 408 || _statusCode == 413 || _statusCode == 500 || _statusCode == 504)
         _type = "text/html";
 }
 
 
 /* HTML RELATED */
-std::string Response::errorHtml(unsigned int error, struct SharedData* shared, parseRequest& request) {
+std::string Response::errorHtml(unsigned int error, struct SharedData* shared, ParseRequest& request) {
     std::map<int, std::string>::iterator it = shared->server_config->error_pages.find(error);
     if (it != shared->server_config->error_pages.end()) {
         std::ifstream file(request.getAbsPath() + shared->server_config->root_dir + it->second);
@@ -194,7 +198,7 @@ std::string Response::errorHtml(unsigned int error, struct SharedData* shared, p
         return (it2->second);
 }
 
-void Response::readContent(parseRequest& request, struct SharedData* shared) {
+void Response::readContent(ParseRequest& request, struct SharedData* shared) {
     std::ifstream file;
 
     if (fileExists(request.getPath()) == true && request.getRawPath() == "" && request.getRawPath() == "") {

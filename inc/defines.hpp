@@ -1,3 +1,15 @@
+/* ************************************************************************** */
+/*                                                                            */
+/*                                                        :::      ::::::::   */
+/*   defines.hpp                                        :+:      :+:    :+:   */
+/*                                                    +:+ +:+         +:+     */
+/*   By: dmaessen <dmaessen@student.42.fr>          +#+  +:+       +#+        */
+/*                                                +#+#+#+#+#+   +#+           */
+/*   Created: 2024/08/19 12:54:19 by dmaessen          #+#    #+#             */
+/*   Updated: 2024/08/19 12:54:20 by dmaessen         ###   ########.fr       */
+/*                                                                            */
+/* ************************************************************************** */
+
 #pragma once
 
 #ifndef DEFINES_HPP
@@ -18,7 +30,7 @@
 #include <sstream>
 #include <fstream>
 
-#include "parseRequest.hpp"
+#include "../inc/ParseRequest.hpp"
 
 // MAGIC NUMBERS
 #define ONE_MB					1048576 // Default max body size (1MB)

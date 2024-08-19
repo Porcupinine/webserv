@@ -1,3 +1,15 @@
+/* ************************************************************************** */
+/*                                                                            */
+/*                                                        :::      ::::::::   */
+/*   Server.hpp                                         :+:      :+:    :+:   */
+/*                                                    +:+ +:+         +:+     */
+/*   By: dmaessen <dmaessen@student.42.fr>          +#+  +:+       +#+        */
+/*                                                +#+#+#+#+#+   +#+           */
+/*   Created: 2024/08/19 12:54:28 by dmaessen          #+#    #+#             */
+/*   Updated: 2024/08/19 12:54:29 by dmaessen         ###   ########.fr       */
+/*                                                                            */
+/* ************************************************************************** */
+
 #pragma once
 
 #ifndef SERVER_HPP
@@ -10,8 +22,8 @@
 # include <vector>
 # include <stdexcept>
 # include <netinet/in.h>
-# include "Config.hpp"
-# include "defines.hpp"
+# include "../inc/Config.hpp"
+# include "../inc/defines.hpp"
 
 class Server : public std::enable_shared_from_this<Server> {
 public:
