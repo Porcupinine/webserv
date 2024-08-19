@@ -1,5 +1,5 @@
 #include "webSocket.h"
-#include "parseRequest.hpp"
+#include "../inc/ParseRequest.hpp"
 #include "cgiHandler.h"
 #include <cstdlib>
 #include <iostream>
@@ -79,7 +79,7 @@ namespace webserv {
 							std::cout << "Can't read: " << strerror(errno) << "\n";
 							exit(1);
 						}
-						parseRequest request(message);
+						ParseRequest request(message);
 						std::cout << "version: " << request.getVersion() << '\n';
 						std::cout << "ret value: " << request.getRetVal() << '\n';
 						std::cout << "body: " << request.getBodyMsg() << '\n';

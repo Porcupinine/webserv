@@ -18,21 +18,19 @@ set(SRCTEST
 
 add_executable(webserver
     src/main.cpp
-    src/webserv/WebServ.cpp
-    src/server/Server.cpp
-    src/config/Config.cpp
-    src/virtualHost/VirtualHost.cpp
-	src/utils/fdManagement.cpp
-	src/utils/structUtils.cpp
-	# src/utils.cpp
-	src/cgiHandler.cpp
-	src/Cgi.cpp
-	Request/parseRequest.cpp
-	Request/utilsRequest.cpp
-	Response/header.cpp 
-	Response/Response.cpp 
-	Response/utils.cpp
-	Cookies/Cookies.cpp
+    src/Webserv/WebServ.cpp
+    src/Server/Server.cpp
+    src/Config/Config.cpp
+    src/VirtualHost/VirtualHost.cpp
+	src/Utils/FdManagement.cpp
+	src/Utils/StructUtils.cpp
+	src/CGI/CgiHandler.cpp
+	src/Request/ParseRequest.cpp
+	src/Request/UtilsRequest.cpp
+	src/Response/Header.cpp 
+	src/Response/Response.cpp 
+	src/Response/Utils.cpp
+	src/Cookies/Cookies.cpp
 )
 
 

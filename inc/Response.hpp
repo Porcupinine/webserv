@@ -1,9 +1,18 @@
-//
-// Created by laura on 16-5-24.
-//
+/* ************************************************************************** */
+/*                                                                            */
+/*                                                        :::      ::::::::   */
+/*   Response.hpp                                       :+:      :+:    :+:   */
+/*                                                    +:+ +:+         +:+     */
+/*   By: dmaessen <dmaessen@student.42.fr>          +#+  +:+       +#+        */
+/*                                                +#+#+#+#+#+   +#+           */
+/*   Created: 2024/08/19 12:45:44 by dmaessen          #+#    #+#             */
+/*   Updated: 2024/08/19 12:46:55 by dmaessen         ###   ########.fr       */
+/*                                                                            */
+/* ************************************************************************** */
 
-#ifndef WEBSERV_RESPONSE_H
-#define WEBSERV_RESPONSE_H
+#pragma once
+#ifndef RESPONSE_HPP
+#define RESPONSE_HPP
 #include <iostream>
 #include <sys/stat.h>
 #include <fstream>
@@ -12,10 +21,10 @@
 #include <iomanip>
 #include <ctime>
 #include <sstream>
-#include "defines.hpp"
-#include "parseRequest.hpp"
+#include "../inc/defines.hpp"
+#include "../inc/ParseRequest.hpp"
 
-class parseRequest;
+class ParseRequest;
 
 class Response 
 {
@@ -43,11 +52,11 @@ class Response
         ~Response();
         Response& operator=(const Response &cpy);
 
-        std::string giveResponse(parseRequest& request, struct SharedData &shared);
+        std::string giveResponse(ParseRequest& request, struct SharedData &shared);
 
-        void getMethod(parseRequest& request, struct SharedData* shared);
-        void postMethod(parseRequest& request, struct SharedData* shared);
-        void deleteMethod(parseRequest& request, struct SharedData* shared);
+        void getMethod(ParseRequest& request, struct SharedData* shared);
+        void postMethod(ParseRequest& request, struct SharedData* shared);
+        void deleteMethod(ParseRequest& request, struct SharedData* shared);
 
         void initErrorCodes();
         void htmlErrorCodesMap();
@@ -57,17 +66,17 @@ class Response
         std::string getFormattedTime(time_t rawtime);
 
         /* RESPONSE HEADER BUIDLING RELATED */
-        std::string buildResponseHeader(parseRequest& request, struct SharedData* shared);
+        std::string buildResponseHeader(ParseRequest& request, struct SharedData* shared);
         void initResponseHeaderFields();
-        void setHeaderValues(parseRequest& request);
+        void setHeaderValues(ParseRequest& request);
         std::string setAllow();
         std::string setDate();
-        std::string getHeaderValues(parseRequest& request, std::string header, struct SharedData* shared);
+        std::string getHeaderValues(ParseRequest& request, std::string header, struct SharedData* shared);
         std::string getMatchingCodeString(unsigned int code);
 
         /* HTML RELATED */
-        std::string errorHtml(unsigned int error, struct SharedData* shared, parseRequest &request);
-        void readContent(parseRequest& request, struct SharedData* shared);
+        std::string errorHtml(unsigned int error, struct SharedData* shared, ParseRequest &request);
+        void readContent(ParseRequest& request, struct SharedData* shared);
 
         /* GETTERS */
         std::string getResponse(void) const; 
@@ -78,7 +87,7 @@ class Response
         bool fileExists(const std::string& path);
 
         /* STATIC */
-		using ResponseCallback = void (Response::*)(parseRequest&, struct SharedData* shared);
+		using ResponseCallback = void (Response::*)(ParseRequest&, struct SharedData* shared);
         static std::map<std::string, ResponseCallback>	_method;
 	    static std::map<std::string, ResponseCallback>	initMethods();
 
@@ -97,4 +106,4 @@ class Response
 */
 
 
-#endif //WEBSERV_RESPONSE_H
+#endif //WEBSERV_RESPONSE_HPP

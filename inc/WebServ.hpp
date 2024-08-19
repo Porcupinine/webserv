@@ -1,14 +1,26 @@
+/* ************************************************************************** */
+/*                                                                            */
+/*                                                        :::      ::::::::   */
+/*   WebServ.hpp                                        :+:      :+:    :+:   */
+/*                                                    +:+ +:+         +:+     */
+/*   By: dmaessen <dmaessen@student.42.fr>          +#+  +:+       +#+        */
+/*                                                +#+#+#+#+#+   +#+           */
+/*   Created: 2024/08/19 12:54:39 by dmaessen          #+#    #+#             */
+/*   Updated: 2024/08/19 12:54:40 by dmaessen         ###   ########.fr       */
+/*                                                                            */
+/* ************************************************************************** */
+
 #pragma once
 #ifndef WEBSERV_HPP
 # define WEBSERV_HPP
 
-# include "Config.hpp"
-# include "Server.hpp"
-# include "VirtualHost.hpp"
+# include "../inc/Config.hpp"
+# include "../inc/Server.hpp"
+# include "../inc/VirtualHost.hpp"
 # include <signal.h>
 # include <sys/epoll.h>
-# include "parseRequest.hpp"
-# include "cgiHandler.h"
+# include "../inc/ParseRequest.hpp"
+# include "../inc/CgiHandler.hpp"
 
 class WebServ {
 	public:
@@ -29,7 +41,6 @@ class WebServ {
 		void	handleRequest(SharedData* shared);
 		void	readData(SharedData* shared);
 		void	writeData(SharedData* shared);
-		// void	initErrorPages(SharedData* shared);
 
 		class InitException : public std::exception {
 			public:
@@ -58,7 +69,7 @@ class WebServ {
 		
 		void										_setNonBlocking(int fd);
 
-		// void										_checkHanging(); Figure out some implementation for this. and an errorResponse.
+		void										_checkHangingSockets(SharedData *data);
 		void										_closeConnections();
 
 };

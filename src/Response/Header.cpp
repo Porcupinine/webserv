@@ -1,19 +1,19 @@
 /* ************************************************************************** */
 /*                                                                            */
 /*                                                        :::      ::::::::   */
-/*   header.cpp                                         :+:      :+:    :+:   */
+/*   Header.cpp                                         :+:      :+:    :+:   */
 /*                                                    +:+ +:+         +:+     */
 /*   By: dmaessen <dmaessen@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2024/07/07 15:50:08 by dmaessen          #+#    #+#             */
-/*   Updated: 2024/08/14 10:18:53 by dmaessen         ###   ########.fr       */
+/*   Updated: 2024/08/19 12:51:40 by dmaessen         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
-#include "response.h"
-#include "Server.hpp"
+#include "../../inc/Response.hpp"
+#include "../../inc/Server.hpp"
 
-std::string Response::buildResponseHeader(parseRequest& request, struct SharedData* shared) {
+std::string Response::buildResponseHeader(ParseRequest& request, struct SharedData* shared) {
     std::string header = "";
 	initResponseHeaderFields();
 	setHeaderValues(request);
@@ -31,7 +31,7 @@ void Response::initResponseHeaderFields() {
 }
 
 /* HEADER SETTERS */
-void Response::setHeaderValues(parseRequest& request) {
+void Response::setHeaderValues(ParseRequest& request) {
 	_allow = setAllow();
 	_contentLanguage = request.getLanguageStr();
 	_contentLength = _response.size();
@@ -66,7 +66,7 @@ std::string Response::setDate() {
 
 
 /* HEADER GETTERS */
-std::string Response::getHeaderValues(parseRequest& request, std::string header, struct SharedData* shared) {
+std::string Response::getHeaderValues(ParseRequest& request, std::string header, struct SharedData* shared) {
 	header += "HTTP/" + request.getVersion() + " " + std::to_string(_statusCode) + " " + getMatchingCodeString(_statusCode) + LINE_ENDING;
 	if (_allow != "" && request.getRedirection() == false)
 		header += "Allow: " + _allow + LINE_ENDING;

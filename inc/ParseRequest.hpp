@@ -1,3 +1,17 @@
+/* ************************************************************************** */
+/*                                                                            */
+/*                                                        :::      ::::::::   */
+/*   ParseRequest.hpp                                   :+:      :+:    :+:   */
+/*                                                    +:+ +:+         +:+     */
+/*   By: dmaessen <dmaessen@student.42.fr>          +#+  +:+       +#+        */
+/*                                                +#+#+#+#+#+   +#+           */
+/*   Created: 2024/08/19 12:54:23 by dmaessen          #+#    #+#             */
+/*   Updated: 2024/08/19 13:37:36 by dmaessen         ###   ########.fr       */
+/*                                                                            */
+/* ************************************************************************** */
+
+#pragma once
+
 #ifndef PARSEREQUEST_HPP
 #define PARSEREQUEST_HPP
 
@@ -12,15 +26,15 @@
 #include <functional>
 #include <set>
 
-#include "response.h"
-#include "defines.hpp"
+#include "../inc/Response.hpp"
+#include "../inc/defines.hpp"
 
 #define LINE_ENDING "\r\n"
 
 class Response;
 struct SharedData;
 
-class parseRequest
+class ParseRequest
 {
     private:
         std::string _methodType;
@@ -41,6 +55,8 @@ class parseRequest
 
 
         void parseStr(std::string &info, struct SharedData* shared);
+
+        void errorServer(struct SharedData* shared);
 
         void initHeaders();
 
@@ -66,10 +82,10 @@ class parseRequest
         std::vector<std::string> split(const std::string &str, char c);
 
     public:
-		parseRequest() = default; // take the address of the struct
-        explicit parseRequest(struct SharedData* shared); // ++ server instance -- TO DO
-        ~parseRequest() = default;
-        parseRequest& operator=(const parseRequest &cpy);
+		ParseRequest() = default; // take the address of the struct
+        explicit ParseRequest(struct SharedData* shared); // ++ server instance -- TO DO
+        ~ParseRequest() = default;
+        ParseRequest& operator=(const ParseRequest &cpy);
 
         /* GETTERS */
 		std::string getAbsPath(void) const;

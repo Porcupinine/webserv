@@ -1,18 +1,18 @@
 /* ************************************************************************** */
 /*                                                                            */
-/*                                                        :::      ::::::::   */
-/*   utilsRequest.cpp                                   :+:      :+:    :+:   */
-/*                                                    +:+ +:+         +:+     */
-/*   By: dmaessen <dmaessen@student.42.fr>          +#+  +:+       +#+        */
-/*                                                +#+#+#+#+#+   +#+           */
-/*   Created: 2024/07/07 15:50:31 by dmaessen          #+#    #+#             */
-/*   Updated: 2024/08/13 16:38:52 by dmaessen         ###   ########.fr       */
+/*                                                        ::::::::            */
+/*   UtilsRequest.cpp                                   :+:    :+:            */
+/*                                                     +:+                    */
+/*   By: dmaessen <dmaessen@student.42.fr>            +#+                     */
+/*                                                   +#+                      */
+/*   Created: 2024/07/07 15:50:31 by dmaessen      #+#    #+#                 */
+/*   Updated: 2024/08/19 19:57:54 by ewehl         ########   odam.nl         */
 /*                                                                            */
 /* ************************************************************************** */
 
-#include "parseRequest.hpp"
+#include "../../inc/ParseRequest.hpp"
 
-std::string& parseRequest::capsOn(std::string &str) {
+std::string& ParseRequest::capsOn(std::string &str) {
     for (size_t i = 0; i < str.size(); i++) {
         if (str[0])
             str[0] = toupper(str[0]);
@@ -22,15 +22,15 @@ std::string& parseRequest::capsOn(std::string &str) {
     return str;
 }
 
-std::string parseRequest::rmSpaces(std::string &str) {
-    size_t len;
-    len = str.size() - 1;
-    while (len >= 0 && str[len] == ' ')
+std::string ParseRequest::rmSpaces(std::string &str) {
+    if (str.empty()) return str;
+    size_t len = str.size() - 1;
+    while (len > 0 && str[len] == ' ')
         --len;
     return str.substr(0, len + 1);
 }
 
-std::vector<std::string> parseRequest::split(const std::string &str, char c) {
+std::vector<std::string> ParseRequest::split(const std::string &str, char c) {
     std::vector<std::string> vec;
     std::string element;
     std::istringstream stream(str);

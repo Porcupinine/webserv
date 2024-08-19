@@ -1,8 +1,20 @@
+/* ************************************************************************** */
+/*                                                                            */
+/*                                                        :::      ::::::::   */
+/*   VirtualHost.hpp                                    :+:      :+:    :+:   */
+/*                                                    +:+ +:+         +:+     */
+/*   By: dmaessen <dmaessen@student.42.fr>          +#+  +:+       +#+        */
+/*                                                +#+#+#+#+#+   +#+           */
+/*   Created: 2024/08/19 12:54:34 by dmaessen          #+#    #+#             */
+/*   Updated: 2024/08/19 12:54:35 by dmaessen         ###   ########.fr       */
+/*                                                                            */
+/* ************************************************************************** */
+
 #pragma once
 #ifndef VIRTUAL_HOST_HPP
 # define VIRTUAL_HOST_HPP
 
-# include "defines.hpp"
+# include "../inc/defines.hpp"
 
 class VirtualHost {
 public:

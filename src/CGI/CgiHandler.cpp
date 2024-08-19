@@ -1,24 +1,24 @@
 /* ************************************************************************** */
 /*                                                                            */
-/*                                                        :::      ::::::::   */
-/*   cgiHandler.cpp                                     :+:      :+:    :+:   */
-/*                                                    +:+ +:+         +:+     */
-/*   By: dmaessen <dmaessen@student.42.fr>          +#+  +:+       +#+        */
-/*                                                +#+#+#+#+#+   +#+           */
-/*   Created: 2024/07/31 15:50:10 by lpraca-l          #+#    #+#             */
-/*   Updated: 2024/08/13 16:24:34 by dmaessen         ###   ########.fr       */
+/*                                                        ::::::::            */
+/*   CgiHandler.cpp                                     :+:    :+:            */
+/*                                                     +:+                    */
+/*   By: dmaessen <dmaessen@student.42.fr>            +#+                     */
+/*                                                   +#+                      */
+/*   Created: 2024/07/31 15:50:10 by lpraca-l      #+#    #+#                 */
+/*   Updated: 2024/08/19 21:30:21 by ewehl         ########   odam.nl         */
 /*                                                                            */
 /* ************************************************************************** */
 
-#include "parseRequest.hpp"
-#include "cgiHandler.h"
+#include "../../inc/ParseRequest.hpp"
+#include "../../inc/CgiHandler.hpp"
 #include <unistd.h>
 #include <sys/wait.h>
 #include <string>
 #include <cstring>
 #include <filesystem>
 #include <cctype>
-#include "defines.hpp"
+#include "../../inc/defines.hpp"
 #include <cerrno>
 #include <cstdio>
 #include <sys/epoll.h>
@@ -26,18 +26,18 @@
 //TODO need the server info
 
 namespace {
-	void addToEpoll(SharedData* shared, int fd){
+	void addToEpoll(SharedData* shared, int fd, uint32_t event){
 		epoll_event newEvent {};
 
 		newEvent.data.fd = fd;
-		newEvent.events = EPOLLHUP;
+		newEvent.events = event | EPOLLHUP | EPOLLERR;
 		newEvent.data.ptr = shared;
 		if (epoll_ctl(shared->epoll_fd, EPOLL_CTL_ADD, fd, &newEvent) < 0)
 			std::cerr<<"Failed to poll\n"; //TODO error handle
 //			throw ServerException("Failed to register with epoll");
 	}
 
-	char **getEnv(parseRequest &request, SharedData* shared) {
+	char **getEnv(ParseRequest &request, SharedData* shared) {
 		auto copy = request.getHeaders();
 		char **env = new char *[copy.size() + 5];
 		size_t count = 0;
@@ -82,7 +82,7 @@ namespace {
 		delete[] env;
 	}
 
-	int runChild(parseRequest &request, int pipeRead, int pipeWrite, SharedData* shared) {
+	int runChild(ParseRequest &request, int pipeRead, int pipeWrite, SharedData* shared) {
 		std::string cgiPtah = request.getPath();
 		char *argv[] = {cgiPtah.data(), nullptr}; //path and NULL
 		char **env = getEnv(request, shared);
@@ -112,7 +112,7 @@ namespace {
 	}
 }
 
-int cgiHandler(SharedData* shared, parseRequest& request) {
+int cgiHandler(SharedData* shared, ParseRequest& request) {
 //	(void) shared;
 	std::cout<<"file path: \'"<<request.getPath()<<"\'\n";
 	try {
@@ -133,6 +133,10 @@ int cgiHandler(SharedData* shared, parseRequest& request) {
 		return 1;
 	}
 //	addToEpoll(shared, pipeChildToParent[0]);
+
+	// printf("pPtC[0] = %d\t pPtC[1] = %d\n", pipeParentToChild[0], pipeParentToChild[1]);
+	// printf("pCtP[0] = %d\t pCtP[1] = %d\n", pipeChildToParent[0], pipeChildToParent[1]);
+
 	int pid = fork();
 	if (pid == -1) {
 		std::cerr<<"There are no forks, you can try the philos!\n";
@@ -154,7 +158,7 @@ int cgiHandler(SharedData* shared, parseRequest& request) {
 				std::cerr << "Broken pipe while writing to child process!\n";
 			}
 		}
-		close(pipeParentToChild[1]);
+		// close(pipeParentToChild[1]);
 		std::cout<<"body done!\n";
 
 		//this gets its own function

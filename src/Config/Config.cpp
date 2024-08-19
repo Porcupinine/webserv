@@ -1,4 +1,16 @@
-#include "Config.hpp"
+/* ************************************************************************** */
+/*                                                                            */
+/*                                                        :::      ::::::::   */
+/*   Config.cpp                                         :+:      :+:    :+:   */
+/*                                                    +:+ +:+         +:+     */
+/*   By: dmaessen <dmaessen@student.42.fr>          +#+  +:+       +#+        */
+/*                                                +#+#+#+#+#+   +#+           */
+/*   Created: 2024/08/19 12:54:46 by dmaessen          #+#    #+#             */
+/*   Updated: 2024/08/19 12:54:47 by dmaessen         ###   ########.fr       */
+/*                                                                            */
+/* ************************************************************************** */
+
+#include "../../inc/Config.hpp"
 
 Config::Config(const std::string& filePath) : _filePath(filePath), _lineNum(0), _confErrorOccurred(false) {
 	

@@ -1,4 +1,16 @@
-#include "defines.hpp"
+/* ************************************************************************** */
+/*                                                                            */
+/*                                                        ::::::::            */
+/*   structUtils.cpp                                    :+:    :+:            */
+/*                                                     +:+                    */
+/*   By: dmaessen <dmaessen@student.42.fr>            +#+                     */
+/*                                                   +#+                      */
+/*   Created: 2024/08/19 12:55:08 by dmaessen      #+#    #+#                 */
+/*   Updated: 2024/08/19 20:07:45 by ewehl         ########   odam.nl         */
+/*                                                                            */
+/* ************************************************************************** */
+
+#include "../../inc/defines.hpp"
 
 template<typename Map>
 bool map_compare(Map const& lhs, Map const& rhs) {
@@ -13,7 +25,7 @@ bool Locations::operator==(const Locations& other) const {
 			&& allowed_methods == other.allowed_methods && map_compare(redirect, other.redirect));
 }
 
-// Don't need to compare all the other things, I think.
+// Don't need to compare all the other things, I think
 bool ServerConfig::operator==(const std::unique_ptr<ServerConfig>& other) const {
 	return (host == other->host && port == other->port /*&& server_name == other->server_name
 			&& index == other->index && auto_index == other->auto_index && root_dir == other->root_dir

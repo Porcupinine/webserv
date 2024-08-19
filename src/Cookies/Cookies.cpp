@@ -6,18 +6,18 @@
 /*   By: dmaessen <dmaessen@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2024/07/08 13:18:59 by dmaessen          #+#    #+#             */
-/*   Updated: 2024/08/13 13:52:56 by dmaessen         ###   ########.fr       */
+/*   Updated: 2024/08/19 12:52:11 by dmaessen         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
-#include "parseRequest.hpp"
-#include "response.h"
+#include "../../inc/ParseRequest.hpp"
+#include "../../inc/Response.hpp"
 
 // Set-Cookie: header is for when its a new one (within response)
 // if its just Cookie: it just summerizes the content (within request)
 
 /* read from request header */
-std::map<std::string, std::string> parseRequest::parseCookies(const std::string& cookies) {
+std::map<std::string, std::string> ParseRequest::parseCookies(const std::string& cookies) {
     std::map<std::string, std::string> cookieMap;
     std::istringstream cookieStream(cookies);
     std::string cookie;
@@ -34,7 +34,7 @@ std::map<std::string, std::string> parseRequest::parseCookies(const std::string&
     return cookieMap;
 }
 
-std::string parseRequest::getAbsPath(void) const {
+std::string ParseRequest::getAbsPath(void) const {
 	return _absPathRoot;
 }
 

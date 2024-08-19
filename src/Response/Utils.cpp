@@ -1,16 +1,16 @@
 /* ************************************************************************** */
 /*                                                                            */
 /*                                                        :::      ::::::::   */
-/*   utils.cpp                                          :+:      :+:    :+:   */
+/*   Utils.cpp                                          :+:      :+:    :+:   */
 /*                                                    +:+ +:+         +:+     */
 /*   By: dmaessen <dmaessen@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2024/07/07 15:50:11 by dmaessen          #+#    #+#             */
-/*   Updated: 2024/08/14 16:07:32 by dmaessen         ###   ########.fr       */
+/*   Updated: 2024/08/19 12:51:50 by dmaessen         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
-#include "response.h"
+#include "../../inc/Response.hpp"
 
 /* generate an HTML page that lists the contents of a specified directory. 
 This directory listing includes the names of files and subdirectories within the specified directory, 
@@ -52,5 +52,3 @@ std::string Response::autoIndexPageListing(const std::string& path, const std::s
 
     return html.str();
 }
-
-

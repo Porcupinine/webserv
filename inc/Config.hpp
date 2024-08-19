@@ -1,8 +1,20 @@
+/* ************************************************************************** */
+/*                                                                            */
+/*                                                        :::      ::::::::   */
+/*   Config.hpp                                         :+:      :+:    :+:   */
+/*                                                    +:+ +:+         +:+     */
+/*   By: dmaessen <dmaessen@student.42.fr>          +#+  +:+       +#+        */
+/*                                                +#+#+#+#+#+   +#+           */
+/*   Created: 2024/08/19 12:54:09 by dmaessen          #+#    #+#             */
+/*   Updated: 2024/08/19 12:54:11 by dmaessen         ###   ########.fr       */
+/*                                                                            */
+/* ************************************************************************** */
+
 #pragma once
 #ifndef CONFIG_HPP
 # define CONFIG_HPP
 
-# include "defines.hpp"
+# include "../inc/defines.hpp"
 
 class Config {
 	public:

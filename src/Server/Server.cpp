@@ -1,4 +1,16 @@
-#include "Server.hpp"
+/* ************************************************************************** */
+/*                                                                            */
+/*                                                        ::::::::            */
+/*   Server.cpp                                         :+:    :+:            */
+/*                                                     +:+                    */
+/*   By: dmaessen <dmaessen@student.42.fr>            +#+                     */
+/*                                                   +#+                      */
+/*   Created: 2024/08/19 12:54:58 by dmaessen      #+#    #+#                 */
+/*   Updated: 2024/08/19 16:13:08 by ewehl         ########   odam.nl         */
+/*                                                                            */
+/* ************************************************************************** */
+
+#include "../../inc/Server.hpp"
 #include <vector>
 #include <sys/epoll.h>
 #include <algorithm>
@@ -49,8 +61,7 @@ int Server::initServer(std::shared_ptr<ServerConfig> config, int epollFd, double
 	} catch (std::exception & e) {
 		throw e.what();
 	}
-	
-	std::cout << "this too? " << this->getRedirect("/redir").begin()->first << std:: endl;
+
 	std::cout << GREEN << "Server initialized on port " << _configs->port << RESET << std::endl;
 	return 0;
 }
@@ -101,7 +112,6 @@ void Server::_registerWithEpoll(int epollFd, int fd, uint32_t events) {
 	event.data.fd = fd;
 	event.events = events;
 	event.data.ptr = _shared.get();
-	// std::cout << "see if this works\n\t" << _configs.get()->locations[1]->redirect.begin()->first << std::endl;
 	if (epoll_ctl(epollFd, EPOLL_CTL_ADD, fd, &event) < 0)
 		throw ServerException("Failed to register with epoll");
 }
@@ -118,14 +128,11 @@ Locations* Server::getLocation(std::string &locationSpec) const {
 	if (_configs) {
 		auto it = std::find_if(_configs->locations.begin(), _configs->locations.end(),
 			[locationSpec](std::shared_ptr<struct Locations> const& loc) {
-				std::cout << "loc->spec: " << loc->specifier<< " vs " << locationSpec<< std::endl;
 				return (loc->specifier == locationSpec); });
-		std::cout << "Am I getting here?" << std::endl;
 		if (it != _configs->locations.end()) {
 			return it->get();
 		}
 	}
-	std::cout << "Or am I getting here?" << std::endl;
 	return nullptr;
 }
 
@@ -142,7 +149,8 @@ std::string Server::getIndex(const std::string &location) const {
 		auto it = std::find_if(_configs->locations.begin(), _configs->locations.end(),
 			[location](std::shared_ptr<struct Locations> const& loc) { return loc->specifier == location; });
 		if (it != _configs->locations.end()) {
-			return it->get()->default_file;
+			if (it->get()->default_file.empty() == false)
+				return it->get()->default_file;
 		}
 		return _configs->index;
 	}
