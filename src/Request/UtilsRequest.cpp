@@ -1,12 +1,12 @@
 /* ************************************************************************** */
 /*                                                                            */
-/*                                                        :::      ::::::::   */
-/*   UtilsRequest.cpp                                   :+:      :+:    :+:   */
-/*                                                    +:+ +:+         +:+     */
-/*   By: dmaessen <dmaessen@student.42.fr>          +#+  +:+       +#+        */
-/*                                                +#+#+#+#+#+   +#+           */
-/*   Created: 2024/07/07 15:50:31 by dmaessen          #+#    #+#             */
-/*   Updated: 2024/08/19 12:52:02 by dmaessen         ###   ########.fr       */
+/*                                                        ::::::::            */
+/*   UtilsRequest.cpp                                   :+:    :+:            */
+/*                                                     +:+                    */
+/*   By: dmaessen <dmaessen@student.42.fr>            +#+                     */
+/*                                                   +#+                      */
+/*   Created: 2024/07/07 15:50:31 by dmaessen      #+#    #+#                 */
+/*   Updated: 2024/08/19 19:57:54 by ewehl         ########   odam.nl         */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -23,9 +23,9 @@ std::string& ParseRequest::capsOn(std::string &str) {
 }
 
 std::string ParseRequest::rmSpaces(std::string &str) {
-    size_t len;
-    len = str.size() - 1;
-    while (len >= 0 && str[len] == ' ')
+    if (str.empty()) return str;
+    size_t len = str.size() - 1;
+    while (len > 0 && str[len] == ' ')
         --len;
     return str.substr(0, len + 1);
 }
