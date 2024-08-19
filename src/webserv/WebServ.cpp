@@ -193,7 +193,7 @@ void	WebServ::run() {
 		parseRequest req;
 		for (int idx = 0; idx < numEvents; idx++) {
 			SharedData* shared = static_cast<SharedData*>(_events[idx].data.ptr);
-			_checkHanging(shared); //Still need to figure something out here.
+			_checkHangingSockets(shared); //Still need to figure something out here.
 			if (_events[idx].events & EPOLLIN && shared->status == Status::listening)
 				newConnection(shared);
 			if (_events[idx].events & EPOLLIN && shared->status == Status::reading)
@@ -236,7 +236,7 @@ void	WebServ::_closeConnections() {
 	}
 }
 
-void WebServ::_checkHanging(SharedData *data) {
+void WebServ::_checkHangingSockets(SharedData *data) {
     double timeout = data->server->getTimeout();
     time_t currentTime = std::time(nullptr);
     double diff = std::difftime(currentTime, data->timestamp_last_request);
