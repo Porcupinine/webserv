@@ -1,12 +1,12 @@
 /* ************************************************************************** */
 /*                                                                            */
-/*                                                        :::      ::::::::   */
-/*   ParseRequest.cpp                                   :+:      :+:    :+:   */
-/*                                                    +:+ +:+         +:+     */
-/*   By: dmaessen <dmaessen@student.42.fr>          +#+  +:+       +#+        */
-/*                                                +#+#+#+#+#+   +#+           */
-/*   Created: 2024/07/07 15:50:05 by dmaessen          #+#    #+#             */
-/*   Updated: 2024/08/19 13:46:53 by dmaessen         ###   ########.fr       */
+/*                                                        ::::::::            */
+/*   ParseRequest.cpp                                   :+:    :+:            */
+/*                                                     +:+                    */
+/*   By: dmaessen <dmaessen@student.42.fr>            +#+                     */
+/*                                                   +#+                      */
+/*   Created: 2024/07/07 15:50:05 by dmaessen      #+#    #+#                 */
+/*   Updated: 2024/08/19 16:10:44 by ewehl         ########   odam.nl         */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -406,7 +406,7 @@ int ParseRequest::parsePath(const std::string &line, size_t i, struct SharedData
     if (_path == "/favicon.ico")
 		return _returnValue;
 
-    std::cout << GREEN << "getting here" RESET << std::endl; // to rm
+    // std::cout << GREEN << "getting here" RESET << std::endl; // to rm
     // Locations *loc = shared.server->getLocation(isolateDir(_path));
     Locations *loc = shared.server->getLocation(_path);
 //    if (loc != nullptr) { // to rm
