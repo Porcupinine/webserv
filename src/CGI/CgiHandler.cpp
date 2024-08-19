@@ -6,7 +6,7 @@
 /*   By: dmaessen <dmaessen@student.42.fr>            +#+                     */
 /*                                                   +#+                      */
 /*   Created: 2024/07/31 15:50:10 by lpraca-l      #+#    #+#                 */
-/*   Updated: 2024/08/19 16:08:38 by ewehl         ########   odam.nl         */
+/*   Updated: 2024/08/19 21:30:21 by ewehl         ########   odam.nl         */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -26,14 +26,12 @@
 //TODO need the server info
 
 namespace {
-	void addToEpoll(SharedData* shared, int fd){
+	void addToEpoll(SharedData* shared, int fd, uint32_t event){
 		epoll_event newEvent {};
 
 		newEvent.data.fd = fd;
-		newEvent.events = EPOLLHUP;
+		newEvent.events = event | EPOLLHUP | EPOLLERR;
 		newEvent.data.ptr = shared;
-		// if (close(shared->fd) != -1)
-		// 	shared->fd = -1;
 		shared->cgi_fd = fd;
 		if (epoll_ctl(shared->epoll_fd, EPOLL_CTL_ADD, fd, &newEvent) < 0)
 			std::cerr<<"Failed to poll\n"; //TODO error handle
@@ -151,8 +149,8 @@ int cgiHandler(SharedData* shared, ParseRequest& request) {
 	} else {
 		close(pipeParentToChild[0]);
 		close(pipeChildToParent[1]);
-		addToEpoll(shared, pipeParentToChild[1]);
-		addToEpoll(shared, pipeChildToParent[0]);
+		addToEpoll(shared, pipeParentToChild[1], EPOLLOUT);
+		addToEpoll(shared, pipeChildToParent[0], EPOLLIN);
 		auto body = request.getBodyMsg();
 		if(write(pipeParentToChild[1], body.data(), body.size()) == -1){
 			if (errno == EPIPE) {
