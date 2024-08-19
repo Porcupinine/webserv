@@ -132,7 +132,7 @@ int cgiHandler(SharedData* shared, parseRequest& request) {
 		std::cerr<<"Pipe child failed, you gotta call Mario!\n";
 		return 1;
 	}
-
+//	addToEpoll(shared, pipeChildToParent[0]);
 	int pid = fork();
 	if (pid == -1) {
 		std::cerr<<"There are no forks, you can try the philos!\n";
@@ -143,12 +143,13 @@ int cgiHandler(SharedData* shared, parseRequest& request) {
 		close(pipeChildToParent[0]);
 		runChild(request, pipeParentToChild[0], pipeChildToParent[1], shared);
 	} else {
+		shared->cgi_pid = pid;
 		close(pipeParentToChild[0]);
 		close(pipeChildToParent[1]);
-//		addToEpoll(shared, pipeParentToChild[1]);
-//		addToEpoll(shared, pipeChildToParent[0]);
+		addToEpoll(shared, pipeParentToChild[1]);
+		shared->cgi_fd = pipeParentToChild[1];
 		auto body = request.getBodyMsg();
-		if(write(pipeParentToChild[1], body.data(), body.size()) == -1){
+		if(write(pipeParentToChild[1], body.c_str(), body.size()) == -1){
 			if (errno == EPIPE) {
 				std::cerr << "Broken pipe while writing to child process!\n";
 			}
@@ -156,11 +157,12 @@ int cgiHandler(SharedData* shared, parseRequest& request) {
 		close(pipeParentToChild[1]);
 		std::cout<<"body done!\n";
 
+		//this gets its own function
 		ssize_t buffLen = 0;
 		std::string response;
 		std::string buffer(BUFFER_SIZE, '\0');
 		while ((buffLen = ::read(pipeChildToParent[0], buffer.data(), BUFFER_SIZE)) > 0) {
-			response.append(buffer.data(), buffLen);
+			response.append(buffer.c_str(), buffLen);
 		}
 		if (buffLen < 0) {
 			std::cerr<<"Failed to read!\n";
@@ -168,6 +170,7 @@ int cgiHandler(SharedData* shared, parseRequest& request) {
 		std::cout<<"------------response-------------\n\'"<<response<<"\'\n";
 		shared->response = response + "\0";
 		shared->status = Status::writing;
+		shared->connection_closed = true;
 		close(pipeParentToChild[0]); // Close the read end after reading
 		int status;
 		if (waitpid(pid, &status, 0) == -1) {
