@@ -6,7 +6,7 @@
 #    By: dmaessen <dmaessen@student.42.fr>          +#+  +:+       +#+         #
 #                                                 +#+#+#+#+#+   +#+            #
 #    Created: 2024/08/19 12:34:37 by dmaessen          #+#    #+#              #
-#    Updated: 2024/08/19 12:55:37 by dmaessen         ###   ########.fr        #
+#    Updated: 2024/08/19 15:08:42 by dmaessen         ###   ########.fr        #
 #                                                                              #
 # **************************************************************************** #
 
@@ -14,7 +14,7 @@ NAME = webserv
 
 CC = c++
 
-CFLAGS = -Wall -Wextra -Werror -g -std=c++17 #-fsanitize=leak
+CFLAGS = -g -std=c++17 #-fsanitize=leak -Wall -Wextra -Werror
 RM = rm -f
 
 HEADERS = inc/CgiHandler.hpp \

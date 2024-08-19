@@ -6,7 +6,7 @@
 /*   By: dmaessen <dmaessen@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2024/08/19 12:54:19 by dmaessen          #+#    #+#             */
-/*   Updated: 2024/08/19 12:54:20 by dmaessen         ###   ########.fr       */
+/*   Updated: 2024/08/19 15:09:41 by dmaessen         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -35,7 +35,7 @@
 // MAGIC NUMBERS
 #define ONE_MB					1048576 // Default max body size (1MB)
 #define BUFFER_SIZE				5000
-#define SERVER_TIMEOUT			5
+#define SERVER_TIMEOUT			10
 #define MAX_EVENTS				20
 #define BACKLOG					20
 #define SERVER_MAX_NO_REQUEST	5

@@ -80,7 +80,7 @@ try:
     header = f"""HTTP/1.1 {status}\r
         Content-Length: {len(body)}\r
         Content-type: text/html\r
-        Connection: close\r
+        Connection: closed\r
         Date: {date}\r
         Last-Modified: {date}\r
         Server: {os.environ.get("SERVER")}\r\n\r"""

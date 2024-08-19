@@ -58,7 +58,7 @@ BODYLEN=$(echo -n "$BODY" | wc -c)
 
 # Build header
 HEADER="HTTP/1.1 200\r\n
-Connection: close\r\n
+Connection: closed\r\n
 Content-length: $BODYLEN\r\n
 Content-type: text/html\r\n\r\n
 "

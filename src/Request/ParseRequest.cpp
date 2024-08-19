@@ -6,7 +6,7 @@
 /*   By: dmaessen <dmaessen@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2024/07/07 15:50:05 by dmaessen          #+#    #+#             */
-/*   Updated: 2024/08/19 13:46:53 by dmaessen         ###   ########.fr       */
+/*   Updated: 2024/08/19 15:53:04 by dmaessen         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -18,8 +18,10 @@ ParseRequest::ParseRequest::ParseRequest(struct SharedData* shared) : _methodTyp
     if (shared->request.empty())
         shared->status = Status::closing;
     parseStr(shared->request, shared);
-    if (cgiInvolved(_path) == false)
+    if (cgiInvolved(_path) == false) {
+        shared->connection_closed = true;
 		shared->status = Status::writing;
+    }
 	std::cout << "response is " << shared->response << "\n"; // to rm
 }
 
@@ -138,14 +140,29 @@ std::string ParseRequest::readLine(const std::string &str, size_t &i) {
 
     if (i == std::string::npos) 
         return "";
-    j = str.find_first_of('\n', i);
-    res = str.substr(i, j - i);
-    if (res[res.size() - 1] == '\r')
-        res.pop_back();
-    if (j == std::string::npos)
-        i = j;
-    else
-        i = j + 1;
+
+    try {
+        j = str.find_first_of('\n', i);
+        if (j != std::string::npos && j >= i) {
+            res = str.substr(i, j - i);
+        } else {
+            std::cerr << "Error: substring out of range or newline not found.\n";
+            return "";
+        }
+
+        if (!res.empty() && res.back() == '\r')
+            res.pop_back();
+
+        if (j == std::string::npos)
+            i = j;
+        else
+            i = j + 1;
+
+    } catch (const std::out_of_range& e) {
+        std::cerr << "Error: substring out of range: " << e.what() << "\n";
+        return "";
+    }
+
     return res;
 }
 
@@ -165,12 +182,26 @@ std::string ParseRequest::setValue(const std::string &line) {
     size_t endline;
     std::string res;
 
-    i = line.find_first_of(":", 1);
-    i = line.find_first_not_of(" ", i + 1);
-    endline = line.find_first_of("\r", i);
-    line.substr(i, endline - 1); //TODO ignoring return value
-    if (i != std::string::npos)
-        res.append(line, i, std::string::npos);
+    try {
+        i = line.find_first_of(":", 1);
+        i = line.find_first_not_of(" ", i + 1);
+        endline = line.find_first_of("\r", i);
+
+        if (endline != std::string::npos && i != std::string::npos) {
+            line.substr(i, endline - i);
+        } else {
+            std::cerr << "Error: substring out of range or positions not found.\n";
+            return res;
+        }
+        
+        if (i != std::string::npos) {
+            res.append(line, i, std::string::npos);
+        }
+    } catch (const std::out_of_range& e) {
+        std::cerr << "Error: substring out of range: " << e.what() << "\n";
+        return res;
+    }
+
     return rmSpaces(res);
 }
 
@@ -360,8 +391,15 @@ int ParseRequest::parseFirstline(const std::string &info, struct SharedData* sha
     size_t i;
     std::string line;
 
-    i = info.find_first_of('\n');
-    line = info.substr(0, i);
+    try {
+        i = info.find_first_of('\n');
+        line = info.substr(0, i);
+    } catch (const std::out_of_range& e) {
+        _returnValue = 400;
+        std::cerr << "Error: substring out of range: " << e.what() << "\n";
+        return _returnValue;
+    }
+    
     i = line.find_first_of(' ');
     
     if (i == std::string::npos) {

@@ -6,7 +6,7 @@
 /*   By: dmaessen <dmaessen@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2024/08/19 12:55:16 by dmaessen          #+#    #+#             */
-/*   Updated: 2024/08/19 14:42:23 by dmaessen         ###   ########.fr       */
+/*   Updated: 2024/08/19 15:08:17 by dmaessen         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -213,7 +213,7 @@ void	WebServ::run() {
 			if (shared->status == Status::handling_request){
 				// handleRequest(shared);
 				std::cout << PURPLE << "Inside ParseReq" << RESET << std::endl;
-				req = parseRequest(shared);
+				req = ParseRequest(shared);
 				if (shared->status == Status::start_cgi)
 					cgiHandler(shared, req);
 				shared->request.clear();
@@ -266,7 +266,7 @@ void WebServ::_checkHangingSockets(SharedData *data) {
             //     data->response_code = 404;
 			// 	std::time(&(data->timestamp_last_request));
 			// 	data->status = Status::handling_request;
-            //     break;
+                // break;
             case Status::reading:
                 std::cout << "reading.." << std::endl;
                 data->response_code = 408;
