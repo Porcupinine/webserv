@@ -142,7 +142,8 @@ std::string Server::getIndex(const std::string &location) const {
 		auto it = std::find_if(_configs->locations.begin(), _configs->locations.end(),
 			[location](std::shared_ptr<struct Locations> const& loc) { return loc->specifier == location; });
 		if (it != _configs->locations.end()) {
-			return it->get()->default_file;
+			if (it->get()->default_file.empty() == false)
+				return it->get()->default_file;
 		}
 		return _configs->index;
 	}
@@ -168,7 +169,7 @@ std::string Server::getRootFolder(const std::string &location) const {
 			return it->get()->root_dir.empty() ? _configs->root_dir : it->get()->root_dir; // Use location-specific or fallback to general
 		}
 	}
-	return "/";
+	return _configs->root_dir;
 }
 
 std::set<std::string> Server::getAllowedMethods(const std::string &location) const {
