@@ -6,7 +6,7 @@
 /*   By: dmaessen <dmaessen@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2024/07/31 15:50:10 by lpraca-l          #+#    #+#             */
-/*   Updated: 2024/08/19 15:24:50 by dmaessen         ###   ########.fr       */
+/*   Updated: 2024/08/19 16:19:51 by dmaessen         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -145,8 +145,8 @@ int cgiHandler(SharedData* shared, ParseRequest& request) {
 	} else {
 		close(pipeParentToChild[0]);
 		close(pipeChildToParent[1]);
-		addToEpoll(shared, pipeParentToChild[1]);
-		addToEpoll(shared, pipeChildToParent[0]);
+		// addToEpoll(shared, pipeParentToChild[1]);
+		// addToEpoll(shared, pipeChildToParent[0]);
 		auto body = request.getBodyMsg();
 		if(write(pipeParentToChild[1], body.data(), body.size()) == -1){
 			if (errno == EPIPE) {

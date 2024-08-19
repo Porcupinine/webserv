@@ -6,7 +6,7 @@
 #    By: dmaessen <dmaessen@student.42.fr>          +#+  +:+       +#+         #
 #                                                 +#+#+#+#+#+   +#+            #
 #    Created: 2024/08/19 12:34:37 by dmaessen          #+#    #+#              #
-#    Updated: 2024/08/19 15:08:42 by dmaessen         ###   ########.fr        #
+#    Updated: 2024/08/19 16:22:11 by dmaessen         ###   ########.fr        #
 #                                                                              #
 # **************************************************************************** #
 
@@ -14,7 +14,8 @@ NAME = webserv
 
 CC = c++
 
-CFLAGS = -g -std=c++17 #-fsanitize=leak -Wall -Wextra -Werror
+# CFLAGS = -Wall -Wextra -Werror -g -std=c++17 #-fsanitize=leak 
+CFLAGS = -g -std=c++17 #-fsanitize=leak
 RM = rm -f
 
 HEADERS = inc/CgiHandler.hpp \
@@ -49,7 +50,6 @@ DIRS = $(sort $(dir $(OBJ)))
 
 all: $(NAME)
 
-# Create the necessary directories
 $(OBJ_DIR)%.o: src/%.cpp $(HEADERS)
 	@echo "Compiling $< to $@"
 	@mkdir -p $(DIRS)

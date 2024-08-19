@@ -6,7 +6,7 @@
 /*   By: dmaessen <dmaessen@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2024/07/07 15:50:05 by dmaessen          #+#    #+#             */
-/*   Updated: 2024/08/19 15:53:04 by dmaessen         ###   ########.fr       */
+/*   Updated: 2024/08/19 16:15:13 by dmaessen         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -471,6 +471,12 @@ int ParseRequest::parsePath(const std::string &line, size_t i, struct SharedData
 	if ((_path[0] == '/' && _path.size() == 2) || _path == "/")
         _path = _absPathRoot + abspath + "/" + shared.server->getIndex(_path);
     // ADD SOMETHING THAT IF IT ENDS ON / LOOK FOR THE INDEX FILE
+    // else if () {
+    // maybe a for loop with auto looping through the locations struct and see if it finds that words at the start of the path
+    // then stops when found  (or nothing if not found)
+    // and then trim that location if needed (as the right root folder is already set above) 
+    // so maybe do a find in the end 
+    //}
     else if (loc != nullptr) {
         std::cout << "this one2\n"; // to rm
 		if (loc->specifier == _path)
