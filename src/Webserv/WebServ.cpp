@@ -6,7 +6,7 @@
 /*   By: dmaessen <dmaessen@student.42.fr>            +#+                     */
 /*                                                   +#+                      */
 /*   Created: 2024/08/19 12:55:16 by dmaessen      #+#    #+#                 */
-/*   Updated: 2024/08/19 16:18:10 by ewehl         ########   odam.nl         */
+/*   Updated: 2024/08/19 20:26:24 by ewehl         ########   odam.nl         */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -205,7 +205,7 @@ void	WebServ::run() {
 		ParseRequest req;
 		for (int idx = 0; idx < numEvents; idx++) {
 			SharedData* shared = static_cast<SharedData*>(_events[idx].data.ptr);
-			_checkHangingSockets(shared); //Still need to figure something out here.
+			_checkHangingSockets(shared);
 			if (_events[idx].events & EPOLLIN && shared->status == Status::listening)
 				newConnection(shared);
 			if (_events[idx].events & EPOLLIN && shared->status == Status::reading)
