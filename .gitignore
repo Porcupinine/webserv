@@ -1,11 +1,13 @@
+webserv
+.gitignore
+
 # Prerequisites
 *.d
-
+logs/
+www/
 .*
  
 # Compiled Object files
-*.slo
-*.lo
 *.o
 *.obj
 
