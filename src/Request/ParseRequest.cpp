@@ -6,7 +6,7 @@
 /*   By: dmaessen <dmaessen@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2024/07/07 15:50:05 by dmaessen          #+#    #+#             */
-/*   Updated: 2024/08/19 13:41:13 by dmaessen         ###   ########.fr       */
+/*   Updated: 2024/08/19 13:46:53 by dmaessen         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -430,20 +430,17 @@ int ParseRequest::parsePath(const std::string &line, size_t i, struct SharedData
     }
 
     _absPathRoot = current;
-	if ((_path[0] == '/' && _path.size() == 2) || _path == "/") {
-        _path = _absPathRoot + abspath + "/" + shared.server_config->index;
-        // std::cout << "this one1 " << shared.server->getIndex(_path) <<  "\n";
-        // _path = _absPathRoot + abspath + "/" + shared.server->getIndex(_path); // to use later
-    }
+	if ((_path[0] == '/' && _path.size() == 2) || _path == "/")
+        _path = _absPathRoot + abspath + "/" + shared.server->getIndex(_path);
     // ADD SOMETHING THAT IF IT ENDS ON / LOOK FOR THE INDEX FILE
     else if (loc != nullptr) {
-        std::cout << "this one2\n";
+        std::cout << "this one2\n"; // to rm
 		if (loc->specifier == _path)
 			_redirection = true;
         std::map<int, std::string> redirMap2 = shared.server->getRedirect(_path);
 		if (loc->specifier == _path && redirMap2.begin()->first == 0){
             _dir = true;
-            std::cout << "this one3\n";
+            std::cout << "this one3\n"; // to rm
             _rawPath = _path;
 		    _path = _absPathRoot + abspath + _path;
         }

@@ -6,7 +6,7 @@
 /*   By: dmaessen <dmaessen@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2024/07/07 15:49:40 by dmaessen          #+#    #+#             */
-/*   Updated: 2024/08/19 13:30:44 by dmaessen         ###   ########.fr       */
+/*   Updated: 2024/08/19 13:49:42 by dmaessen         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -214,8 +214,8 @@ void Response::readContent(ParseRequest& request, struct SharedData* shared) {
         _response = content;
         file.close();
     }
-    // else if (_isAutoIndex == false && request.getDir() == true && fileExists(request.getPath() + "/" + shared->server->getIndex(request.getRawPath()))) {
-    else if (_isAutoIndex == false && request.getDir() == true && fileExists(request.getPath() + "/index.html")) {
+    // else if (_isAutoIndex == false && request.getDir() == true && fileExists(request.getPath() + "/index.html")) {
+    else if (_isAutoIndex == false && request.getDir() == true && fileExists(request.getPath() + "/" + shared->server->getIndex(request.getRawPath()))) {
         // CHEK IF THERE IS ALREADY A BACK SLASH OR NOT IF NOT ADD ELSE TRIM OR SOMETHING TO NOT HAVE A BUG THERE
         
         // std::string f = request.getPath() + "/" + shared->server->getIndex(request.getRawPath()); // put this back when fixed
