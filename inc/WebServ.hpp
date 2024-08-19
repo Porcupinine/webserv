@@ -41,7 +41,6 @@ class WebServ {
 		void	handleRequest(SharedData* shared);
 		void	readData(SharedData* shared);
 		void	writeData(SharedData* shared);
-		// void	initErrorPages(SharedData* shared);
 
 		class InitException : public std::exception {
 			public:
@@ -70,7 +69,7 @@ class WebServ {
 		
 		void										_setNonBlocking(int fd);
 
-		// void										_checkHanging(); Figure out some implementation for this. and an errorResponse.
+		void										_checkHangingSockets(SharedData *data);
 		void										_closeConnections();
 
 };

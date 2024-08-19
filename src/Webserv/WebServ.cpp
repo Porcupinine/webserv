@@ -6,7 +6,7 @@
 /*   By: dmaessen <dmaessen@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2024/08/19 12:55:16 by dmaessen          #+#    #+#             */
-/*   Updated: 2024/08/19 12:55:17 by dmaessen         ###   ########.fr       */
+/*   Updated: 2024/08/19 14:42:23 by dmaessen         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -16,7 +16,7 @@
 #include <fcntl.h>
 #include <ctime>
 
-#include <regex> // check if needed
+// #include <regex> // check if needed
 
 bool WebServ::_serverShutdown = false; 
 
@@ -56,39 +56,6 @@ WebServ::~WebServ() {
 	// _closeConnections();
 }
 
-// void WebServ::initErrorPages(SharedData* shared) {
-// 	shared->errorPages[301] = "HTTP/1.1 301 Moved Permanently\r\n\n"
-// 	"Content-Type: text/html\r\n\nContent-Length: 150\r\n\r\n "
-// 	"<!DOCTYPE html><html><head><title>301</title></head><body><h1> 301 Moved Permanently! </h1><p>This page has been moved permanently.</p></body></html>";
-// 	shared->errorPages[302] = "HTTP/1.1 302 Found\r\n\n"
-// 	"Content-Type: text/html\r\n\nContent-Length: 138\r\n\r\n "
-// 	"<!DOCTYPE html><html><head><title>302</title></head><body><h1> 302 Found! </h1><p>This page has been temporarily moved.</p></body></html>";
-// 	shared->errorPages[307] = "HTTP/1.1 307 Temporary Redirect\r\n\n"
-// 	"Content-Type: text/html\r\n\nContent-Length: 137\r\n\r\n "
-// 	"<!DOCTYPE html><html><head><title>307</title></head><body><h1> 307 Temporary Redirect! </h1><p>This page is temporary.</p></body></html>";
-// 	shared->errorPages[308] = "HTTP/1.1 308 Permanent Redirect\r\n\n"
-// 	"Content-Type: text/html\r\n\nContent-Length: 151\r\n\r\n "
-// 	"<!DOCTYPE html><html><head><title>308</title></head><body><h1> 308 Permanent Redirect! </h1><p>This page has been permanently moved.</p></body></html>";
-// 	shared->errorPages[400] = "HTTP/1.1 400 Bad Request\r\n\n"
-// 	"Content-Type: text/html\r\n\nContent-Length: 151\r\n\r\n "
-// 	"<!DOCTYPE html><html><head><title>400</title></head><body><h1> 400 Bad Request Error! </h1><p>We are not speaking the same language!</p></body></html>";
-// 	shared->errorPages[403] = "HTTP/1.1 403 Forbiden\r\n\n"
-// 	"Content-Type: text/html\r\n\nContent-Length: 130\r\n\r\n "
-// 	"<!DOCTYPE html><html><head><title>403</title></head><body><h1> 403 Forbiden! </h1><p>This is top secret, sorry!</p></body></html>";
-// 	shared->errorPages[404] = "HTTP/1.1 404 Not Found\r\n"
-// 	"Content-Type: text/html\r\n\nContent-Length: 115\r\n\r\n "
-// 	"<!DOCTYPE html><html><head><title>404</title></head><body><h1> 404 Page not found! </h1><p>Puff!</p></body></html>";
-// 	shared->errorPages[405] = "HTTP/1.1 405 Method Not Allowed\r\n\n"
-// 	"Content-Type: text/html\r\n\nContent-Length: 139\r\n\r\n "
-// 	"<!DOCTYPE html><html><head><title>405</title></head><body><h1> 405 Method Not Allowed! </h1><p>We forgot how to do that!</p></body></html>";
-// 	shared->errorPages[413] = "HTTP/1.1 413 Payload Too Large\r\n\n"
-// 	"Content-Type: text/html\r\n\nContent-Length: 163\r\n\r\n "
-// 	"<!DOCTYPE html><html><head><title>413</title></head><body><h1> 413 Payload Too Large! </h1><p>We are too busy right now, please try again later!</p></body></html>";
-// 	shared->errorPages[500] = "HTTP/1.1 500 Internal Server Error\r\n\n"
-// 	"Content-Type: text/html\r\n\nContent-Length: 146\r\n\r\n "
-// 	"<!DOCTYPE html><html><head><title>500</title></head><body><h1> 500 Internal Server Error! </h1><p>I probably should study more!</p></body></html>";
-// }
-
 void WebServ::handleRequest(SharedData* shared) {
 	std::cout << PURPLE << "Do I get here handleReq?" << RESET << std::endl;
 	std::cout << "Received request:\n" << shared->request << std::endl;
@@ -101,59 +68,59 @@ void WebServ::handleRequest(SharedData* shared) {
 }
 
 void	WebServ::writeData(SharedData* shared) {
+	std::cout << PURPLE << "Inside WriteData" << RESET << std::endl;
 	if (shared->status == Status::closing) return;
 	static int count;
 	int clientFd = shared->fd;
 	std::cout << PURPLE << "Am I here @start?\n" << RESET << std::endl;
-	// std::cout << "resp = " << shared->response << std::endl;
-	ssize_t len = std::min(static_cast<int>(shared->response.length()), BUFFER_SIZE);
+	int len = std::min(static_cast<int>(shared->response.length()), BUFFER_SIZE);
 	len = send(clientFd, shared->response.c_str(), len, MSG_NOSIGNAL);
 	if (len == -1) {
 		std::cerr << "Some error occured trying to send. Reason " << RED << strerror(errno) << RESET << std::endl;
 		printf("\t\t%s%d%s", CYAN, clientFd, RESET);
 		shared->status = Status::closing;
-	} else if (len < static_cast<int>(shared->response.size())) {
+	} else if (len < static_cast<int>(shared->response.size()) && len != 0) {
 		shared->response = shared->response.substr(len, shared->response.npos);
 		shared->status = Status::writing;
 	} else {
 		std::cerr << "We wrote, now what? count " << RED << count++ << RESET << std::endl;
 		shared->response.clear();
-//		shared->status = shared->connection_closed ? Status::closing : Status::reading;
-		shared->status = Status::closing; // TODO: this is not closing connections after writing!
+		shared->timestamp_last_request = std::time(nullptr);
+		shared->status = shared->connection_closed ? Status::closing : Status::reading;
 	}
-	std::cout << PURPLE << "Am I here?\n" << RESET << std::endl;
 }
 
-bool requestIsComplete(const std::string& buffer) {
-	size_t headers_end = buffer.find("\r\n\r\n");
-	if (headers_end == std::string::npos) {
-		return false;
-	}
+// bool requestIsComplete(const std::string& buffer) {
+// 	size_t headers_end = buffer.find("\r\n\r\n");
+// 	if (headers_end == std::string::npos) {
+// 		return false;
+// 	}
 
-	size_t content_length_pos = buffer.find("Content-Length:");
-	if (content_length_pos != std::string::npos && content_length_pos < headers_end) {
-		size_t start = buffer.find_first_of("0123456789", content_length_pos);
-		if (start != std::string::npos) {
-			size_t end = buffer.find(LINE_ENDING, start);
-			if (end != std::string::npos) {
-				int content_length = std::stoi(buffer.substr(start, end - start));
-				size_t total_request_size = headers_end + 4 + content_length; // 4 for "\r\n\r\n"
-				std::cout << total_request_size << "vs " << buffer.size() << std::endl;
-				return buffer.size() >= total_request_size;
-			}
-		}
-	} else {
-		// No Content-Length header found, assume no body expected
-		return true; // The headers are complete, and no body is expected
-	}
+// 	size_t content_length_pos = buffer.find("Content-Length:");
+// 	if (content_length_pos != std::string::npos && content_length_pos < headers_end) {
+// 		size_t start = buffer.find_first_of("0123456789", content_length_pos);
+// 		if (start != std::string::npos) {
+// 			size_t end = buffer.find(LINE_ENDING, start);
+// 			if (end != std::string::npos) {
+// 				int content_length = std::stoi(buffer.substr(start, end - start));
+// 				size_t total_request_size = headers_end + 4 + content_length; // 4 for "\r\n\r\n"
+// 				std::cout << total_request_size << "vs " << buffer.size() << std::endl;
+// 				return buffer.size() >= total_request_size;
+// 			}
+// 		}
+// 	} else {
+// 		// No Content-Length header found, assume no body expected
+// 		return true; // The headers are complete, and no body is expected
+// 	}
 
-	return false;
-}
+// 	return false;
+// }
 
 void WebServ::readData(SharedData* shared) {
 	char buffer[BUFFER_SIZE];
 	int bytesRead;
 
+	std::cout << PURPLE << "Inside ReadData" << RESET << std::endl;
 	while (true) {
 		bytesRead = recv(shared->fd, buffer, BUFFER_SIZE - 1, MSG_DONTWAIT);
 
@@ -162,7 +129,7 @@ void WebServ::readData(SharedData* shared) {
 		if (bytesRead > 0) {
 			buffer[bytesRead] = '\0';
 			shared->request.append(buffer, bytesRead);
-			std::time(&(shared->timestamp_last_request));
+			shared->timestamp_last_request = std::time(&(shared->timestamp_last_request));
 		} else if (bytesRead == 0) {
 			// Connection closed by client
 			shared->status = Status::closing;
@@ -190,16 +157,15 @@ void WebServ::readData(SharedData* shared) {
 
 
 void	WebServ::newConnection(SharedData* shared) {
-	std::cout << PURPLE << "Do I get here newConnection?" << RESET << std::endl;
+	std::cout << PURPLE << "Inside newConnection?" << RESET << std::endl;
 	int clientFd = accept(shared->fd, nullptr, nullptr);
 	if (clientFd == -1) {
 		std::cerr << "Failed to accept new connection: " << strerror(errno) << std::endl; //make this some exception
 		return;
 	}
 
-	// printf("%sClientFd: %d\tSharedFd: %d%s\n", PURPLE, clientFd, shared->fd, RESET);
 	std::cout << PURPLE << "ClientFd: " << clientFd << "\tSharedFd: " << shared->fd << RESET << std::endl;
-	_setNonBlocking(clientFd); // Add some errorhandling
+	_setNonBlocking(clientFd);
 
 	std::cout << "Serv conf = " << shared->server_config->root_dir << std::endl;
 
@@ -209,21 +175,20 @@ void	WebServ::newConnection(SharedData* shared) {
 	clientShared->cgi_fd = -1;
 	clientShared->cgi_pid = -1;
 	clientShared->status = Status::reading;
-	clientShared->request = "";
-	clientShared->response = "";
-	clientShared->response_code = 200; // TODO check on this
+	clientShared->request.clear();
+	clientShared->response.clear();
+	clientShared->response_code = 200;
 	clientShared->server = shared->server;
 	clientShared->server_config = shared->server_config;
 	std::cout << shared->server_config->root_dir << std::endl;
-	// std::cout << "IN LOU " << shared->server_config->root_dir << " and " << shared->server_config->auto_index << "\n";
 	clientShared->connection_closed = false;
 	clientShared->timestamp_last_request = std::time(nullptr);
-	// initErrorPages(shared);
 
 	epoll_event event;
 	event.events = EPOLLIN | EPOLLOUT;
 	event.data.ptr = clientShared.get();
 
+	shared->timestamp_last_request = std::time(nullptr);
 	if (epoll_ctl(shared->epoll_fd, EPOLL_CTL_ADD, clientFd, &event) == -1) {
 		std::cerr << "Error registering new client on epoll: " << strerror(errno) << std::endl;
 		close(clientFd);
@@ -240,15 +205,15 @@ void	WebServ::run() {
 		ParseRequest req;
 		for (int idx = 0; idx < numEvents; idx++) {
 			SharedData* shared = static_cast<SharedData*>(_events[idx].data.ptr);
-			// _checkHanging(); Still need to figure something out here.
+			_checkHangingSockets(shared); //Still need to figure something out here.
 			if (_events[idx].events & EPOLLIN && shared->status == Status::listening)
 				newConnection(shared);
 			if (_events[idx].events & EPOLLIN && shared->status == Status::reading)
 				readData(shared);
 			if (shared->status == Status::handling_request){
 				// handleRequest(shared);
-				// std::cout << "Location test = " << shared->server_config->locations[1]->specifier << std::endl;
-				req = ParseRequest(shared);
+				std::cout << PURPLE << "Inside ParseReq" << RESET << std::endl;
+				req = parseRequest(shared);
 				if (shared->status == Status::start_cgi)
 					cgiHandler(shared, req);
 				shared->request.clear();
@@ -262,7 +227,7 @@ void	WebServ::run() {
 			if ((_events[idx].events & EPOLLOUT) && shared->status == Status::writing)
 				writeData(shared);
 			if ((_events[idx].events & EPOLLERR) || shared->status == Status::closing) {
-				std::cout << RED << "HERE" << std::endl;
+				std::cout << RED << "HERE" << RESET << std::endl;
 				closeCGIfds(shared);
 				closeConnection(shared);
 				shared->request.clear(); // might introduce complications.. Guess well find out.
@@ -279,6 +244,67 @@ void	WebServ::_closeConnections() {
 		if (_events[idx].events && shared->status != Status::listening) {
 			closeCGIfds(shared);
 			closeConnection(shared);
+		}
+	}
+}
+
+void WebServ::_checkHangingSockets(SharedData *data) {
+    double timeout = data->server->getTimeout();
+    time_t currentTime = std::time(nullptr);
+    double diff = std::difftime(currentTime, data->timestamp_last_request);
+
+    // std::cout << "tmstamp = " << data->timestamp_last_request
+    //           << " current time = " << currentTime
+    //           << " server timeout = " << timeout
+    //           << " diff = " << diff << std::endl;
+
+    if (diff >= timeout) {
+        std::cout << "Do I get in CheckHanging?" << std::endl;
+        switch (data->status) {
+            // case Status::listening:
+            //     std::cout << "for testing purposes.." << std::endl;
+            //     data->response_code = 404;
+			// 	std::time(&(data->timestamp_last_request));
+			// 	data->status = Status::handling_request;
+            //     break;
+            case Status::reading:
+                std::cout << "reading.." << std::endl;
+                data->response_code = 408;
+				std::time(&(data->timestamp_last_request));
+				data->status = Status::handling_request;
+                break;
+            case Status::handling_request:
+                std::cout << CYAN << "handling_request.." << std::endl;
+                data->response_code = 500; //..??
+				data->status = Status::closing; // ../
+                break;
+            case Status::start_cgi:
+                std::cout << "start_cgi.." << std::endl;
+                data->response_code = 504;
+				std::time(&(data->timestamp_last_request));
+				data->status = Status::handling_request;
+                if (data->cgi_fd != -1){
+                    close(data->cgi_fd);
+                    data->cgi_fd = -1;
+                }
+                if (kill(data->cgi_pid, 0) == 0) {
+                    kill(data->cgi_pid, SIGTERM);
+                }
+                break;
+			case Status::in_cgi: // Is this necessary?
+				std::cout << "in_cgi.." << std::endl;
+				// data->response_code = ...;
+				break;
+			case Status::writing:
+				std::cout << "writing.." << std::endl;
+				break;
+			case Status::closing:
+				std::cout << "CLOSING.." << std::endl;
+				// closeConnection(data);
+				break;
+			// case Status::writing:
+			// 	data->response_code = ...;
+			// 	break;
 		}
 	}
 }
