@@ -2,6 +2,16 @@
 
 #check if exists, delete, call files again?
 
+# Check if UPLOAD_DIR is set
+if [ -z "$UPLOAD_DIR" ]; then
+    HEADER=""
+    echo "<html><body><h1>Error</h1><p>UPLOAD_DIR environment variable is not set.</p></body></html>"
+    exit 1
+fi
+
+# Get directoryIRECTORY="$UPLOAD_DIR"
+
+
 # Build body
 BODY="<!DOCTYPE html>
 <html>
@@ -9,10 +19,9 @@ BODY="<!DOCTYPE html>
 
 <h1>File was successfully deleted!!</h1>
 
-<p>Thank you for your file!</p>
+<p>We are sad to see your data go!</p>
 <p> {message}</p>
-<p><a href="/upload.html">Upload another picture</a></p>
-<p><a href="/index.html">Back</a></p>
+
 
 </body>
 </html>"

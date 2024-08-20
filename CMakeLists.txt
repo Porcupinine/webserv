@@ -31,6 +31,7 @@ add_executable(webserver
 	src/Response/Response.cpp 
 	src/Response/Utils.cpp
 	src/Cookies/Cookies.cpp
+		src/CGI/ReadFromCGI.cpp
 )
 
 

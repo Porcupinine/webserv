@@ -34,7 +34,7 @@ def uploadFile() -> (int, str):
     try:
         with open(os.path.join(path), 'wb') as f:
             f.write(fileData.file.read())
-        return 201, f"Well done!!!\n"
+        return 201, f"Thanks for your file!\n"
     except:
         return 500, "Ooopsie!!!\n"
 
@@ -68,9 +68,8 @@ try:
         
         <h1>Welcome to the ______ webserv!!</h1>
         
-        <p>Thank you for your file!</p>
         <p> {message}</p>
-           <p><a href="/upload.html">Upload another picture</a></p>
+           <p><a href="/upload.html">Give us more data?</a></p>
         <p><a href="/index.html">Back</a></p>
         
         </body>
