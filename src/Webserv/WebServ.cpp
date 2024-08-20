@@ -6,7 +6,7 @@
 /*   By: dmaessen <dmaessen@student.42.fr>            +#+                     */
 /*                                                   +#+                      */
 /*   Created: 2024/08/19 12:55:16 by dmaessen      #+#    #+#                 */
-/*   Updated: 2024/08/19 20:26:24 by ewehl         ########   odam.nl         */
+/*   Updated: 2024/08/20 12:46:22 by ewehl         ########   odam.nl         */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -172,7 +172,8 @@ void	WebServ::newConnection(SharedData* shared) {
 	auto clientShared = std::make_shared<SharedData>();
 	clientShared->fd = clientFd;
 	clientShared->epoll_fd = shared->epoll_fd;
-	clientShared->cgi_fd = -1;
+	clientShared->cgi_write = -1;
+	clientShared->cgi_read = -1;
 	clientShared->cgi_pid = -1;
 	clientShared->status = Status::reading;
 	clientShared->request.clear();
@@ -218,13 +219,19 @@ void	WebServ::run() {
 					cgiHandler(shared, req);
 				shared->request.clear();
 			}
-			if ((_events[idx].events & EPOLLHUP) && shared->status == Status::in_cgi){
-				std::cout << "in WebServ cgi\n"; //TODO read from cgi fd here
-				 readCGI(shared);
+			if ((_events[idx].events & EPOLLOUT) && shared->status == Status::start_cgi){
+				std::cout << "in writeCGI \n";
+				writeCGI(shared, req);
+			}
+			if ((_events[idx].events & EPOLLIN) && shared->status == Status::in_cgi){
+				std::cout << "in ReadCGI \n";
+				readCGI(shared);
+				finishCGI(shared);
 			}
 			if ((_events[idx].events & EPOLLOUT) && shared->status == Status::writing)
 				writeData(shared);
-			if ((_events[idx].events & EPOLLERR) || shared->status == Status::closing) {
+			if ((_events[idx].events & (EPOLLERR | EPOLLHUP)) || shared->status == Status::closing) {
+				(_events[idx].events == EPOLLERR) ? closeConnection(shared) : (void)(std::cout << "EPOLLHUP..\n") ; 
 				std::cout << RED << "HERE" << RESET << std::endl;
 				closeCGIfds(shared);
 				closeConnection(shared);
@@ -281,9 +288,13 @@ void WebServ::_checkHangingSockets(SharedData *data) {
                 data->response_code = 504;
 				std::time(&(data->timestamp_last_request));
 				data->status = Status::handling_request;
-                if (data->cgi_fd != -1){
-                    close(data->cgi_fd);
-                    data->cgi_fd = -1;
+                if (data->cgi_read != -1){
+                    close(data->cgi_read);
+                    data->cgi_read = -1;
+                }
+				if (data->cgi_write != -1){
+                    close(data->cgi_write);
+                    data->cgi_write = -1;
                 }
                 if (kill(data->cgi_pid, 0) == 0) {
                     kill(data->cgi_pid, SIGTERM);
