@@ -6,7 +6,7 @@
 /*   By: dmaessen <dmaessen@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2024/07/07 15:50:05 by dmaessen          #+#    #+#             */
-/*   Updated: 2024/08/20 15:16:41 by dmaessen         ###   ########.fr       */
+/*   Updated: 2024/08/20 15:34:42 by dmaessen         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -446,9 +446,7 @@ int ParseRequest::parsePath(const std::string &line, size_t i, struct SharedData
     else if (cgiInvolved(_path) == true) {
 		_path = current + _path;
     }
-    else if (isFileExists(_path))
-        _path = _path;
-    else if (_dir == false){
+    else if (_dir == false && !isFileExists(_path)){
         _path = _absPathRoot + abspath + _path;
     }
     // std::cout << "PATH HERE= " << _path << " ABS= " << _absPathRoot << " RAW PATH = " << _rawPath <<"\n"; // to rm
