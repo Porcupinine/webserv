@@ -1,6 +1,6 @@
 #!/bin/bash
 
-#check if exists, delete, call files again?
+#check if exists, delete, call files again? parse body to get
 
 # Check if UPLOAD_DIR is set
 if [ -z "$UPLOAD_DIR" ]; then
@@ -9,8 +9,8 @@ if [ -z "$UPLOAD_DIR" ]; then
     exit 1
 fi
 
-# Get directoryIRECTORY="$UPLOAD_DIR"
-
+# Get directory
+DIRECTORY="$UPLOAD_DIR"
 
 # Build body
 BODY="<!DOCTYPE html>
@@ -20,7 +20,7 @@ BODY="<!DOCTYPE html>
 <h1>File was successfully deleted!!</h1>
 
 <p>We are sad to see your data go!</p>
-<p> {message}</p>
+<p><a href=\"$DIRECTORY/files.sh\">Back</a></p>
 
 
 </body>

@@ -285,6 +285,7 @@ void WebServ::_checkHangingSockets(SharedData *data) {
                     close(data->cgi_fd);
                     data->cgi_fd = -1;
                 }
+				std::cerr << "\n\n\n-----------------------------------------------------------------------------------\n" << data->cgi_pid << "\n" << "--------------------------------------------------------------------------------------------\n\n\n";
                 if (kill(data->cgi_pid, 0) == 0) {
                     kill(data->cgi_pid, SIGTERM);
                 }

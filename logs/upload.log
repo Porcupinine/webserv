@@ -635,3 +635,26 @@ INFO:__main__:body: <!DOCTYPE html>
         
         </body>
         </html>
+INFO:__main__:will upload data
+INFO:__main__:will upload data
+INFO:__main__:header: HTTP/1.1 201
+        Content-Length: 302
+        Content-type: text/html
+        Connection: close
+        Date: Tue, 20 Aug 2024 15:29:41 GMT
+        Last-Modified: Tue, 20 Aug 2024 15:29:41 GMT
+        Server: 
+
+INFO:__main__:body: <!DOCTYPE html>
+        <html>
+        <body>
+        
+        <h1>Welcome to the ______ webserv!!</h1>
+        
+        <p> Thanks for your file!
+</p>
+           <p><a href="/upload.html">Give us more data?</a></p>
+        <p><a href="/index.html">Back</a></p>
+        
+        </body>
+        </html>
