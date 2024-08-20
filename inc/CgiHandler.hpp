@@ -15,11 +15,7 @@
 #define CGI_HPP
 
 int cgiHandler(SharedData* shared, ParseRequest& request);
-//class CGI {
-//private:
-//public:
-//	int cgiHandler(ParseRequest& request);
-//};
+void readCGI(SharedData* shared);
 
 
 #endif //CGI_HPP

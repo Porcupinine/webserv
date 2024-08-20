@@ -6,7 +6,7 @@
 /*   By: dmaessen <dmaessen@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2024/07/31 15:50:10 by lpraca-l          #+#    #+#             */
-/*   Updated: 2024/08/20 10:09:51 by dmaessen         ###   ########.fr       */
+/*   Updated: 2024/08/20 10:43:24 by dmaessen         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -26,13 +26,12 @@
 //TODO need the server info
 
 namespace {
-	void addToEpoll(SharedData* shared, int fd, uint32_t event){
+	void addToEpoll(SharedData* shared, int fd){
 		epoll_event newEvent {};
 
 		newEvent.data.fd = fd;
-		newEvent.events = event | EPOLLHUP | EPOLLERR;
+		newEvent.events = EPOLLIN | EPOLLHUP | EPOLLERR;
 		newEvent.data.ptr = shared;
-		shared->cgi_fd = fd;
 		if (epoll_ctl(shared->epoll_fd, EPOLL_CTL_ADD, fd, &newEvent) < 0)
 			std::cerr<<"Failed to poll\n"; //TODO error handle
 //			throw ServerException("Failed to register with epoll");
@@ -133,6 +132,7 @@ int cgiHandler(SharedData* shared, ParseRequest& request) {
 		std::cerr<<"Pipe child failed, you gotta call Mario!\n";
 		return 1;
 	}
+//	addToEpoll(shared, pipeChildToParent[0]);
 
 	// printf("pPtC[0] = %d\t pPtC[1] = %d\n", pipeParentToChild[0], pipeParentToChild[1]);
 	// printf("pCtP[0] = %d\t pCtP[1] = %d\n", pipeChildToParent[0], pipeChildToParent[1]);
@@ -147,32 +147,36 @@ int cgiHandler(SharedData* shared, ParseRequest& request) {
 		close(pipeChildToParent[0]);
 		runChild(request, pipeParentToChild[0], pipeChildToParent[1], shared);
 	} else {
+		shared->cgi_pid = pid;
 		close(pipeParentToChild[0]);
 		close(pipeChildToParent[1]);
-		addToEpoll(shared, pipeParentToChild[1], EPOLLOUT);
-		addToEpoll(shared, pipeChildToParent[0], EPOLLIN);
+		addToEpoll(shared, pipeChildToParent[0]);
+		shared->cgi_fd = pipeChildToParent[0];
 		auto body = request.getBodyMsg();
-		if(write(pipeParentToChild[1], body.data(), body.size()) == -1){
+		if(write(pipeParentToChild[1], body.c_str(), body.size()) == -1){
 			if (errno == EPIPE) {
-				std::cerr << "Broken pipe while writing to child process!\n";
+				std::cerr << "Broken pipe while wrting to child process!\n";
 			}
 		}
 		// close(pipeParentToChild[1]);
 		std::cout<<"body done!\n";
 
-		ssize_t buffLen = 0;
-		std::string response;
-		std::string buffer(BUFFER_SIZE, '\0');
-		while ((buffLen = ::read(pipeChildToParent[0], buffer.data(), BUFFER_SIZE)) > 0) {
-			response.append(buffer.data(), buffLen);
-		}
-		if (buffLen < 0) {
-			std::cerr<<"Failed to read!\n";
-		}
-		std::cout<<"------------response-------------\n\'"<<response<<"\'\n";
-		shared->response = response + "\0";
-		shared->status = Status::writing;
+		//this gets its own function
+//		ssize_t buffLen = 0;
+//		std::string response;
+//		std::string buffer(BUFFER_SIZE, '\0');
+//		while ((buffLen = ::read(pipeChildToParent[0], buffer.data(), BUFFER_SIZE)) > 0) {
+//			response.append(buffer.c_str(), buffLen);
+//		}
+//		if (buffLen < 0) {
+//			std::cerr<<"Failed to read!\n";
+//		}
+//		std::cout<<"------------response-------------\n\'"<<response<<"\'\n";
+//		shared->response = response + "\0";
+//		shared->status = Status::writing;
+//		shared->connection_closed = true;
 		close(pipeParentToChild[0]); // Close the read end after reading
+		shared->status = Status::in_cgi;
 		int status;
 		if (waitpid(pid, &status, 0) == -1) {
 			std::cerr << "Failed to wait for child process\n";

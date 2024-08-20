@@ -220,7 +220,7 @@ void	WebServ::run() {
 			}
 			if ((_events[idx].events & EPOLLHUP) && shared->status == Status::in_cgi){
 				std::cout << "in WebServ cgi\n"; //TODO read from cgi fd here
-				// readCgi();
+				 readCGI(shared);
 			}
 			if ((_events[idx].events & EPOLLOUT) && shared->status == Status::writing)
 				writeData(shared);
