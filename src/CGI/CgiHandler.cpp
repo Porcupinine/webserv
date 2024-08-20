@@ -6,7 +6,7 @@
 /*   By: dmaessen <dmaessen@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2024/07/31 15:50:10 by lpraca-l          #+#    #+#             */
-/*   Updated: 2024/08/19 16:19:51 by dmaessen         ###   ########.fr       */
+/*   Updated: 2024/08/20 10:09:51 by dmaessen         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -26,12 +26,13 @@
 //TODO need the server info
 
 namespace {
-	void addToEpoll(SharedData* shared, int fd){
+	void addToEpoll(SharedData* shared, int fd, uint32_t event){
 		epoll_event newEvent {};
 
 		newEvent.data.fd = fd;
-		newEvent.events = EPOLLHUP;
+		newEvent.events = event | EPOLLHUP | EPOLLERR;
 		newEvent.data.ptr = shared;
+		shared->cgi_fd = fd;
 		if (epoll_ctl(shared->epoll_fd, EPOLL_CTL_ADD, fd, &newEvent) < 0)
 			std::cerr<<"Failed to poll\n"; //TODO error handle
 //			throw ServerException("Failed to register with epoll");
@@ -133,6 +134,9 @@ int cgiHandler(SharedData* shared, ParseRequest& request) {
 		return 1;
 	}
 
+	// printf("pPtC[0] = %d\t pPtC[1] = %d\n", pipeParentToChild[0], pipeParentToChild[1]);
+	// printf("pCtP[0] = %d\t pCtP[1] = %d\n", pipeChildToParent[0], pipeChildToParent[1]);
+
 	int pid = fork();
 	if (pid == -1) {
 		std::cerr<<"There are no forks, you can try the philos!\n";
@@ -145,15 +149,15 @@ int cgiHandler(SharedData* shared, ParseRequest& request) {
 	} else {
 		close(pipeParentToChild[0]);
 		close(pipeChildToParent[1]);
-		// addToEpoll(shared, pipeParentToChild[1]);
-		// addToEpoll(shared, pipeChildToParent[0]);
+		addToEpoll(shared, pipeParentToChild[1], EPOLLOUT);
+		addToEpoll(shared, pipeChildToParent[0], EPOLLIN);
 		auto body = request.getBodyMsg();
 		if(write(pipeParentToChild[1], body.data(), body.size()) == -1){
 			if (errno == EPIPE) {
 				std::cerr << "Broken pipe while writing to child process!\n";
 			}
 		}
-		close(pipeParentToChild[1]);
+		// close(pipeParentToChild[1]);
 		std::cout<<"body done!\n";
 
 		ssize_t buffLen = 0;
