@@ -36,7 +36,7 @@
 #define ONE_MB					1048576 // Default max body size (1MB)
 #define BUFFER_SIZE				5000
 #define SERVER_TIMEOUT			5
-#define CGI_TIMEOUT				60
+#define CGI_TIMEOUT				30
 #define MAX_EVENTS				20
 #define BACKLOG					20
 #define SERVER_MAX_NO_REQUEST	5

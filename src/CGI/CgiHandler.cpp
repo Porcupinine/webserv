@@ -106,9 +106,11 @@ namespace {
 			std::cerr << strerror(errno)<< "\n";
 			close(pipeRead); pipeRead = -1;
 			close(pipeWrite); pipeWrite = -1;
+			shared->response_code = 500;
+			shared->status = Status::handling_request;
 			freeEnv(env); // Will this leak if I kill the process?
 			// DOMI
-			return 1;
+			exit(1);
 		}
 		return 0;
 	}
