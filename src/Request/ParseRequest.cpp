@@ -6,7 +6,7 @@
 /*   By: dmaessen <dmaessen@student.42.fr>            +#+                     */
 /*                                                   +#+                      */
 /*   Created: 2024/07/07 15:50:05 by dmaessen      #+#    #+#                 */
-/*   Updated: 2024/08/19 16:10:44 by ewehl         ########   odam.nl         */
+/*   Updated: 2024/08/20 14:00:24 by ewehl         ########   odam.nl         */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -15,8 +15,10 @@
 
 ParseRequest::ParseRequest::ParseRequest(struct SharedData* shared) : _methodType(""), _path(""), _version(""), _bodyMsg(""), _port(0), _returnValue(200), _query(""), _redirection(false), _dir(false), _rawPath("") {
     initHeaders();
-    if (shared->request.empty())
+    if (shared->request.empty()){
         shared->status = Status::closing;
+        return;
+    }
     parseStr(shared->request, shared);
     if (cgiInvolved(_path) == false)
 		shared->status = Status::writing;
