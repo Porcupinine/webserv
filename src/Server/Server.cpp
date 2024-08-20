@@ -6,7 +6,7 @@
 /*   By: dmaessen <dmaessen@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2024/08/19 12:54:58 by dmaessen          #+#    #+#             */
-/*   Updated: 2024/08/20 12:35:26 by dmaessen         ###   ########.fr       */
+/*   Updated: 2024/08/20 13:05:42 by dmaessen         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -92,8 +92,9 @@ void Server::_listenSocket(int backlog) {
 void Server::_registerWithEpoll(int epollFd, int fd, uint32_t events) {
 	epoll_event	event;
 
-	_shared->cgi_fd = -1;	//Laura??
-	_shared->cgi_pid = -1;	//Laura??
+	_shared->cgi_read = -1;		//Laura??
+	_shared->cgi_write = -1;	//Laura??
+	_shared->cgi_pid = -1;		//Laura??
 
 	_shared->request = "";
 	_shared->response = "";
