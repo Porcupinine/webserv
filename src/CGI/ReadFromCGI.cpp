@@ -1,16 +1,17 @@
 /* ************************************************************************** */
 /*                                                                            */
-/*                                                        ::::::::            */
-/*   ReadFromCGI.cpp                                    :+:    :+:            */
-/*                                                     +:+                    */
-/*   By: laura <laura@student.codam.nl>               +#+                     */
-/*                                                   +#+                      */
-/*   Created: 2024/08/20 08:00:47 by laura         #+#    #+#                 */
-/*   Updated: 2024/08/20 08:00:47 by laura         ########   odam.nl         */
+/*                                                        :::      ::::::::   */
+/*   ReadFromCGI.cpp                                    :+:      :+:    :+:   */
+/*                                                    +:+ +:+         +:+     */
+/*   By: dmaessen <dmaessen@student.42.fr>          +#+  +:+       +#+        */
+/*                                                +#+#+#+#+#+   +#+           */
+/*   Created: 2024/08/20 08:00:47 by laura             #+#    #+#             */
+/*   Updated: 2024/08/20 10:46:33 by dmaessen         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
 #include "../../inc/ParseRequest.hpp"
+#include "../../inc/CgiHandler.hpp"
 #include <unistd.h>
 #include <string>
 #include <filesystem>

@@ -6,7 +6,7 @@
 #    By: dmaessen <dmaessen@student.42.fr>          +#+  +:+       +#+         #
 #                                                 +#+#+#+#+#+   +#+            #
 #    Created: 2024/08/19 12:34:37 by dmaessen          #+#    #+#              #
-#    Updated: 2024/08/19 16:22:11 by dmaessen         ###   ########.fr        #
+#    Updated: 2024/08/20 10:48:14 by dmaessen         ###   ########.fr        #
 #                                                                              #
 # **************************************************************************** #
 
@@ -36,6 +36,7 @@ SRC =  src/main.cpp \
 	src/Utils/FdManagement.cpp \
 	src/Utils/StructUtils.cpp \
 	src/CGI/CgiHandler.cpp \
+	src/CGI/ReadFromCGI.cpp \
 	src/Request/ParseRequest.cpp \
 	src/Request/UtilsRequest.cpp \
 	src/Response/Header.cpp \

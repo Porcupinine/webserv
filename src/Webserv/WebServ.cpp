@@ -6,12 +6,13 @@
 /*   By: dmaessen <dmaessen@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2024/08/19 12:55:16 by dmaessen          #+#    #+#             */
-/*   Updated: 2024/08/20 10:10:47 by dmaessen         ###   ########.fr       */
+/*   Updated: 2024/08/20 10:47:42 by dmaessen         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
 #include "../../inc/WebServ.hpp"
 #include "../../inc/VirtualHost.hpp"
+#include "../../inc/CgiHandler.hpp"
 #include "../../inc/Utils.hpp"
 #include <fcntl.h>
 #include <ctime>
@@ -220,7 +221,7 @@ void	WebServ::run() {
 			}
 			if ((_events[idx].events & EPOLLHUP) && shared->status == Status::in_cgi){
 				std::cout << "in WebServ cgi\n"; //TODO read from cgi fd here
-				 readCGI(shared);
+				readCGI(shared);
 			}
 			if ((_events[idx].events & EPOLLOUT) && shared->status == Status::writing)
 				writeData(shared);
