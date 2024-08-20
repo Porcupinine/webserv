@@ -6,7 +6,7 @@
 /*   By: dmaessen <dmaessen@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2024/07/07 15:50:05 by dmaessen          #+#    #+#             */
-/*   Updated: 2024/08/20 10:56:50 by dmaessen         ###   ########.fr       */
+/*   Updated: 2024/08/20 12:39:22 by dmaessen         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -378,19 +378,6 @@ int ParseRequest::parseFirstline(const std::string &info, struct SharedData* sha
     return parsePath(line, i, *shared);
 }
 
-// std::string ParseRequest::isolateDir(std::string &path) {
-//     int count = std::count(path.begin(), path.end(), "/");
-//     std::cout << "HOW MAYBE DASH = " << count << "\n";
-    
-
-//     // DO TWO THINGS:
-//         // IF ITS TWO AND INDEX 0 AND END OF STRING THEN SEARCH FOR INDEX (AND DO 404 IF NOT FOUND)
-//         // ITS MORE THAN 1 AND NOT THE ABOVE THEN ISOLATE FROM INDEX 0 UNTIL FIND NEXT /
-
-
-//     return path; 
-// }
-
 int ParseRequest::parsePath(const std::string &line, size_t i, struct SharedData &shared) {
     size_t j;
 
@@ -410,15 +397,8 @@ int ParseRequest::parsePath(const std::string &line, size_t i, struct SharedData
 	
     if (_path == "/favicon.ico")
 		return _returnValue;
-
-    // std::cout << GREEN << "getting here" RESET << std::endl; // to rm
-    // Locations *loc = shared.server->getLocation(isolateDir(_path));
+        
     Locations *loc = shared.server->getLocation(_path);
-    // if (loc != nullptr) { // to rm
-    //    std::cout << loc->specifier << std::endl; // segf on this
-    //    std::map<int, std::string> redirMap = shared.server->getRedirect(_path);
-    //    std::cout << "url = " <<  redirMap.begin()->second << std::endl; //TODO started segfaulting here?
-    // }
 
     std::string abspath = shared.server->getRootFolder(_path);
     std::string current = "";
@@ -436,23 +416,29 @@ int ParseRequest::parsePath(const std::string &line, size_t i, struct SharedData
     }
 
     _absPathRoot = current;
+    
+    Locations *spe = shared.server->getSpecifier(_path);
+    if (spe != nullptr) {
+        if (spe->root_dir != ""){
+            _dir = true;
+            _redirection = true;
+            size_t pos = 0;
+            while ((pos = _path.find(spe->specifier, pos)) != std::string::npos) {
+                _path.erase(pos, spe->specifier.length());
+            }
+            _path = _absPathRoot + spe->root_dir + _path;
+            _rawPath = spe->specifier;
+        }
+    }
+    
 	if ((_path[0] == '/' && _path.size() == 2) || _path == "/")
         _path = _absPathRoot + abspath + "/" + shared.server->getIndex(_path);
-    // ADD SOMETHING THAT IF IT ENDS ON / LOOK FOR THE INDEX FILE
-    // else if () {
-    // maybe a for loop with auto looping through the locations struct and see if it finds that words at the start of the path
-    // then stops when found  (or nothing if not found)
-    // and then trim that location if needed (as the right root folder is already set above) 
-    // so maybe do a find in the end 
-    //}
     else if (loc != nullptr) {
-        std::cout << "this one2\n"; // to rm
 		if (loc->specifier == _path)
 			_redirection = true;
         std::map<int, std::string> redirMap2 = shared.server->getRedirect(_path);
-		if (loc->specifier == _path && redirMap2.begin()->first == 0){
+		if (loc->specifier == _path && redirMap2.begin()->first == 0 && _dir == false){
             _dir = true;
-            std::cout << "this one3\n"; // to rm
             _rawPath = _path;
 		    _path = _absPathRoot + abspath + _path;
         }
@@ -460,10 +446,10 @@ int ParseRequest::parsePath(const std::string &line, size_t i, struct SharedData
     else if (cgiInvolved(_path) == true) {
 		_path = current + _path;
     }
-    else {
+    else if (_dir == false){
         _path = _absPathRoot + abspath + _path;
     }
-    std::cout << "PATH HERE= " << _path << " ABS= " << _absPathRoot << "\n"; // to rm
+    // std::cout << "PATH HERE= " << _path << " ABS= " << _absPathRoot << " RAW PATH = " << _rawPath <<"\n"; // to rm
     return parseVersion(line, j, shared);
 }
 
