@@ -1,12 +1,12 @@
 /* ************************************************************************** */
 /*                                                                            */
-/*                                                        ::::::::            */
-/*   Server.cpp                                         :+:    :+:            */
-/*                                                     +:+                    */
-/*   By: dmaessen <dmaessen@student.42.fr>            +#+                     */
-/*                                                   +#+                      */
-/*   Created: 2024/08/19 12:54:58 by dmaessen      #+#    #+#                 */
-/*   Updated: 2024/08/20 11:58:16 by ewehl         ########   odam.nl         */
+/*                                                        :::      ::::::::   */
+/*   Server.cpp                                         :+:      :+:    :+:   */
+/*                                                    +:+ +:+         +:+     */
+/*   By: dmaessen <dmaessen@student.42.fr>          +#+  +:+       +#+        */
+/*                                                +#+#+#+#+#+   +#+           */
+/*   Created: 2024/08/19 12:54:58 by dmaessen          #+#    #+#             */
+/*   Updated: 2024/08/20 13:05:42 by dmaessen         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -137,6 +137,21 @@ Locations* Server::getLocation(std::string &locationSpec) const {
 	return nullptr;
 }
 
+Locations* Server::getSpecifier(const std::string &path) const {
+    if (_configs) {
+        auto it = std::find_if(_configs->locations.begin(), _configs->locations.end(),
+            [&path](const std::shared_ptr<struct Locations>& loc) {
+                const std::string& specifier = loc->specifier;
+                return (path == specifier || 
+                        (path.find(specifier) == 0 && path[specifier.length()] == '/'));
+            });
+        if (it != _configs->locations.end()) {
+            return it->get();
+        }
+    }
+    return nullptr;
+}
+
 int Server::getMaxNrOfRequests() const {
 	return _maxNrOfRequests;
 }
@@ -163,6 +178,7 @@ bool Server::getDirListing(const std::string &location) const {
 		auto it = std::find_if(_configs->locations.begin(), _configs->locations.end(),
 			[location](std::shared_ptr<struct Locations> const& loc) { return loc->specifier == location; });
 		if (it != _configs->locations.end()) {
+			std::cout <<"DIR\n";
 			return it->get()->dir_listing;
 		}
 	}

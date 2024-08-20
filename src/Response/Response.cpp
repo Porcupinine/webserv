@@ -6,7 +6,7 @@
 /*   By: dmaessen <dmaessen@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2024/07/07 15:49:40 by dmaessen          #+#    #+#             */
-/*   Updated: 2024/08/19 13:49:42 by dmaessen         ###   ########.fr       */
+/*   Updated: 2024/08/20 12:40:40 by dmaessen         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -53,7 +53,6 @@ std::string Response::giveResponse(ParseRequest& request, struct SharedData &sha
     _isAutoIndex = shared.server_config->auto_index;
     if (request.getRedirection() == true) {
         _isAutoIndex = shared.server->getDirListing(request.getRawPath());
-        std::cout << "AM I OVER HERE??? HELOOOO " << _isAutoIndex << "\n"; // to rm
         if (_isAutoIndex == false && (_statusCode != 301 && _statusCode != 302 && _statusCode != 307 && _statusCode != 308))
             _statusCode = 403;
     }
@@ -97,7 +96,7 @@ void Response::getMethod(ParseRequest& request, struct SharedData* shared) {
         readContent(request, shared);
         _response = buildResponseHeader(request, shared);
     }
-    else if (request.getRedirection() == true) { // check on this as could be a dir listing
+    else if (request.getRedirection() == true) {
         if (_statusCode == 301 || _statusCode == 302 || _statusCode == 307 || _statusCode == 308)
             _response = errorHtml(_statusCode, shared, request);
         else
@@ -125,7 +124,7 @@ void Response::deleteMethod(ParseRequest& request, struct SharedData* shared) {
 
     if (fileExists(request.getPath()) == true){
         if (remove(request.getPath().c_str()) == 0)
-            _statusCode = 204; // meaning no content, returned to indicate success and there is no body message
+            _statusCode = 204;
         else
             _statusCode = 403;
     }
@@ -200,13 +199,13 @@ std::string Response::errorHtml(unsigned int error, struct SharedData* shared, P
 
 void Response::readContent(ParseRequest& request, struct SharedData* shared) {
     std::ifstream file;
-
-    if (fileExists(request.getPath()) == true && request.getRawPath() == "" && request.getRawPath() == "") {
+    
+    if (fileExists(request.getPath()) == true && request.getRawPath() == "") {
         file.open((request.getPath().c_str()), std::ifstream::in);
         if (!file.is_open()) {
             _statusCode = 403;
             _response = errorHtml(_statusCode, shared, request);
-            return ; // or break ??
+            return ;
         }
         std::stringstream buffer;
         buffer << file.rdbuf();
@@ -214,17 +213,13 @@ void Response::readContent(ParseRequest& request, struct SharedData* shared) {
         _response = content;
         file.close();
     }
-    // else if (_isAutoIndex == false && request.getDir() == true && fileExists(request.getPath() + "/index.html")) {
     else if (_isAutoIndex == false && request.getDir() == true && fileExists(request.getPath() + "/" + shared->server->getIndex(request.getRawPath()))) {
-        // CHEK IF THERE IS ALREADY A BACK SLASH OR NOT IF NOT ADD ELSE TRIM OR SOMETHING TO NOT HAVE A BUG THERE
-        
-        // std::string f = request.getPath() + "/" + shared->server->getIndex(request.getRawPath()); // put this back when fixed
-        std::string f = request.getPath() + "/index.html";
+        std::string f = request.getPath() + "/" + shared->server->getIndex(request.getRawPath());
         file.open(f.c_str(), std::ifstream::in);
         if (!file.is_open()) {
             _statusCode = 403;
             _response = errorHtml(_statusCode, shared, request);
-            return ; // or break ??
+            return ;
         }
         std::stringstream buffer;
         buffer << file.rdbuf();
@@ -240,7 +235,7 @@ void Response::readContent(ParseRequest& request, struct SharedData* shared) {
         _type = "text/html";
     }
     else {
-        _statusCode = 404; // not found
+        _statusCode = 404;
         _response = errorHtml(_statusCode, shared, request);
     }
 }
@@ -263,7 +258,7 @@ std::string Response::getResponse(void) const {
 /* UTILS */
 bool Response::fileExists(const std::string& path) {
     struct stat buffer;
-    std::cout << "PATH:"<<path<<"\n"; // to rm
+    
     if (stat(path.c_str(), &buffer) == 0)
         return true;
     return false;

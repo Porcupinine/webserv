@@ -6,12 +6,13 @@
 /*   By: dmaessen <dmaessen@student.42.fr>            +#+                     */
 /*                                                   +#+                      */
 /*   Created: 2024/08/19 12:55:16 by dmaessen      #+#    #+#                 */
-/*   Updated: 2024/08/20 15:39:44 by ewehl         ########   odam.nl         */
+/*   Updated: 2024/08/20 12:46:22 by ewehl         ########   odam.nl         */
 /*                                                                            */
 /* ************************************************************************** */
 
 #include "../../inc/WebServ.hpp"
 #include "../../inc/VirtualHost.hpp"
+#include "../../inc/CgiHandler.hpp"
 #include "../../inc/Utils.hpp"
 #include <fcntl.h>
 #include <ctime>
@@ -55,6 +56,17 @@ WebServ::~WebServ() {
 	_sharedPtrs_SharedData.clear();
 	// _closeConnections();
 }
+
+// void WebServ::handleRequest(SharedData* shared) {
+// 	std::cout << PURPLE << "Do I get here handleReq?" << RESET << std::endl;
+// 	std::cout << "Received request:\n" << shared->request << std::endl;
+// 	shared->response = "HTTP/1.1 200 OK\r\n"
+// 	"Content-Type: text/plain\r\n"
+// 	"Content-Length: 13\r\n"
+// 	"\r\n"
+// 	"Hello, world!";
+// 	shared->status = Status::writing;
+// }
 
 void	WebServ::writeData(SharedData* shared) {
 	std::cout << PURPLE << "Inside WriteData" << RESET << std::endl;
@@ -184,7 +196,7 @@ void	WebServ::run() {
 			if ((_events[idx].events & EPOLLOUT) && shared->status == Status::writing)
 				writeData(shared);
 			if ((_events[idx].events & (EPOLLERR | EPOLLHUP)) || shared->status == Status::closing) {
-				// (_events[idx].events == EPOLLERR) ? closeConnection(shared) : (void)(std::cout << "EPOLLHUP..\n") ; 
+				// (_events[idx].events == EPOLLERR) ? closeConnection(shared) : (void)(std::cout << "EPOLLHUP..\n") ;
 				std::cout << RED << "HERE" << RESET << std::endl;
 				shared->request.clear(); // might introduce complications.. Guess well find out.
 				closeCGIfds(shared);

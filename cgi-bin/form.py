@@ -57,7 +57,7 @@ def fillForm():
     header = f"""HTTP/1.1 {status} OK\r
 Content-Length: {len(body)}\r
 Content-type: text/html\r
-Connection: close\r
+Connection: closed\r
 {cookie.output()}\r
 Date: {date}\r
 Last-Modified: {date}\r

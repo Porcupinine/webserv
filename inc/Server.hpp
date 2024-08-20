@@ -6,7 +6,7 @@
 /*   By: dmaessen <dmaessen@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2024/08/19 12:54:28 by dmaessen          #+#    #+#             */
-/*   Updated: 2024/08/19 12:54:29 by dmaessen         ###   ########.fr       */
+/*   Updated: 2024/08/20 11:06:31 by dmaessen         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -51,6 +51,7 @@ public:
 		std::string							getUploadDir(const std::string &location) const;
 		std::set<std::string>				getAllowedMethods(const std::string &location) const;
 		std::shared_ptr<ServerConfig>		getConf();
+		Locations*							getSpecifier(const std::string &path) const;
 
 		class ServerException : public std::exception {
 		public:

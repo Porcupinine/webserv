@@ -1,12 +1,12 @@
 /* ************************************************************************** */
 /*                                                                            */
-/*                                                        ::::::::            */
-/*   ParseRequest.cpp                                   :+:    :+:            */
-/*                                                     +:+                    */
-/*   By: dmaessen <dmaessen@student.42.fr>            +#+                     */
-/*                                                   +#+                      */
-/*   Created: 2024/07/07 15:50:05 by dmaessen      #+#    #+#                 */
-/*   Updated: 2024/08/20 14:00:24 by ewehl         ########   odam.nl         */
+/*                                                        :::      ::::::::   */
+/*   ParseRequest.cpp                                   :+:      :+:    :+:   */
+/*                                                    +:+ +:+         +:+     */
+/*   By: dmaessen <dmaessen@student.42.fr>          +#+  +:+       +#+        */
+/*                                                +#+#+#+#+#+   +#+           */
+/*   Created: 2024/07/07 15:50:05 by dmaessen          #+#    #+#             */
+/*   Updated: 2024/08/20 15:34:42 by dmaessen         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -15,13 +15,13 @@
 
 ParseRequest::ParseRequest::ParseRequest(struct SharedData* shared) : _methodType(""), _path(""), _version(""), _bodyMsg(""), _port(0), _returnValue(200), _query(""), _redirection(false), _dir(false), _rawPath("") {
     initHeaders();
-    if (shared->request.empty()){
+    if (shared->request.empty())
         shared->status = Status::closing;
-        return;
-    }
     parseStr(shared->request, shared);
-    if (cgiInvolved(_path) == false)
+    if (cgiInvolved(_path) == false) {
+        shared->connection_closed = true;
 		shared->status = Status::writing;
+    }
 	std::cout << "response is " << shared->response << "\n"; // to rm
 }
 
@@ -170,7 +170,7 @@ std::string ParseRequest::setValue(const std::string &line) {
     i = line.find_first_of(":", 1);
     i = line.find_first_not_of(" ", i + 1);
     endline = line.find_first_of("\r", i);
-    line.substr(i, endline - 1); //TODO ignoring return value
+    line.substr(i, endline - 1);
     if (i != std::string::npos)
         res.append(line, i, std::string::npos);
     return rmSpaces(res);
@@ -259,12 +259,8 @@ void ParseRequest::setPort(std::string port) {
     if (port.size() < 5 && _returnValue == 200){
         try {
             _port = std::stoul(port);
-        } catch (const std::invalid_argument& e) {
-            std::cerr << "Error: Invalid port number (not a number)\n";
         } catch (const std::out_of_range& e) {
-            std::cerr << "Error: Port number out of range\n";
-        } catch (...) {
-            std::cerr << "Error: Unexpected error occurred trying to setPort\n";
+            std::cerr << "Error: Port number out of range "<<_port<< "\n";
         }
     }
     else
@@ -362,8 +358,15 @@ int ParseRequest::parseFirstline(const std::string &info, struct SharedData* sha
     size_t i;
     std::string line;
 
-    i = info.find_first_of('\n');
-    line = info.substr(0, i);
+    try {
+        i = info.find_first_of('\n');
+        line = info.substr(0, i);
+    } catch (const std::out_of_range& e) {
+        _returnValue = 400;
+        std::cerr << "Error: substring out of range: " << e.what() << "\n";
+        return _returnValue;
+    }
+
     i = line.find_first_of(' ');
     
     if (i == std::string::npos) {
@@ -374,19 +377,6 @@ int ParseRequest::parseFirstline(const std::string &info, struct SharedData* sha
     _methodType.assign(line, 0, i);
     return parsePath(line, i, *shared);
 }
-
-// std::string ParseRequest::isolateDir(std::string &path) {
-//     int count = std::count(path.begin(), path.end(), "/");
-//     std::cout << "HOW MAYBE DASH = " << count << "\n";
-    
-
-//     // DO TWO THINGS:
-//         // IF ITS TWO AND INDEX 0 AND END OF STRING THEN SEARCH FOR INDEX (AND DO 404 IF NOT FOUND)
-//         // ITS MORE THAN 1 AND NOT THE ABOVE THEN ISOLATE FROM INDEX 0 UNTIL FIND NEXT /
-
-
-//     return path; 
-// }
 
 int ParseRequest::parsePath(const std::string &line, size_t i, struct SharedData &shared) {
     size_t j;
@@ -408,13 +398,7 @@ int ParseRequest::parsePath(const std::string &line, size_t i, struct SharedData
     if (_path == "/favicon.ico")
 		return _returnValue;
 
-    // std::cout << GREEN << "getting here" RESET << std::endl; // to rm
-    // Locations *loc = shared.server->getLocation(isolateDir(_path));
     Locations *loc = shared.server->getLocation(_path);
-//    if (loc != nullptr) { // to rm
-//        std::cout << loc->specifier << std::endl; // segf on this
-//        std::map<int, std::string> redirMap = shared.server->getRedirect(_path);
-////        std::cout << "url = " <<  redirMap.begin()->second << std::endl; //TODO started segfaulting here?
 
     std::string abspath = shared.server->getRootFolder(_path);
     std::string current = "";
@@ -432,17 +416,29 @@ int ParseRequest::parsePath(const std::string &line, size_t i, struct SharedData
     }
 
     _absPathRoot = current;
+
+    Locations *spe = shared.server->getSpecifier(_path);
+    if (spe != nullptr) {
+        if (spe->root_dir != ""){
+            _dir = true;
+            _redirection = true;
+            size_t pos = 0;
+            while ((pos = _path.find(spe->specifier, pos)) != std::string::npos) {
+                _path.erase(pos, spe->specifier.length());
+            }
+            _path = _absPathRoot + spe->root_dir + _path;
+            _rawPath = spe->specifier;
+        }
+    }
+
 	if ((_path[0] == '/' && _path.size() == 2) || _path == "/")
         _path = _absPathRoot + abspath + "/" + shared.server->getIndex(_path);
-    // ADD SOMETHING THAT IF IT ENDS ON / LOOK FOR THE INDEX FILE
     else if (loc != nullptr) {
-        std::cout << "this one2\n"; // to rm
 		if (loc->specifier == _path)
 			_redirection = true;
         std::map<int, std::string> redirMap2 = shared.server->getRedirect(_path);
-		if (loc->specifier == _path && redirMap2.begin()->first == 0){
+		if (loc->specifier == _path && redirMap2.begin()->first == 0 && _dir == false){
             _dir = true;
-            std::cout << "this one3\n"; // to rm
             _rawPath = _path;
 		    _path = _absPathRoot + abspath + _path;
         }
@@ -450,10 +446,10 @@ int ParseRequest::parsePath(const std::string &line, size_t i, struct SharedData
     else if (cgiInvolved(_path) == true) {
 		_path = current + _path;
     }
-    else {
+    else if (_dir == false && !isFileExists(_path)){
         _path = _absPathRoot + abspath + _path;
     }
-    std::cout << "PATH HERE= " << _path << " ABS= " << _absPathRoot << "\n"; // to rm
+    // std::cout << "PATH HERE= " << _path << " ABS= " << _absPathRoot << " RAW PATH = " << _rawPath <<"\n"; // to rm
     return parseVersion(line, j, shared);
 }
 
