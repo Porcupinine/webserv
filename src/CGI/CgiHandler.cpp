@@ -6,7 +6,7 @@
 /*   By: laura <laura@student.codam.nl>               +#+                     */
 /*                                                   +#+                      */
 /*   Created: 2024/08/20 08:01:07 by laura         #+#    #+#                 */
-/*   Updated: 2024/08/20 13:04:37 by ewehl         ########   odam.nl         */
+/*   Updated: 2024/08/20 19:40:53 by ewehl         ########   odam.nl         */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -63,11 +63,15 @@ namespace {
 		env[count] = new char[tmp.size()];
 		std::strcpy(env[count], tmp.data());
 		count++;
-		tmp = "UPLOAD_DIR=" + request.getAbsPath() + shared->server_config->upload_dir; //TODO remove fucking point??
+		tmp = "UPLOAD_DIR=" + request.getAbsPath() + shared->server_config->upload_dir;
 		env[count] = new char[tmp.size()];
 		std::strcpy(env[count], tmp.data());
 		count++;
 		tmp = "SERVER=" + shared->server_config->server_name;
+		env[count] = new char[tmp.size()];
+		std::strcpy(env[count], tmp.data());
+		count++;
+		tmp = "FILENAME=";
 		env[count] = new char[tmp.size()];
 		std::strcpy(env[count], tmp.data());
 		count++;
@@ -98,8 +102,9 @@ namespace {
 			close(pipeRead); pipeRead = -1; // Close unused read end
 			close(pipeWrite); pipeWrite = -1; // Close the original pipe write end
 			freeEnv(env); // Will this leak if I kill the process?
-			// DOMI
-			return 1;
+			shared->response_code = 504;
+			shared->status = Status::handling_request;
+			std::exit(EXIT_FAILURE);
 		}
 		if (execve(argv[0], argv, env) == -1) {
 			std::cerr << "This is no middle age\n";
@@ -107,10 +112,11 @@ namespace {
 			close(pipeRead); pipeRead = -1;
 			close(pipeWrite); pipeWrite = -1;
 			freeEnv(env); // Will this leak if I kill the process?
-			// DOMI
-			return 1;
+			shared->response_code = 504;
+			shared->status = Status::handling_request;
+			std::exit(EXIT_FAILURE);
 		}
-		return 0;
+		std::exit(EXIT_SUCCESS);
 	}
 }
 
