@@ -6,7 +6,7 @@
 /*   By: dmaessen <dmaessen@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2024/08/19 12:54:23 by dmaessen          #+#    #+#             */
-/*   Updated: 2024/08/19 13:37:36 by dmaessen         ###   ########.fr       */
+/*   Updated: 2024/08/20 15:14:20 by dmaessen         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -127,6 +127,7 @@ enum class Method
 
 std::string     initMethodString(Method method);
 bool            cgiInvolved(const std::string& path);
+bool            isFileExists(const std::string& path);
 
 
 

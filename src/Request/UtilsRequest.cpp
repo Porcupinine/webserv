@@ -1,12 +1,12 @@
 /* ************************************************************************** */
 /*                                                                            */
-/*                                                        ::::::::            */
-/*   UtilsRequest.cpp                                   :+:    :+:            */
-/*                                                     +:+                    */
-/*   By: dmaessen <dmaessen@student.42.fr>            +#+                     */
-/*                                                   +#+                      */
-/*   Created: 2024/07/07 15:50:31 by dmaessen      #+#    #+#                 */
-/*   Updated: 2024/08/19 19:57:54 by ewehl         ########   odam.nl         */
+/*                                                        :::      ::::::::   */
+/*   UtilsRequest.cpp                                   :+:      :+:    :+:   */
+/*                                                    +:+ +:+         +:+     */
+/*   By: dmaessen <dmaessen@student.42.fr>          +#+  +:+       +#+        */
+/*                                                +#+#+#+#+#+   +#+           */
+/*   Created: 2024/07/07 15:50:31 by dmaessen          #+#    #+#             */
+/*   Updated: 2024/08/20 15:14:02 by dmaessen         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -48,3 +48,10 @@ bool cgiInvolved(const std::string& path) {
     return false;
 }
 
+bool isFileExists(const std::string& path) {
+    struct stat buffer;
+    
+    if (stat(path.c_str(), &buffer) == 0)
+        return true;
+    return false;
+}

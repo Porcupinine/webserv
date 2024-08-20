@@ -33,8 +33,8 @@ if [ -d "$DIRECTORY" ]; then
         if [ -f "$FILE" ]; then
             FILENAME=$(basename "$FILE")
             BODY+="<li>"
-            BODY+="<a href=\"uploads/$FILENAME\" target=\"_blank\">$FILENAME               </a>"
-            BODY+="<form style=\"display:inline;\" method=\"delete\" action=\"/cgi-bin/delete.py\">"
+            BODY+="<a href=\"$DIRECTORY/$FILENAME\" target=\"_blank\">$FILENAME               </a>"
+            BODY+="<form style=\"display:inline;\" method=\"post\" action=\"/cgi-bin/delete.sh\">"
             BODY+="<input type=\"hidden\" name=\"file\" value=\"$FILENAME\" />"
             BODY+="<input type=\"submit\" value=\"Delete\" />"
             BODY+="</form>"
