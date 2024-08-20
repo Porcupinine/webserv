@@ -6,7 +6,7 @@
 /*   By: dmaessen <dmaessen@student.42.fr>            +#+                     */
 /*                                                   +#+                      */
 /*   Created: 2024/08/19 12:55:16 by dmaessen      #+#    #+#                 */
-/*   Updated: 2024/08/20 12:46:22 by ewehl         ########   odam.nl         */
+/*   Updated: 2024/08/20 13:05:22 by ewehl         ########   odam.nl         */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -231,7 +231,7 @@ void	WebServ::run() {
 			if ((_events[idx].events & EPOLLOUT) && shared->status == Status::writing)
 				writeData(shared);
 			if ((_events[idx].events & (EPOLLERR | EPOLLHUP)) || shared->status == Status::closing) {
-				(_events[idx].events == EPOLLERR) ? closeConnection(shared) : (void)(std::cout << "EPOLLHUP..\n") ; 
+				// (_events[idx].events == EPOLLERR) ? closeConnection(shared) : (void)(std::cout << "EPOLLHUP..\n") ; 
 				std::cout << RED << "HERE" << RESET << std::endl;
 				closeCGIfds(shared);
 				closeConnection(shared);
