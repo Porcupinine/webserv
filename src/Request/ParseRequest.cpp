@@ -6,7 +6,7 @@
 /*   By: dmaessen <dmaessen@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2024/07/07 15:50:05 by dmaessen          #+#    #+#             */
-/*   Updated: 2024/08/20 10:10:05 by dmaessen         ###   ########.fr       */
+/*   Updated: 2024/08/20 10:34:43 by dmaessen         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -140,29 +140,14 @@ std::string ParseRequest::readLine(const std::string &str, size_t &i) {
 
     if (i == std::string::npos) 
         return "";
-
-    try {
-        j = str.find_first_of('\n', i);
-        if (j != std::string::npos && j >= i) {
-            res = str.substr(i, j - i);
-        } else {
-            std::cerr << "Error: substring out of range or newline not found.\n";
-            return "";
-        }
-
-        if (!res.empty() && res.back() == '\r')
-            res.pop_back();
-
-        if (j == std::string::npos)
-            i = j;
-        else
-            i = j + 1;
-
-    } catch (const std::out_of_range& e) {
-        std::cerr << "Error: substring out of range: " << e.what() << "\n";
-        return "";
-    }
-
+    j = str.find_first_of('\n', i);
+    res = str.substr(i, j - i);
+    if (res[res.size() - 1] == '\r')
+        res.pop_back();
+    if (j == std::string::npos)
+        i = j;
+    else
+        i = j + 1;
     return res;
 }
 
@@ -180,7 +165,7 @@ std::string ParseRequest::setKey(const std::string &line) {
 std::string ParseRequest::setValue(const std::string &line) {
     size_t i;
     size_t endline;
-    std::string res;
+    std::string res = "";
 
     try {
         i = line.find_first_of(":", 1);
@@ -190,7 +175,7 @@ std::string ParseRequest::setValue(const std::string &line) {
         if (endline != std::string::npos && i != std::string::npos) {
             line.substr(i, endline - i);
         } else {
-            std::cerr << "Error: substring out of range or positions not found.\n";
+            //std::cerr << "Error: substring out of range or positions not found.\n";
             return res;
         }
         
@@ -201,7 +186,6 @@ std::string ParseRequest::setValue(const std::string &line) {
         std::cerr << "Error: substring out of range: " << e.what() << "\n";
         return res;
     }
-
     return rmSpaces(res);
 }
 
@@ -288,12 +272,8 @@ void ParseRequest::setPort(std::string port) {
     if (port.size() < 5 && _returnValue == 200){
         try {
             _port = std::stoul(port);
-        } catch (const std::invalid_argument& e) {
-            std::cerr << "Error: Invalid port number (not a number)\n";
         } catch (const std::out_of_range& e) {
             std::cerr << "Error: Port number out of range\n";
-        } catch (...) {
-            std::cerr << "Error: Unexpected error occurred trying to setPort\n";
         }
     }
     else
@@ -447,10 +427,11 @@ int ParseRequest::parsePath(const std::string &line, size_t i, struct SharedData
     // std::cout << GREEN << "getting here" RESET << std::endl; // to rm
     // Locations *loc = shared.server->getLocation(isolateDir(_path));
     Locations *loc = shared.server->getLocation(_path);
-//    if (loc != nullptr) { // to rm
-//        std::cout << loc->specifier << std::endl; // segf on this
-//        std::map<int, std::string> redirMap = shared.server->getRedirect(_path);
-////        std::cout << "url = " <<  redirMap.begin()->second << std::endl; //TODO started segfaulting here?
+    if (loc != nullptr) { // to rm
+       std::cout << loc->specifier << std::endl; // segf on this
+       std::map<int, std::string> redirMap = shared.server->getRedirect(_path);
+       std::cout << "url = " <<  redirMap.begin()->second << std::endl; //TODO started segfaulting here?
+    }
 
     std::string abspath = shared.server->getRootFolder(_path);
     std::string current = "";

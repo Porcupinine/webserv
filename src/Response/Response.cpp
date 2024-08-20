@@ -6,7 +6,7 @@
 /*   By: dmaessen <dmaessen@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2024/07/07 15:49:40 by dmaessen          #+#    #+#             */
-/*   Updated: 2024/08/19 13:49:42 by dmaessen         ###   ########.fr       */
+/*   Updated: 2024/08/20 10:33:49 by dmaessen         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -53,7 +53,6 @@ std::string Response::giveResponse(ParseRequest& request, struct SharedData &sha
     _isAutoIndex = shared.server_config->auto_index;
     if (request.getRedirection() == true) {
         _isAutoIndex = shared.server->getDirListing(request.getRawPath());
-        std::cout << "AM I OVER HERE??? HELOOOO " << _isAutoIndex << "\n"; // to rm
         if (_isAutoIndex == false && (_statusCode != 301 && _statusCode != 302 && _statusCode != 307 && _statusCode != 308))
             _statusCode = 403;
     }
