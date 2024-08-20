@@ -6,7 +6,7 @@
 /*   By: dmaessen <dmaessen@student.42.fr>            +#+                     */
 /*                                                   +#+                      */
 /*   Created: 2024/08/19 12:54:19 by dmaessen      #+#    #+#                 */
-/*   Updated: 2024/08/19 16:15:39 by ewehl         ########   odam.nl         */
+/*   Updated: 2024/08/20 11:14:08 by ewehl         ########   odam.nl         */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -134,7 +134,8 @@ struct ConfigError {
 struct SharedData {
 	std::shared_ptr<Server>				server;
 
-	int									cgi_fd;
+	int									cgi_write;
+	int									cgi_read;
 	pid_t								cgi_pid;
 
 	std::string							request;
