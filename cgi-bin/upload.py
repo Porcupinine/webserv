@@ -1,5 +1,7 @@
 #!/usr/bin/env python3
 
+#TODO check file extension
+
 import datetime
 import os
 import cgi
@@ -29,7 +31,17 @@ def uploadFile() -> (int, str):
     path = os.path.join(upDir, fileData.filename)
     x = 0
 
-    # Check if file already exists to set a new file name
+    # Check file extension
+    valid_extensions = {'.jpg', '.jpeg', '.png', '.gif'}
+    ext = extension.lower()
+
+    if ext not in valid_extensions:
+        return 400, "Invalid file type.\n"
+
+    path = os.path.join(upDir, fileData.filename)
+
+# Check if file already exists to set a new file name
+    x = 0
     while os.path.isfile(path):
         x += 1
         path = os.path.join(upDir, f"{name}({x}){extension}")
@@ -72,7 +84,8 @@ try:
 <h1>Welcome to the ______ webserv!!</h1>
 
 <p> {message}</p>
-<p><a href="/upload.html">Give us more data?</a></p>
+<p>We can take some .png .gif .jpg and .jpeg!</p>
+<p><a href="/upload.html">Give us more images?</a></p>
 <p><a href="/index.html">Back</a></p>
 
 </body>
