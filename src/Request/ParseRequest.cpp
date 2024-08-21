@@ -1,12 +1,12 @@
 /* ************************************************************************** */
 /*                                                                            */
-/*                                                        ::::::::            */
-/*   ParseRequest.cpp                                   :+:    :+:            */
-/*                                                     +:+                    */
-/*   By: dmaessen <dmaessen@student.42.fr>            +#+                     */
-/*                                                   +#+                      */
-/*   Created: 2024/07/07 15:50:05 by dmaessen      #+#    #+#                 */
-/*   Updated: 2024/08/21 16:53:31 by ewehl         ########   odam.nl         */
+/*                                                        :::      ::::::::   */
+/*   ParseRequest.cpp                                   :+:      :+:    :+:   */
+/*                                                    +:+ +:+         +:+     */
+/*   By: dmaessen <dmaessen@student.42.fr>          +#+  +:+       +#+        */
+/*                                                +#+#+#+#+#+   +#+           */
+/*   Created: 2024/07/07 15:50:05 by dmaessen          #+#    #+#             */
+/*   Updated: 2024/08/21 17:03:17 by dmaessen         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -15,15 +15,14 @@
 
 ParseRequest::ParseRequest::ParseRequest(struct SharedData* shared) : _methodType(""), _path(""), _version(""), _bodyMsg(""), _port(0), _returnValue(200), _query(""), _redirection(false), _dir(false), _rawPath("") {
     initHeaders();
-
-    if (shared->request.empty() && shared->response_code == 200)
+    if (shared->request.empty())
         shared->status = Status::closing;
     parseStr(shared->request, shared);
     if (cgiInvolved(_path) == false || _methodType == "DELETE") {
         shared->connection_closed = true;
 		shared->status = Status::writing;
     }
-	// std::cout << "response is " << shared->response << "\n"; // to rm
+	// std::cout << "response is " << shared->response << "\n";
 }
 
 ParseRequest&	ParseRequest::operator=(const ParseRequest &cpy)
@@ -421,7 +420,9 @@ int ParseRequest::parsePath(const std::string &line, size_t i, struct SharedData
     Locations *spe = shared.server_config->getSpecifier(_path);
     if (spe != nullptr) {
         if (spe->root_dir != ""){
-            _dir = true;
+            if (spe->specifier.size() == _path.size()){
+                _dir = true;
+            }
             _redirection = true;
             size_t pos = 0;
             while ((pos = _path.find(spe->specifier, pos)) != std::string::npos) {
@@ -439,7 +440,9 @@ int ParseRequest::parsePath(const std::string &line, size_t i, struct SharedData
 			_redirection = true;
         std::map<int, std::string> redirMap2 = shared.server_config->getRedirect(_path);
 		if (loc->specifier == _path && redirMap2.begin()->first == 0 && _dir == false){
-            _dir = true;
+            if (loc->specifier.size() == _path.size()){
+                _dir = true;
+            }
             _rawPath = _path;
 		    _path = _absPathRoot + abspath + _path;
         }
