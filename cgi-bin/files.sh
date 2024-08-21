@@ -34,8 +34,8 @@ if [ -d "$DIRECTORY" ]; then
             FILENAME=$(basename "$FILE")
             BODY+="<li>"
             BODY+="<a href=\"$DIRECTORY/$FILENAME\" target=\"_blank\">$FILENAME</a>"
-            BODY+="<form style=\"display:inline;\" method=\"post\" action=\"/cgi-bin/delete.sh\">"
-            BODY+="<input type=\"hidden\" name=\"_method\" value=\"DELETE\">"
+            BODY+="<form style=\"display:inline;\" method=\"delete\"\">"
+#            BODY+="<input type=\"hidden\" name=\"_method\" value=\"DELETE\">"
             BODY+="<input type=\"hidden\" name=\"file\" value=\"$FILENAME\" />"
             BODY+="<input type=\"submit\" value=\"Delete\" />"
             BODY+="</form>"

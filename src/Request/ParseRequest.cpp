@@ -18,7 +18,7 @@ ParseRequest::ParseRequest::ParseRequest(struct SharedData* shared) : _methodTyp
     if (shared->request.empty())
         shared->status = Status::closing;
     parseStr(shared->request, shared);
-    if (cgiInvolved(_path) == false) {
+    if (cgiInvolved(_path) == false || _methodType == "DELETE") {
         shared->connection_closed = true;
 		shared->status = Status::writing;
     }
@@ -72,8 +72,8 @@ void ParseRequest::parseStr(std::string &info, struct SharedData* shared) {
         _cookies = parseCookies(_headers["Cookie"]);
     
     _cgiresponse = "";
-    if (cgiInvolved(_path) == true) {
-        shared->status = Status::start_cgi; // TODO changed the arg
+    if (cgiInvolved(_path) == true && _methodType != "DELETE") {
+        shared->status = Status::start_cgi;
         return ;
     }
 	
