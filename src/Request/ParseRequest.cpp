@@ -6,7 +6,7 @@
 /*   By: dmaessen <dmaessen@student.42.fr>            +#+                     */
 /*                                                   +#+                      */
 /*   Created: 2024/07/07 15:50:05 by dmaessen      #+#    #+#                 */
-/*   Updated: 2024/08/21 16:39:55 by ewehl         ########   odam.nl         */
+/*   Updated: 2024/08/21 16:53:31 by ewehl         ########   odam.nl         */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -16,12 +16,13 @@
 ParseRequest::ParseRequest::ParseRequest(struct SharedData* shared) : _methodType(""), _path(""), _version(""), _bodyMsg(""), _port(0), _returnValue(200), _query(""), _redirection(false), _dir(false), _rawPath("") {
     initHeaders();
 
-    if (shared->request.empty() && shared->response_code == 200){
+    if (shared->request.empty() && shared->response_code == 200)
         shared->status = Status::closing;
     parseStr(shared->request, shared);
     if (cgiInvolved(_path) == false || _methodType == "DELETE") {
         shared->connection_closed = true;
 		shared->status = Status::writing;
+    }
 	// std::cout << "response is " << shared->response << "\n"; // to rm
 }
 
@@ -399,6 +400,7 @@ int ParseRequest::parsePath(const std::string &line, size_t i, struct SharedData
 		return _returnValue;
 
     Locations *loc = shared.server_config->getLocation(_path);
+
     std::string abspath = shared.server_config->getRootFolder(_path);
     std::string current = "";
 	try {
@@ -416,7 +418,7 @@ int ParseRequest::parsePath(const std::string &line, size_t i, struct SharedData
 
     _absPathRoot = current;
 
-    Locations *spe = shared.server->getSpecifier(_path);
+    Locations *spe = shared.server_config->getSpecifier(_path);
     if (spe != nullptr) {
         if (spe->root_dir != ""){
             _dir = true;
@@ -436,7 +438,7 @@ int ParseRequest::parsePath(const std::string &line, size_t i, struct SharedData
 		if (loc->specifier == _path)
 			_redirection = true;
         std::map<int, std::string> redirMap2 = shared.server_config->getRedirect(_path);
-		if (loc->specifier == _path && redirMap2.begin()->first == 0){
+		if (loc->specifier == _path && redirMap2.begin()->first == 0 && _dir == false){
             _dir = true;
             _rawPath = _path;
 		    _path = _absPathRoot + abspath + _path;
