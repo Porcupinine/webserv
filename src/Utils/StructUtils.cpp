@@ -6,7 +6,7 @@
 /*   By: dmaessen <dmaessen@student.42.fr>            +#+                     */
 /*                                                   +#+                      */
 /*   Created: 2024/08/19 12:55:08 by dmaessen      #+#    #+#                 */
-/*   Updated: 2024/08/21 14:45:04 by ewehl         ########   odam.nl         */
+/*   Updated: 2024/08/21 16:54:53 by ewehl         ########   odam.nl         */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -29,6 +29,22 @@ bool Locations::operator==(const Locations& other) const {
 bool ServerConfig::operator==(const std::unique_ptr<ServerConfig>& other) const {
 	return (host == other->host && port == other->port);
 }
+
+Locations* ServerConfig::getSpecifier(const std::string &path) const {
+    if (locations.empty() == false)  {
+        auto it = std::find_if(locations.begin(), locations.end(),
+            [&path](const std::shared_ptr<struct Locations>& loc) {
+                const std::string& specifier = loc->specifier;
+                return (path == specifier || 
+                        (path.find(specifier) == 0 && path[specifier.length()] == '/'));
+            });
+        if (it != locations.end()) {
+            return it->get();
+        }
+    }
+    return nullptr;
+}
+
 
 Locations* ServerConfig::getLocation(std::string &locationSpec) const {
 	if (locations.empty() == false) {

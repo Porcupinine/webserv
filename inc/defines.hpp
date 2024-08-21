@@ -6,7 +6,7 @@
 /*   By: dmaessen <dmaessen@student.42.fr>            +#+                     */
 /*                                                   +#+                      */
 /*   Created: 2024/08/19 12:54:19 by dmaessen      #+#    #+#                 */
-/*   Updated: 2024/08/21 16:45:20 by ewehl         ########   odam.nl         */
+/*   Updated: 2024/08/21 16:55:18 by ewehl         ########   odam.nl         */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -124,6 +124,7 @@ struct ServerConfig {
 	std::vector<std::shared_ptr<struct Locations>>	locations;
 
 	bool 						operator==(const std::unique_ptr<ServerConfig>& other) const;
+	Locations* 					getSpecifier(const std::string &path) const;
 	Locations* 					getLocation(std::string &locationSpec) const;
 	std::string 				getIndex(const std::string &location) const;
 	bool 						getDirListing(const std::string &location) const;
