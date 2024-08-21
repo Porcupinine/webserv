@@ -35,7 +35,7 @@ if [ -d "$DIRECTORY" ]; then
             BODY+="<li>"
             BODY+="<a href=\"$DIRECTORY/$FILENAME\" target=\"_blank\">$FILENAME</a>"
             BODY+="<form style=\"display:inline;\" method=\"post\" action=\"/cgi-bin/delete_file.sh\">"
-            BODY+="<input type=\"hidden\" name=\"_method\" value=\"DELETE\">"
+#            BODY+="<input type=\"hidden\" name=\"_method\" value=\"DELETE\">"
             BODY+="<input type=\"hidden\" name=\"file\" value=\"$FILENAME\" />"
             BODY+="<input type=\"submit\" value=\"Delete\" />"
             BODY+="</form>"
@@ -50,7 +50,7 @@ else
 fi
 
 # End HTML output
-BODY+="<p><a href=\"/index.html\">Back</a></p>"
+BODY+="<p><a href=\"/\">Back</a></p>"
 BODY+="</body>"
 BODY+="</html>"
 

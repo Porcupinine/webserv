@@ -1208,3 +1208,69 @@ INFO:__main__:body: <!DOCTYPE html>
         
         </body>
         </html>
+INFO:__main__:will upload data
+INFO:__main__:header: HTTP/1.1 201
+        Content-Length: 292
+        Content-type: text/html
+        Connection: closed
+        Date: Wed, 21 Aug 2024 14:20:33 GMT
+        Last-Modified: Wed, 21 Aug 2024 14:20:33 GMT
+        Server: 
+
+INFO:__main__:body: <!DOCTYPE html>
+        <html>
+        <body>
+        
+        <h1>Welcome to the ______ webserv!!</h1>
+        
+        <p> Thanks for your file!
+</p>
+           <p><a href="/upload.html">Give us more data?</a></p>
+        <p><a href="/">Back</a></p>
+        
+        </body>
+        </html>
+INFO:__main__:will upload data
+INFO:__main__:header: HTTP/1.1 201
+        Content-Length: 292
+        Content-type: text/html
+        Connection: closed
+        Date: Wed, 21 Aug 2024 14:52:37 GMT
+        Last-Modified: Wed, 21 Aug 2024 14:52:37 GMT
+        Server: 
+
+INFO:__main__:body: <!DOCTYPE html>
+        <html>
+        <body>
+        
+        <h1>Welcome to the ______ webserv!!</h1>
+        
+        <p> Thanks for your file!
+</p>
+           <p><a href="/upload.html">Give us more data?</a></p>
+        <p><a href="/">Back</a></p>
+        
+        </body>
+        </html>
+INFO:__main__:will upload data
+INFO:__main__:header: HTTP/1.1 201
+        Content-Length: 292
+        Content-type: text/html
+        Connection: closed
+        Date: Wed, 21 Aug 2024 14:52:40 GMT
+        Last-Modified: Wed, 21 Aug 2024 14:52:40 GMT
+        Server: 
+
+INFO:__main__:body: <!DOCTYPE html>
+        <html>
+        <body>
+        
+        <h1>Welcome to the ______ webserv!!</h1>
+        
+        <p> Thanks for your file!
+</p>
+           <p><a href="/upload.html">Give us more data?</a></p>
+        <p><a href="/">Back</a></p>
+        
+        </body>
+        </html>

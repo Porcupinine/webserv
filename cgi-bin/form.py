@@ -48,7 +48,7 @@ def fillForm():
         <body>
         
         <h1>Thank you {name} for your precious data!!</h1>
-        <p><a href="/index.html">Back</a></p>
+        <p><a href="/">Back</a></p>
         
         </body>
         </html>"""

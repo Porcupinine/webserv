@@ -70,7 +70,7 @@ try:
         
         <p> {message}</p>
            <p><a href="/upload.html">Give us more data?</a></p>
-        <p><a href="/index.html">Back</a></p>
+        <p><a href="/">Back</a></p>
         
         </body>
         </html>"""

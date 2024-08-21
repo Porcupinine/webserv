@@ -39,7 +39,7 @@ namespace {
 
 	char **getEnv(ParseRequest &request, SharedData* shared) {
 		auto copy = request.getHeaders();
-		char **env = new char *[copy.size() + 5];
+		char **env = new char *[copy.size() + 6];
 		size_t count = 0;
 		for (const auto &copy: copy) {
 			std::string reform = copy.first;
@@ -68,6 +68,10 @@ namespace {
 		std::strcpy(env[count], tmp.data());
 		count++;
 		tmp = "SERVER=" + shared->server_config->server_name;
+		env[count] = new char[tmp.size()];
+		std::strcpy(env[count], tmp.data());
+		count++;
+		tmp = "CGIPATH=" + request.getAbsPath() + "/cgi-bin";
 		env[count] = new char[tmp.size()];
 		std::strcpy(env[count], tmp.data());
 		count++;
