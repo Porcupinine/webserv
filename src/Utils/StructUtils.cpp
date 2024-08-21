@@ -1,12 +1,12 @@
 /* ************************************************************************** */
 /*                                                                            */
 /*                                                        ::::::::            */
-/*   structUtils.cpp                                    :+:    :+:            */
+/*   StructUtils.cpp                                    :+:    :+:            */
 /*                                                     +:+                    */
 /*   By: dmaessen <dmaessen@student.42.fr>            +#+                     */
 /*                                                   +#+                      */
 /*   Created: 2024/08/19 12:55:08 by dmaessen      #+#    #+#                 */
-/*   Updated: 2024/08/21 14:11:58 by ewehl         ########   odam.nl         */
+/*   Updated: 2024/08/21 14:45:04 by ewehl         ########   odam.nl         */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -27,19 +27,8 @@ bool Locations::operator==(const Locations& other) const {
 
 // Don't need to compare all the other things, I think
 bool ServerConfig::operator==(const std::unique_ptr<ServerConfig>& other) const {
-	return (host == other->host && port == other->port /*&& server_name == other->server_name
-			&& index == other->index && auto_index == other->auto_index && root_dir == other->root_dir
-			&& upload_dir == other->upload_dir && max_client_body_size == other->max_client_body_size
-			&& map_compare(error_pages, other->error_pages) && locations == other->locations*/);
+	return (host == other->host && port == other->port);
 }
-
-// bool SharedData::operator==(std::shared_ptr<SharedData>& other) const {
-// 	return (server == other->server && cgi_write == other->cgi_write && cgi_read == other->cgi_read
-// 			&& request == other->request && response == other->response && response_code == other->response_code
-// 			&& fd == other->fd && epoll_fd == other->epoll_fd && status == other->status 
-// 			&& server_config == other->server_config && connection_closed == other->connection_closed 
-// 			/*&& timestamp_last_request == other->timestamp_last_request*/);
-// }
 
 Locations* ServerConfig::getLocation(std::string &locationSpec) const {
 	if (locations.empty() == false) {
