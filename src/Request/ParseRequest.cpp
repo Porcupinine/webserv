@@ -170,7 +170,7 @@ std::string ParseRequest::setValue(const std::string &line) {
     i = line.find_first_of(":", 1);
     i = line.find_first_not_of(" ", i + 1);
     endline = line.find_first_of("\r", i);
-    line.substr(i, endline - 1);
+	(void)line.substr(i, endline - 1);
     if (i != std::string::npos)
         res.append(line, i, std::string::npos);
     return rmSpaces(res);
