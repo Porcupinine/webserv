@@ -1,5 +1,8 @@
 #!/bin/bash
 
+
+
+
 # Check if UPLOAD_DIR is set
 if [ -z "$UPLOAD_DIR" ]; then
     echo "HTTP/1.1 500 Internal Server Error"
