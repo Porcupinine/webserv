@@ -6,7 +6,7 @@
 /*   By: dmaessen <dmaessen@student.42.fr>            +#+                     */
 /*                                                   +#+                      */
 /*   Created: 2024/07/07 15:50:05 by dmaessen      #+#    #+#                 */
-/*   Updated: 2024/08/21 16:17:14 by ewehl         ########   odam.nl         */
+/*   Updated: 2024/08/21 16:29:37 by ewehl         ########   odam.nl         */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -15,7 +15,6 @@
 
 ParseRequest::ParseRequest::ParseRequest(struct SharedData* shared) : _methodType(""), _path(""), _version(""), _bodyMsg(""), _port(0), _returnValue(200), _query(""), _redirection(false), _dir(false), _rawPath("") {
     initHeaders();
-    std::cout << GREEN << "JAAAAAAAA\t " << RESET << std::endl;
 
     if (shared->request.empty() && shared->response_code == 200){
         shared->status = Status::closing;
@@ -24,7 +23,7 @@ ParseRequest::ParseRequest::ParseRequest(struct SharedData* shared) : _methodTyp
     parseStr(shared->request, shared);
     if (cgiInvolved(_path) == false)
 		shared->status = Status::writing;
-	std::cout << "response is " << shared->response << "\n"; // to rm
+	// std::cout << "response is " << shared->response << "\n"; // to rm
 }
 
 ParseRequest&	ParseRequest::operator=(const ParseRequest &cpy)
@@ -45,7 +44,6 @@ ParseRequest&	ParseRequest::operator=(const ParseRequest &cpy)
 
 void ParseRequest::parseStr(std::string &info, struct SharedData* shared) {
     if (shared->response_code != 200) {
-        std::cout << "Here?" << std::endl;
         errorServer(shared);
         return ;
     }
