@@ -12,50 +12,53 @@ logging.basicConfig(filename='logs/upload.log', encoding='utf-8', level=logging.
 cgitb.enable()
 cgitb.enable(display=0, logdir="logdir")  # for debugging
 
-
 def uploadFile() -> (int, str):
-    # Set lodgir for debugging purposes
+    # Set logdir for debugging purposes
     if not os.path.isdir("logdir"):
         os.mkdir("logdir")
 
-    # Get data parsed from cgi mdule
+    # Get data parsed from cgi module
     form = cgi.FieldStorage()
-    fileData = form['filename'] #fileToUpload/filename
-    path = upDir + "/" + fileData.filename
+    fileData = form['filename']
     name, extension = os.path.splitext(fileData.filename)
+
+    # Check if filename contains spaces
+    if ' ' in fileData.filename:
+        return 400, "Filenames with spaces are not allowed.\n"
+
+    path = os.path.join(upDir, fileData.filename)
     x = 0
 
-    # Check if file already exists to set file name
+    # Check if file already exists to set a new file name
     while os.path.isfile(path):
         x += 1
-        path = upDir + "/" + name + "(" + str(x) + ")" + extension
+        path = os.path.join(upDir, f"{name}({x}){extension}")
 
     # Write data into newly created file
     try:
-        with open(os.path.join(path), 'wb') as f:
+        with open(path, 'wb') as f:
             f.write(fileData.file.read())
-        return 201, f"Thanks for your file!\n"
-    except:
-        return 500, "Ooopsie!!!\n"
+        return 201, "Thanks for your file!\n"
+    except Exception as e:
+        logger.error(f"Failed to write file: {e}")
+        return 500, "Oops! Something went wrong.\n"
 
-# def uploadCGI() :
 try:
     message = ""
     status = 0
     upDir = os.environ["UPLOAD_DIR"]
 
-    logger.info("will upload data")
+    logger.info("Starting file upload process")
 
-    #Check if folder ecxists, if not, create such folder
+    # Check if folder exists, if not, create such folder
     if not os.path.isdir(upDir):
-        logger.error("folder does not exist")
+        logger.error("Upload directory does not exist")
         os.mkdir(upDir)
-    # files = os.listdir(os.environ.get("UPLOAD_DIR"))
 
     if os.environ.get("REQUEST_METHOD") == "POST":
         status, message = uploadFile()
     else:
-        message = "Sorry, can't do!\n"
+        status, message = 405, "Method Not Allowed\n"
 
     # Get time and date
     x = datetime.datetime.now()
@@ -63,32 +66,32 @@ try:
 
     # Build body
     body = f"""<!DOCTYPE html>
-        <html>
-        <body>
-        
-        <h1>Welcome to the ______ webserv!!</h1>
-        
-        <p> {message}</p>
-           <p><a href="/upload.html">Give us more data?</a></p>
-        <p><a href="/index.html">Back</a></p>
-        
-        </body>
-        </html>"""
+<html>
+<body>
+
+<h1>Welcome to the ______ webserv!!</h1>
+
+<p> {message}</p>
+<p><a href="/upload.html">Give us more data?</a></p>
+<p><a href="/index.html">Back</a></p>
+
+</body>
+</html>"""
 
     # Build header
     header = f"""HTTP/1.1 {status}\r
-        Content-Length: {len(body)}\r
-        Content-type: text/html\r
-        Connection: closed\r
-        Date: {date}\r
-        Last-Modified: {date}\r
-        Server: {os.environ.get("SERVER")}\r\n\r"""
+Content-Length: {len(body)}\r
+Content-type: text/html\r
+Connection: closed\r
+Date: {date}\r
+Last-Modified: {date}\r
+Server: {os.environ.get("SERVER")}\r\n\r"""
 
     logger.info(f'header: {header}')
     logger.info(f'body: {body}')
     print(header)
     print(body)
-except:
-    logger.error("Your script failed!!")
+except Exception as e:
+    logger.error(f"Your script failed: {e}")
 finally:
     print("\0")
