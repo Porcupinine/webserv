@@ -1,12 +1,12 @@
 /* ************************************************************************** */
 /*                                                                            */
-/*                                                        :::      ::::::::   */
-/*   Response.cpp                                       :+:      :+:    :+:   */
-/*                                                    +:+ +:+         +:+     */
-/*   By: dmaessen <dmaessen@student.42.fr>          +#+  +:+       +#+        */
-/*                                                +#+#+#+#+#+   +#+           */
-/*   Created: 2024/07/07 15:49:40 by dmaessen          #+#    #+#             */
-/*   Updated: 2024/08/19 13:49:42 by dmaessen         ###   ########.fr       */
+/*                                                        ::::::::            */
+/*   Response.cpp                                       :+:    :+:            */
+/*                                                     +:+                    */
+/*   By: dmaessen <dmaessen@student.42.fr>            +#+                     */
+/*                                                   +#+                      */
+/*   Created: 2024/07/07 15:49:40 by dmaessen      #+#    #+#                 */
+/*   Updated: 2024/08/21 14:15:44 by ewehl         ########   odam.nl         */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -40,7 +40,7 @@ std::string Response::giveResponse(ParseRequest& request, struct SharedData &sha
     }
     
     if (request.getRedirection() == true) {
-        std::map<int, std::string> redirMap = shared.server->getRedirect(request.getPath());
+        std::map<int, std::string> redirMap = shared.server_config->getRedirect(request.getPath());
         if (redirMap.begin()->first == 0)
             _statusCode = request.getRetVal();
         else
@@ -52,7 +52,7 @@ std::string Response::giveResponse(ParseRequest& request, struct SharedData &sha
     
     _isAutoIndex = shared.server_config->auto_index;
     if (request.getRedirection() == true) {
-        _isAutoIndex = shared.server->getDirListing(request.getRawPath());
+        _isAutoIndex = shared.server_config->getDirListing(request.getRawPath());
         std::cout << "AM I OVER HERE??? HELOOOO " << _isAutoIndex << "\n"; // to rm
         if (_isAutoIndex == false && (_statusCode != 301 && _statusCode != 302 && _statusCode != 307 && _statusCode != 308))
             _statusCode = 403;
@@ -215,7 +215,7 @@ void Response::readContent(ParseRequest& request, struct SharedData* shared) {
         file.close();
     }
     // else if (_isAutoIndex == false && request.getDir() == true && fileExists(request.getPath() + "/index.html")) {
-    else if (_isAutoIndex == false && request.getDir() == true && fileExists(request.getPath() + "/" + shared->server->getIndex(request.getRawPath()))) {
+    else if (_isAutoIndex == false && request.getDir() == true && fileExists(request.getPath() + "/" + shared->server_config->getIndex(request.getRawPath()))) {
         // CHEK IF THERE IS ALREADY A BACK SLASH OR NOT IF NOT ADD ELSE TRIM OR SOMETHING TO NOT HAVE A BUG THERE
         
         // std::string f = request.getPath() + "/" + shared->server->getIndex(request.getRawPath()); // put this back when fixed

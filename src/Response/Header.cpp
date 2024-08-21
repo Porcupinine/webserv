@@ -1,12 +1,12 @@
 /* ************************************************************************** */
 /*                                                                            */
-/*                                                        :::      ::::::::   */
-/*   Header.cpp                                         :+:      :+:    :+:   */
-/*                                                    +:+ +:+         +:+     */
-/*   By: dmaessen <dmaessen@student.42.fr>          +#+  +:+       +#+        */
-/*                                                +#+#+#+#+#+   +#+           */
-/*   Created: 2024/07/07 15:50:08 by dmaessen          #+#    #+#             */
-/*   Updated: 2024/08/19 12:51:40 by dmaessen         ###   ########.fr       */
+/*                                                        ::::::::            */
+/*   Header.cpp                                         :+:    :+:            */
+/*                                                     +:+                    */
+/*   By: dmaessen <dmaessen@student.42.fr>            +#+                     */
+/*                                                   +#+                      */
+/*   Created: 2024/07/07 15:50:08 by dmaessen      #+#    #+#                 */
+/*   Updated: 2024/08/21 14:15:11 by ewehl         ########   odam.nl         */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -85,7 +85,7 @@ std::string Response::getHeaderValues(ParseRequest& request, std::string header,
 	if (_statusCode == 301 || _statusCode == 302 || _statusCode == 307 || _statusCode == 308){
 		// int key = 1;
 		std::cout << "HERE IN LOCATION HEADER\n";
-		auto redirectMap = shared->server->getRedirect(request.getPath()); // Hier moet dus de location name in.
+		auto redirectMap = shared->server_config->getRedirect(request.getPath()); // Hier moet dus de location name in.
 		// auto redirectMap = shared->server->getRedirect(shared->server_config->locations->path); // Hier moet dus de location name in..
 		auto it = redirectMap.find(_statusCode);
 		if (it != redirectMap.end()) {

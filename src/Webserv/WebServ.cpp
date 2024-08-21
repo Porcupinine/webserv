@@ -6,7 +6,7 @@
 /*   By: dmaessen <dmaessen@student.42.fr>            +#+                     */
 /*                                                   +#+                      */
 /*   Created: 2024/08/19 12:55:16 by dmaessen      #+#    #+#                 */
-/*   Updated: 2024/08/20 20:08:18 by ewehl         ########   odam.nl         */
+/*   Updated: 2024/08/21 13:53:36 by ewehl         ########   odam.nl         */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -130,7 +130,7 @@ void	WebServ::newConnection(SharedData* shared) {
 	clientShared->request.clear();
 	clientShared->response.clear();
 	clientShared->response_code = 200;
-	clientShared->server = shared->server;
+	// clientShared->server = shared->server;
 	clientShared->server_config = shared->server_config;
 	std::cout << shared->server_config->root_dir << std::endl;
 	clientShared->connection_closed = false;
@@ -138,7 +138,7 @@ void	WebServ::newConnection(SharedData* shared) {
 
 	epoll_event event;
 	event.events = EPOLLIN | EPOLLOUT;
-	event.data.ptr = clientShared.get();
+	event.data.ptr = static_cast<void*>(clientShared.get());
 
 	shared->timestamp_last_request = std::time(nullptr);
 	if (epoll_ctl(shared->epoll_fd, EPOLL_CTL_ADD, clientFd, &event) == -1) {
@@ -189,6 +189,9 @@ void	WebServ::run() {
 				shared->request.clear(); // might introduce complications.. Guess well find out.
 				closeCGIfds(shared);
 				closeConnection(shared);
+				// auto it = std::find(_sharedPtrs_SharedData.begin(), _sharedPtrs_SharedData.end(), shared);
+				// if (it != _sharedPtrs_SharedData.end())
+				// 	it->reset();
 			}
 		}
 	}
@@ -209,7 +212,7 @@ void	WebServ::_closeConnections() {
 void WebServ::_checkHangingSockets(SharedData *data) {
 	if (data->status == Status::listening) return;
 
-	double timeout = (data->status == Status::in_cgi) ? CGI_TIMEOUT : data->server->getTimeout();
+	double timeout = (data->status == Status::in_cgi) ? CGI_TIMEOUT : SERVER_TIMEOUT;
 	time_t currentTime = std::time(nullptr);
 	double diff = std::difftime(currentTime, data->timestamp_last_request);
 
@@ -273,16 +276,17 @@ std::vector<VirtualHost> WebServ::_setUpHosts(Config& conf) {
 void WebServ::_initializeServers(Config& conf) {
 	std::vector<VirtualHost>  virtualHosts = _setUpHosts(conf);
 	for (const auto& vhost : virtualHosts) {
-		std::shared_ptr<Server> server = std::make_shared<Server>();
-		std::shared_ptr<ServerConfig> servConfig = std::shared_ptr(vhost.getConfig());
+		auto server = std::make_unique<Server>();
+		auto servConfig = std::shared_ptr(vhost.getConfig());
 
 		// std::cout << servConfig.root_dir << std::endl;
 		if (server->initServer(servConfig, _epollFd, SERVER_TIMEOUT, SERVER_MAX_NO_REQUEST) != 0) {
 			throw InitException("Failed to initialize server for host: " + servConfig->host);
 		}
-		_servers.push_back(server);
-		_sharedPtrs_Servers.push_back(server);
+		_servers.push_back(std::move(server));
+		// _sharedPtrs_Servers.push_back(server);
 	}
+	virtualHosts.clear();
 }
 
 void WebServ::_handleSignal(int sig) {

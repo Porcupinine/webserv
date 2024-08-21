@@ -1,12 +1,12 @@
 /* ************************************************************************** */
 /*                                                                            */
-/*                                                        :::      ::::::::   */
-/*   Server.hpp                                         :+:      :+:    :+:   */
-/*                                                    +:+ +:+         +:+     */
-/*   By: dmaessen <dmaessen@student.42.fr>          +#+  +:+       +#+        */
-/*                                                +#+#+#+#+#+   +#+           */
-/*   Created: 2024/08/19 12:54:28 by dmaessen          #+#    #+#             */
-/*   Updated: 2024/08/19 12:54:29 by dmaessen         ###   ########.fr       */
+/*                                                        ::::::::            */
+/*   Server.hpp                                         :+:    :+:            */
+/*                                                     +:+                    */
+/*   By: dmaessen <dmaessen@student.42.fr>            +#+                     */
+/*                                                   +#+                      */
+/*   Created: 2024/08/19 12:54:28 by dmaessen      #+#    #+#                 */
+/*   Updated: 2024/08/21 13:57:46 by ewehl         ########   odam.nl         */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -25,7 +25,7 @@
 # include "../inc/Config.hpp"
 # include "../inc/defines.hpp"
 
-class Server : public std::enable_shared_from_this<Server> {
+class Server {
 public:
 		Server();
 		Server(Server const & src) = delete;
@@ -33,24 +33,19 @@ public:
 		~Server();
 
 		int									initServer(std::shared_ptr<ServerConfig> configs, int epollFd, double timeout, int maxNrOfRequests);
-		std::shared_ptr<Server>				getShared();
+		// std::shared_ptr<Server>				getShared();
 
 		// Getter methods
 		uint16_t							getPort() const;
-		double								getTimeout() const;
-		int									getMaxNrOfRequests() const;
-		std::map<std::string, int>			getKnownClientIds() const;
 
 		// Content getters
-		Locations*							getLocation(std::string &locationSpec) const;
-		std::string							getIndex(const std::string &location) const;
-		bool								getDirListing(const std::string &location) const;
-		std::map<int, std::string>			getRedirect(const std::string &location) const;
-		std::string							getRootFolder(const std::string &location) const;
-		size_t								getMaxBodySize() const;
-		std::string							getUploadDir(const std::string &location) const;
-		std::set<std::string>				getAllowedMethods(const std::string &location) const;
-		std::shared_ptr<ServerConfig>		getConf();
+		// Locations*							getLocation(std::string &locationSpec) const;
+		// std::string							getIndex(const std::string &location) const;
+		// bool								getDirListing(const std::string &location) const;
+		// std::map<int, std::string>			getRedirect(const std::string &location) const;
+		// std::string							getRootFolder(const std::string &location) const;
+		// std::string							getUploadDir(const std::string &location) const;
+		// std::set<std::string>				getAllowedMethods(const std::string &location) const;
 
 		class ServerException : public std::exception {
 		public:
@@ -70,7 +65,7 @@ private:
 		std::shared_ptr<SharedData>			_getSharedData() const;
 
 		void								_bindSocket();
-    	void								_listenSocket(int backlog);
+		void								_listenSocket(int backlog);
 		void								_setSocketOptions();
 		void								_setSharedData();
 		void								_registerWithEpoll(int epollFd, int fd, uint32_t events);
@@ -81,7 +76,6 @@ private:
 		double								_timeout;
 		int									_maxNrOfRequests;
 		std::shared_ptr<ServerConfig>		_configs;
-		// std::list<ServerConfig *>			_configs;
 		std::shared_ptr<SharedData>			_shared;
 };
 

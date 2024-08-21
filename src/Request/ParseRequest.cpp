@@ -6,7 +6,7 @@
 /*   By: dmaessen <dmaessen@student.42.fr>            +#+                     */
 /*                                                   +#+                      */
 /*   Created: 2024/07/07 15:50:05 by dmaessen      #+#    #+#                 */
-/*   Updated: 2024/08/20 14:00:24 by ewehl         ########   odam.nl         */
+/*   Updated: 2024/08/21 14:14:52 by ewehl         ########   odam.nl         */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -410,13 +410,13 @@ int ParseRequest::parsePath(const std::string &line, size_t i, struct SharedData
 
     // std::cout << GREEN << "getting here" RESET << std::endl; // to rm
     // Locations *loc = shared.server->getLocation(isolateDir(_path));
-    Locations *loc = shared.server->getLocation(_path);
+    Locations *loc = shared.server_config->getLocation(_path);
 //    if (loc != nullptr) { // to rm
 //        std::cout << loc->specifier << std::endl; // segf on this
 //        std::map<int, std::string> redirMap = shared.server->getRedirect(_path);
 ////        std::cout << "url = " <<  redirMap.begin()->second << std::endl; //TODO started segfaulting here?
 
-    std::string abspath = shared.server->getRootFolder(_path);
+    std::string abspath = shared.server_config->getRootFolder(_path);
     std::string current = "";
 	try {
 		current = std::filesystem::current_path();
@@ -433,13 +433,13 @@ int ParseRequest::parsePath(const std::string &line, size_t i, struct SharedData
 
     _absPathRoot = current;
 	if ((_path[0] == '/' && _path.size() == 2) || _path == "/")
-        _path = _absPathRoot + abspath + "/" + shared.server->getIndex(_path);
+        _path = _absPathRoot + abspath + "/" + shared.server_config->getIndex(_path);
     // ADD SOMETHING THAT IF IT ENDS ON / LOOK FOR THE INDEX FILE
     else if (loc != nullptr) {
         std::cout << "this one2\n"; // to rm
 		if (loc->specifier == _path)
 			_redirection = true;
-        std::map<int, std::string> redirMap2 = shared.server->getRedirect(_path);
+        std::map<int, std::string> redirMap2 = shared.server_config->getRedirect(_path);
 		if (loc->specifier == _path && redirMap2.begin()->first == 0){
             _dir = true;
             std::cout << "this one3\n"; // to rm
@@ -491,7 +491,7 @@ std::string initMethodString(Method method)
 
 int ParseRequest::validateMethodType(struct SharedData &shared) {
     if (_redirection == true) {
-        std::set<std::string> allowedMethods = shared.server->getAllowedMethods(_rawPath);
+        std::set<std::string> allowedMethods = shared.server_config->getAllowedMethods(_rawPath);
         if (allowedMethods.find(_methodType) == allowedMethods.end())
             _returnValue = 405;
         return _returnValue;

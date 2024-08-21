@@ -1,12 +1,12 @@
 /* ************************************************************************** */
 /*                                                                            */
-/*                                                        :::      ::::::::   */
-/*   WebServ.hpp                                        :+:      :+:    :+:   */
-/*                                                    +:+ +:+         +:+     */
-/*   By: dmaessen <dmaessen@student.42.fr>          +#+  +:+       +#+        */
-/*                                                +#+#+#+#+#+   +#+           */
-/*   Created: 2024/08/19 12:54:39 by dmaessen          #+#    #+#             */
-/*   Updated: 2024/08/19 12:54:40 by dmaessen         ###   ########.fr       */
+/*                                                        ::::::::            */
+/*   WebServ.hpp                                        :+:    :+:            */
+/*                                                     +:+                    */
+/*   By: dmaessen <dmaessen@student.42.fr>            +#+                     */
+/*                                                   +#+                      */
+/*   Created: 2024/08/19 12:54:39 by dmaessen      #+#    #+#                 */
+/*   Updated: 2024/08/21 13:32:38 by ewehl         ########   odam.nl         */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -55,7 +55,7 @@ class WebServ {
 		int											_epollFd;
 		static bool									_serverShutdown;
 		epoll_event									_events[MAX_EVENTS];
-		std::vector<std::shared_ptr<Server>>		_servers;
+		std::vector<std::unique_ptr<Server>>		_servers;
 
 		std::vector<std::shared_ptr<Server>>		_sharedPtrs_Servers;
 		std::vector<std::shared_ptr<SharedData>>	_sharedPtrs_SharedData;

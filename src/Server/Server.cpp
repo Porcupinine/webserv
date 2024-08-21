@@ -6,7 +6,7 @@
 /*   By: dmaessen <dmaessen@student.42.fr>            +#+                     */
 /*                                                   +#+                      */
 /*   Created: 2024/08/19 12:54:58 by dmaessen      #+#    #+#                 */
-/*   Updated: 2024/08/20 11:58:16 by ewehl         ########   odam.nl         */
+/*   Updated: 2024/08/21 14:13:36 by ewehl         ########   odam.nl         */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -29,9 +29,9 @@ Server::~Server() {
 	}
 }
 
-std::shared_ptr<Server> Server::getShared() {
-	return shared_from_this();
-}
+// std::shared_ptr<Server> Server::getShared() {
+// 	return shared_from_this();
+// }
 
 // Dit kan netter, time ? doen : skip;
 int Server::initServer(std::shared_ptr<ServerConfig> config, int epollFd, double timeout, int maxNrOfRequests) {
@@ -104,7 +104,7 @@ void Server::_registerWithEpoll(int epollFd, int fd, uint32_t events) {
 	_shared->epoll_fd = epollFd;
 
 	_shared->status = Status::listening;
-	_shared->server = this->getShared();
+	// _shared->server = this->getShared();
 	_shared->server_config = _configs;
 	_shared->connection_closed = false;
 
@@ -121,112 +121,93 @@ uint16_t Server::getPort() const {
 	return ntohs(_serverAddr.sin_port);
 }
 
-double Server::getTimeout() const {
-	return _timeout;
-}
+// Locations* Server::getLocation(std::string &locationSpec) const {
+// 	if (_configs) {
+// 		auto it = std::find_if(_configs->locations.begin(), _configs->locations.end(),
+// 			[locationSpec](std::shared_ptr<struct Locations> const& loc) {
+// 				return (loc->specifier == locationSpec); });
+// 		if (it != _configs->locations.end()) {
+// 			return it->get();
+// 		}
+// 	}
+// 	return nullptr;
+// }
 
-Locations* Server::getLocation(std::string &locationSpec) const {
-	if (_configs) {
-		auto it = std::find_if(_configs->locations.begin(), _configs->locations.end(),
-			[locationSpec](std::shared_ptr<struct Locations> const& loc) {
-				return (loc->specifier == locationSpec); });
-		if (it != _configs->locations.end()) {
-			return it->get();
-		}
-	}
-	return nullptr;
-}
+// std::string Server::getIndex(const std::string &location) const {
+// 	if (_configs) {
+// 		auto it = std::find_if(_configs->locations.begin(), _configs->locations.end(),
+// 			[location](std::shared_ptr<struct Locations> const& loc) { return loc->specifier == location; });
+// 		if (it != _configs->locations.end()) {
+// 			if (it->get()->default_file.empty() == false)
+// 				return it->get()->default_file;
+// 		}
+// 		return _configs->index;
+// 	}
+// 	return "index.html";
+// }
 
-int Server::getMaxNrOfRequests() const {
-	return _maxNrOfRequests;
-}
+// bool Server::getDirListing(const std::string &location) const {
+// 	if (_configs) {
+// 		auto it = std::find_if(_configs->locations.begin(), _configs->locations.end(),
+// 			[location](std::shared_ptr<struct Locations> const& loc) { return loc->specifier == location; });
+// 		if (it != _configs->locations.end()) {
+// 			return it->get()->dir_listing;
+// 		}
+// 	}
+// 	return false; // Dit had ik afgesproken met Domi, right?
+// }
 
-std::map<std::string, int> Server::getKnownClientIds() const {
-	return _knownClientIds;
-}
+// std::string Server::getRootFolder(const std::string &location) const {
+// 	if (_configs) {
+// 		auto it = std::find_if(_configs->locations.begin(), _configs->locations.end(),
+// 			[location](std::shared_ptr<struct Locations> const& loc) { return loc->specifier == location; });
+// 		if (it != _configs->locations.end()) {
+// 			return it->get()->root_dir.empty() ? _configs->root_dir : it->get()->root_dir; // Use location-specific or fallback to general
+// 		}
+// 	}
+// 	return _configs->root_dir;
+// }
 
-std::string Server::getIndex(const std::string &location) const {
-	if (_configs) {
-		auto it = std::find_if(_configs->locations.begin(), _configs->locations.end(),
-			[location](std::shared_ptr<struct Locations> const& loc) { return loc->specifier == location; });
-		if (it != _configs->locations.end()) {
-			if (it->get()->default_file.empty() == false)
-				return it->get()->default_file;
-		}
-		return _configs->index;
-	}
-	return "index.html";
-}
+// std::set<std::string> Server::getAllowedMethods(const std::string &location) const {
+// 	if (_configs) {
+// 		auto it = std::find_if(_configs->locations.begin(), _configs->locations.end(),
+// 			[location](std::shared_ptr<struct Locations> const& loc) { return loc->specifier == location; });
+// 		if (it != _configs->locations.end() && !it->get()->allowed_methods.empty()) {
+// 			return it->get()->allowed_methods;
+// 		}
+// 	}
+// 	return {"GET", "POST"};
+// }
 
-bool Server::getDirListing(const std::string &location) const {
-	if (_configs) {
-		auto it = std::find_if(_configs->locations.begin(), _configs->locations.end(),
-			[location](std::shared_ptr<struct Locations> const& loc) { return loc->specifier == location; });
-		if (it != _configs->locations.end()) {
-			return it->get()->dir_listing;
-		}
-	}
-	return false; // Dit had ik afgesproken met Domi, right?
-}
+// std::map<int, std::string> Server::getRedirect(const std::string &location) const {
+// 	if (_configs) {
+// 		std::vector<std::shared_ptr<Locations>>::iterator it = std::find_if(_configs->locations.begin(), _configs->locations.end(),
+// 			[location](std::shared_ptr<struct Locations> const& loc) {return loc->specifier == location;});
+// 		if (it != _configs->locations.end()) {
+// 			if (!it->get()->redirect.empty()){
+// 				// std::cout << RED << it->get()->redirect.begin()->first << RESET << std::endl;
+// 				return it->get()->redirect;
+// 			}
+// 		}
+// 	}
+// 	return std::map<int, std::string>();
+// }
 
-std::string Server::getRootFolder(const std::string &location) const {
-	if (_configs) {
-		auto it = std::find_if(_configs->locations.begin(), _configs->locations.end(),
-			[location](std::shared_ptr<struct Locations> const& loc) { return loc->specifier == location; });
-		if (it != _configs->locations.end()) {
-			return it->get()->root_dir.empty() ? _configs->root_dir : it->get()->root_dir; // Use location-specific or fallback to general
-		}
-	}
-	return _configs->root_dir;
-}
-
-std::set<std::string> Server::getAllowedMethods(const std::string &location) const {
-	if (_configs) {
-		auto it = std::find_if(_configs->locations.begin(), _configs->locations.end(),
-			[location](std::shared_ptr<struct Locations> const& loc) { return loc->specifier == location; });
-		if (it != _configs->locations.end() && !it->get()->allowed_methods.empty()) {
-			return it->get()->allowed_methods;
-		}
-	}
-	return {"GET", "POST"};
-}
-
-std::map<int, std::string> Server::getRedirect(const std::string &location) const {
-	if (_configs) {
-		std::vector<std::shared_ptr<Locations>>::iterator it = std::find_if(_configs->locations.begin(), _configs->locations.end(),
-			[location](std::shared_ptr<struct Locations> const& loc) {return loc->specifier == location;});
-		if (it != _configs->locations.end()) {
-			if (!it->get()->redirect.empty()){
-				// std::cout << RED << it->get()->redirect.begin()->first << RESET << std::endl;
-				return it->get()->redirect;
-			}
-		}
-	}
-	return std::map<int, std::string>();
-}
-
-size_t Server::getMaxBodySize() const {
-	if (_configs) {
-		return _configs->max_client_body_size;
-	}
-	return ONE_MB;
-}
-
-std::string Server::getUploadDir(const std::string &location) const {
-	if (_configs) {
-		for (auto it = _configs->locations.rbegin(); it != _configs->locations.rend(); ++it) {
-			if (location.find(it->get()->specifier) == 0) {
-				if (!it->get()->upload_dir.empty()) {
-					return it->get()->upload_dir;
-				}
-			}
-		}
-		if (!_configs->upload_dir.empty()) {
-			return _configs->upload_dir;
-		}
-	}
-	return "/uploads";
-}
+// std::string Server::getUploadDir(const std::string &location) const {
+// 	if (_configs) {
+// 		for (auto it = _configs->locations.rbegin(); it != _configs->locations.rend(); ++it) {
+// 			if (location.find(it->get()->specifier) == 0) {
+// 				if (!it->get()->upload_dir.empty()) {
+// 					return it->get()->upload_dir;
+// 				}
+// 			}
+// 		}
+// 		if (!_configs->upload_dir.empty()) {
+// 			return _configs->upload_dir;
+// 		}
+// 	}
+// 	return "/uploads";
+// }
 
 // Private Methods
 
@@ -242,6 +223,6 @@ std::shared_ptr<SharedData> Server::_getSharedData() const {
 	return _shared;
 }
 
-std::shared_ptr<ServerConfig> Server::getConf() {
-	return _configs;
-}
+// std::shared_ptr<ServerConfig> Server::getConf() {
+// 	return _configs;
+// }
