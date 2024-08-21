@@ -1,12 +1,12 @@
 /* ************************************************************************** */
 /*                                                                            */
-/*                                                        ::::::::            */
-/*   CgiHandler.cpp                                     :+:    :+:            */
-/*                                                     +:+                    */
-/*   By: laura <laura@student.codam.nl>               +#+                     */
-/*                                                   +#+                      */
-/*   Created: 2024/08/20 08:01:07 by laura         #+#    #+#                 */
-/*   Updated: 2024/08/20 19:58:54 by ewehl         ########   odam.nl         */
+/*                                                        :::      ::::::::   */
+/*   CgiHandler.cpp                                     :+:      :+:    :+:   */
+/*                                                    +:+ +:+         +:+     */
+/*   By: dmaessen <dmaessen@student.42.fr>          +#+  +:+       +#+        */
+/*                                                +#+#+#+#+#+   +#+           */
+/*   Created: 2024/08/20 08:01:07 by laura             #+#    #+#             */
+/*   Updated: 2024/08/21 13:10:54 by dmaessen         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -104,7 +104,7 @@ namespace {
 		}
 		if (execve(argv[0], argv, env) == -1) {
 			std::cerr << "This is no middle age\n";
-			std::cerr << strerror(errno)<< "\n";
+			std::cerr << strerror(errno)<< argv[0] <<"\n";
 			close(pipeRead); pipeRead = -1;
 			close(pipeWrite); pipeWrite = -1;
 			freeEnv(env); // Will this leak if I kill the process?

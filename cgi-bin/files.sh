@@ -34,7 +34,7 @@ if [ -d "$DIRECTORY" ]; then
             FILENAME=$(basename "$FILE")
             BODY+="<li>"
             BODY+="<a href=\"$DIRECTORY/$FILENAME\" target=\"_blank\">$FILENAME</a>"
-            BODY+="<form style=\"display:inline;\" method=\"post\" action=\"/cgi-bin/delete.sh\">"
+            BODY+="<form style=\"display:inline;\" method=\"post\" action=\"/cgi-bin/delete_file.sh\">"
             BODY+="<input type=\"hidden\" name=\"_method\" value=\"DELETE\">"
             BODY+="<input type=\"hidden\" name=\"file\" value=\"$FILENAME\" />"
             BODY+="<input type=\"submit\" value=\"Delete\" />"
@@ -58,15 +58,14 @@ BODY+="</html>"
 BODYLEN=$(echo -n "$BODY" | wc -c)
 
 # Build header
-HEADER="HTTP/1.1 200\r\n
-Connection: closed\r\n
-Content-length: $BODYLEN\r\n
-Content-type: text/html\r\n\r\n
-"
+HEADER="HTTP/1.1 200 OK\r\n"
+HEADER+="Connection: close\r\n"
+HEADER+="Content-Length: $BODYLEN\r\n"
+HEADER+="Content-Type: text/html\r\n\r\n"
 
-# Output -e so the backslash is interpreted
-echo -e $HEADER
-echo -e $BODY
+# Output the header and body
+echo -e "$HEADER"
+echo -e "$BODY"
 
 ##TODO error headers
 #
