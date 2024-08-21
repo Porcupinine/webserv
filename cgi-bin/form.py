@@ -6,8 +6,8 @@ import cgitb
 import http.cookies
 import datetime
 import sys
-
 import logging
+
 logger = logging.getLogger(__name__)
 if not os.path.isdir("logs"):
     os.mkdir("logs")

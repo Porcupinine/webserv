@@ -1,7 +1,5 @@
 #!/usr/bin/env python3
 
-#TODO check file extension
-
 import datetime
 import os
 import cgi
