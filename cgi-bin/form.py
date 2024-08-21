@@ -9,6 +9,8 @@ import sys
 
 import logging
 logger = logging.getLogger(__name__)
+if not os.path.isdir("logs"):
+    os.mkdir("logs")
 logging.basicConfig(filename='logs/form.log', encoding='utf-8', level=logging.DEBUG)
 
 def fillForm():

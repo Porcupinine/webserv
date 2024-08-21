@@ -9,6 +9,8 @@ import cgitb
 import logging
 
 logger = logging.getLogger(__name__)
+if not os.path.isdir("logs"):
+    os.mkdir("logs")
 logging.basicConfig(filename='logs/upload.log', encoding='utf-8', level=logging.DEBUG)
 
 cgitb.enable()
