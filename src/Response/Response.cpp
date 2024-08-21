@@ -6,7 +6,7 @@
 /*   By: dmaessen <dmaessen@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2024/07/07 15:49:40 by dmaessen          #+#    #+#             */
-/*   Updated: 2024/08/20 12:40:40 by dmaessen         ###   ########.fr       */
+/*   Updated: 2024/08/21 16:58:42 by dmaessen         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -199,8 +199,8 @@ std::string Response::errorHtml(unsigned int error, struct SharedData* shared, P
 
 void Response::readContent(ParseRequest& request, struct SharedData* shared) {
     std::ifstream file;
-    
-    if (fileExists(request.getPath()) == true && request.getRawPath() == "") {
+
+    if (fileExists(request.getPath()) == true && (request.getRawPath() == "" || request.getDir() == false)) {
         file.open((request.getPath().c_str()), std::ifstream::in);
         if (!file.is_open()) {
             _statusCode = 403;
