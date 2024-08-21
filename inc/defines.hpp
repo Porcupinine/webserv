@@ -6,7 +6,7 @@
 /*   By: dmaessen <dmaessen@student.42.fr>            +#+                     */
 /*                                                   +#+                      */
 /*   Created: 2024/08/19 12:54:19 by dmaessen      #+#    #+#                 */
-/*   Updated: 2024/08/20 11:14:08 by ewehl         ########   odam.nl         */
+/*   Updated: 2024/08/21 16:45:20 by ewehl         ########   odam.nl         */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -35,8 +35,8 @@
 // MAGIC NUMBERS
 #define ONE_MB					1048576 // Default max body size (1MB)
 #define BUFFER_SIZE				5000
-#define SERVER_TIMEOUT			30
-#define CGI_TIMEOUT				30
+#define SERVER_TIMEOUT			5
+#define CGI_TIMEOUT				10
 #define MAX_EVENTS				20
 #define BACKLOG					20
 #define SERVER_MAX_NO_REQUEST	5
@@ -123,7 +123,14 @@ struct ServerConfig {
 	std::map<int, std::string>						error_pages;
 	std::vector<std::shared_ptr<struct Locations>>	locations;
 
-	bool operator==(const std::unique_ptr<ServerConfig>& other) const;
+	bool 						operator==(const std::unique_ptr<ServerConfig>& other) const;
+	Locations* 					getLocation(std::string &locationSpec) const;
+	std::string 				getIndex(const std::string &location) const;
+	bool 						getDirListing(const std::string &location) const;
+	std::string 				getRootFolder(const std::string &location) const;
+	std::set<std::string> 		getAllowedMethods(const std::string &location) const;
+	std::map<int, std::string> 	getRedirect(const std::string &location) const;
+	std::string 				getUploadDir(const std::string &location) const;
 };
 
 struct ConfigError {
@@ -151,6 +158,8 @@ struct SharedData {
 	bool								connection_closed;
 
 	time_t								timestamp_last_request;
+	
+	bool operator==(std::shared_ptr<SharedData>& other) const;
 };
 
 

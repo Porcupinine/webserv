@@ -1,12 +1,12 @@
 /* ************************************************************************** */
 /*                                                                            */
-/*                                                        :::      ::::::::   */
-/*   CgiHandler.cpp                                     :+:      :+:    :+:   */
-/*                                                    +:+ +:+         +:+     */
-/*   By: dmaessen <dmaessen@student.42.fr>          +#+  +:+       +#+        */
-/*                                                +#+#+#+#+#+   +#+           */
-/*   Created: 2024/08/20 08:01:07 by laura             #+#    #+#             */
-/*   Updated: 2024/08/21 13:10:54 by dmaessen         ###   ########.fr       */
+/*                                                        ::::::::            */
+/*   CgiHandler.cpp                                     :+:    :+:            */
+/*                                                     +:+                    */
+/*   By: laura <laura@student.codam.nl>               +#+                     */
+/*                                                   +#+                      */
+/*   Created: 2024/08/20 08:01:07 by laura         #+#    #+#                 */
+/*   Updated: 2024/08/21 16:44:21 by ewehl         ########   odam.nl         */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -68,10 +68,6 @@ namespace {
 		std::strcpy(env[count], tmp.data());
 		count++;
 		tmp = "SERVER=" + shared->server_config->server_name;
-		env[count] = new char[tmp.size()];
-		std::strcpy(env[count], tmp.data());
-		count++;
-		tmp = "CGIPATH=" + request.getAbsPath() + "/cgi-bin";
 		env[count] = new char[tmp.size()];
 		std::strcpy(env[count], tmp.data());
 		count++;
@@ -145,16 +141,15 @@ int cgiHandler(SharedData* shared, ParseRequest& request) {
 		shared->status = Status::handling_request;
 		return 1;
 	}
-	addToEpoll(shared, pipeChildToParent[0], EPOLLIN);
+	addToEpoll(shared, pipeChildToParent[0], EPOLLHUP);
 	shared->cgi_read = pipeChildToParent[0];
 	addToEpoll(shared, pipeParentToChild[1], EPOLLOUT);
 	shared->cgi_write = pipeParentToChild[1];
 
-	printf("pPtC[0] = %d\t pPtC[1] = %d\n", pipeParentToChild[0], pipeParentToChild[1]);
-	printf("pCtP[0] = %d\t pCtP[1] = %d\n", pipeChildToParent[0], pipeChildToParent[1]);
+	// printf("pPtC[0] = %d\t pPtC[1] = %d\n", pipeParentToChild[0], pipeParentToChild[1]);
+	// printf("pCtP[0] = %d\t pCtP[1] = %d\n", pipeChildToParent[0], pipeChildToParent[1]);
 
 	int pid = fork();
-	shared->cgi_pid = pid;
 	if (pid == -1) {
 		std::cerr << "There are no forks, you can try the philos!\n";
 		shared->response_code = 500;
@@ -166,6 +161,8 @@ int cgiHandler(SharedData* shared, ParseRequest& request) {
 		close(pipeChildToParent[0]);
 		runChild(request, pipeParentToChild[0], pipeChildToParent[1], shared);
 	} else {
+		shared->cgi_pid = pid;
+		// std::cout << "PID = " << pid << std::endl;
 		close(pipeParentToChild[0]);
 		close(pipeChildToParent[1]);
 	}
@@ -175,15 +172,15 @@ int cgiHandler(SharedData* shared, ParseRequest& request) {
 void writeCGI(SharedData* shared, ParseRequest& request) {
 	auto body = request.getBodyMsg();
 	// std::cout << "Body in WRITECGI = " << body << std::endl;
-	std::cerr << "trying to write to: " << shared->cgi_write << "\n";
+	// std::cerr << "trying to write to: " << shared->cgi_write << "\n";
 	if(write(shared->cgi_write, body.c_str(), body.size()) == -1){
 		std::cerr << "Couldn't write to child, reason: " << strerror(errno) << "\n";
 		shared->response_code = 504;
 		shared->status = Status::handling_request;
 	}
+	// std::cout<<"body done!\n";
 	close(shared->cgi_write);
 	shared->cgi_write = -1;
-	std::cout<<"body done!\n";
 	shared->status =  Status::in_cgi;
 }
 
@@ -191,7 +188,7 @@ void readCGI(SharedData* shared) {
 	ssize_t buffLen = 0;
 	std::string response;
 	std::string buffer(BUFFER_SIZE, '\0');
-	std::cerr << "trying to read from: " << shared->cgi_read << "\n";
+	// std::cerr << "trying to read from: " << shared->cgi_read << "\n";
 	while ((buffLen = read(shared->cgi_read, buffer.data(), BUFFER_SIZE)) > 0) {
 		response.append(buffer.c_str(), buffLen);
 	}
@@ -200,9 +197,8 @@ void readCGI(SharedData* shared) {
 		shared->response_code = 504;
 		shared->status = Status::handling_request;
 	}
-	std::cout<<"------------response-------------\n\'"<<response<<"\'\n";
+	// std::cout<<"------------response-------------\n\'"<<response<<"\'\n";
 	shared->response = response + "\0";
-	shared->status = Status::writing;
 	shared->connection_closed = true;
 	close(shared->cgi_read);
 	shared->cgi_read = -1;
@@ -215,6 +211,7 @@ void finishCGI(SharedData *shared) {
 	} else if (WIFEXITED(status)) {
 		std::cout << "Child exited with status " << WEXITSTATUS(status) << "\n";
 	}
+	shared->status = Status::writing;
 }
 
 //TODO make index page with cgi to show cookie after user fills the name and intra login?

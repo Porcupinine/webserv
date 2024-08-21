@@ -6,7 +6,7 @@
 /*   By: dmaessen <dmaessen@student.42.fr>            +#+                     */
 /*                                                   +#+                      */
 /*   Created: 2024/08/19 12:55:16 by dmaessen      #+#    #+#                 */
-/*   Updated: 2024/08/20 15:39:44 by ewehl         ########   odam.nl         */
+/*   Updated: 2024/08/21 16:40:41 by ewehl         ########   odam.nl         */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -15,8 +15,6 @@
 #include "../../inc/Utils.hpp"
 #include <fcntl.h>
 #include <ctime>
-
-// #include <regex> // check if needed
 
 bool WebServ::_serverShutdown = false; 
 
@@ -97,7 +95,6 @@ void WebServ::readData(SharedData* shared) {
 		} else {
 			if (shared->fd != -1) {
 				shared->status = Status::handling_request;
-				// shared->status = (requestIsComplete(buffer) ? Status::handling_request : Status::reading);
 				break;
 			} else {
 				std::cerr << "Critical error reading from socket.\n";
@@ -130,7 +127,7 @@ void	WebServ::newConnection(SharedData* shared) {
 	clientShared->request.clear();
 	clientShared->response.clear();
 	clientShared->response_code = 200;
-	clientShared->server = shared->server;
+	// clientShared->server = shared->server;
 	clientShared->server_config = shared->server_config;
 	std::cout << shared->server_config->root_dir << std::endl;
 	clientShared->connection_closed = false;
@@ -138,7 +135,7 @@ void	WebServ::newConnection(SharedData* shared) {
 
 	epoll_event event;
 	event.events = EPOLLIN | EPOLLOUT;
-	event.data.ptr = clientShared.get();
+	event.data.ptr = static_cast<void*>(clientShared.get());
 
 	shared->timestamp_last_request = std::time(nullptr);
 	if (epoll_ctl(shared->epoll_fd, EPOLL_CTL_ADD, clientFd, &event) == -1) {
@@ -166,29 +163,27 @@ void	WebServ::run() {
 			if (_events[idx].events & EPOLLIN && shared->status == Status::reading)
 				readData(shared);
 			if (shared->status == Status::handling_request){
-				std::cout << PURPLE << "Inside ParseReq" << RESET << std::endl;
+				// std::cout << PURPLE << "Inside ParseReq" << RESET << std::endl;
 				req = ParseRequest(shared);
 				if (shared->status == Status::start_cgi)
 					cgiHandler(shared, req);
 				shared->request.clear();
 			}
 			if ((_events[idx].events & EPOLLOUT) && shared->status == Status::start_cgi){
-				std::cout << "in writeCGI \n";
+				// std::cout << "in writeCGI \n";
 				writeCGI(shared, req);
 			}
-			if ((_events[idx].events & EPOLLIN) && shared->status == Status::in_cgi){
-				std::cout << "in ReadCGI \n";
+			if ((_events[idx].events & EPOLLHUP) && shared->status == Status::in_cgi){
 				readCGI(shared);
 				finishCGI(shared);
 			}
 			if ((_events[idx].events & EPOLLOUT) && shared->status == Status::writing)
 				writeData(shared);
-			if ((_events[idx].events & (EPOLLERR | EPOLLHUP)) || shared->status == Status::closing) {
-				// (_events[idx].events == EPOLLERR) ? closeConnection(shared) : (void)(std::cout << "EPOLLHUP..\n") ; 
-				std::cout << RED << "HERE" << RESET << std::endl;
-				shared->request.clear(); // might introduce complications.. Guess well find out.
+			if ((_events[idx].events & (EPOLLERR)) || shared->status == Status::closing) {
+				// std::cout << RED << "HERE" << RESET << std::endl;
+				shared->request.clear();
 				closeCGIfds(shared);
-				closeConnection(shared);
+				closeConnection(shared);;
 			}
 		}
 	}
@@ -209,41 +204,51 @@ void	WebServ::_closeConnections() {
 void WebServ::_checkHangingSockets(SharedData *data) {
 	if (data->status == Status::listening) return;
 
-	double timeout = (data->status == Status::in_cgi) ? CGI_TIMEOUT : data->server->getTimeout();
+	double timeout = (data->status == Status::in_cgi || data->status == Status::start_cgi) ? CGI_TIMEOUT : SERVER_TIMEOUT;
 	time_t currentTime = std::time(nullptr);
 	double diff = std::difftime(currentTime, data->timestamp_last_request);
 
 	if (diff < timeout) return;
 
-	data->response_code = 408;
-	data->status = Status::closing;
-
 	switch (data->status) {
 		case Status::listening: // because werror.
 		case Status::reading:
-			std::cout << "Reading.." << std::endl;
+			// std::cout << "Reading.." << std::endl;
 			break;
 		case Status::handling_request:
-			std::cout << "Handling_Request.." << std::endl;
+			// std::cout << "Handling_Request.." << std::endl;
 			break;
 		case Status::start_cgi:
-			std::cout << "START_CGI.." << std::endl;
-			break;
-		case Status::in_cgi:
+			// std::cout << "START_CGI.." << std::endl;
 			data->response_code = 504;
-			std::time(&(data->timestamp_last_request));
 			data->status = Status::handling_request;
-			if (data->cgi_pid != 0) {
+			if (data->cgi_pid != -1) {
+				std::cout << "Killed child" << std::endl;
 				kill(data->cgi_pid, SIGTERM);
 			}
-			break;
+			std::time(&(data->timestamp_last_request));
+			return;
+			// break;
+		case Status::in_cgi:
+			data->response_code = 504;
+			data->status = Status::handling_request;
+			if (data->cgi_pid != -1) {
+				std::cout << "Killed child" << data->cgi_pid << std::endl;
+				kill(data->cgi_pid, SIGTERM);
+			}
+			std::time(&(data->timestamp_last_request));
+			return;
+			// break;
 		case Status::writing:
-			std::cout << "WRITING.." << std::endl;
+			// std::cout << "WRITING.." << std::endl;
 			break;
 		case Status::closing:
-			std::cout << "CLOSING.." << std::endl;
+			// std::cout << "CLOSING.." << std::endl;
 			break;
 	}
+
+	data->response_code = 408;
+	data->status = Status::closing;
 }
 
 void	WebServ::_setNonBlocking(int fd) {
@@ -273,16 +278,17 @@ std::vector<VirtualHost> WebServ::_setUpHosts(Config& conf) {
 void WebServ::_initializeServers(Config& conf) {
 	std::vector<VirtualHost>  virtualHosts = _setUpHosts(conf);
 	for (const auto& vhost : virtualHosts) {
-		std::shared_ptr<Server> server = std::make_shared<Server>();
-		std::shared_ptr<ServerConfig> servConfig = std::shared_ptr(vhost.getConfig());
+		auto server = std::make_unique<Server>();
+		auto servConfig = std::shared_ptr(vhost.getConfig());
 
 		// std::cout << servConfig.root_dir << std::endl;
 		if (server->initServer(servConfig, _epollFd, SERVER_TIMEOUT, SERVER_MAX_NO_REQUEST) != 0) {
 			throw InitException("Failed to initialize server for host: " + servConfig->host);
 		}
-		_servers.push_back(server);
-		_sharedPtrs_Servers.push_back(server);
+		_servers.push_back(std::move(server));
+		// _sharedPtrs_Servers.push_back(server);
 	}
+	virtualHosts.clear();
 }
 
 void WebServ::_handleSignal(int sig) {
