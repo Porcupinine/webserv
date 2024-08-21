@@ -1,55 +1,46 @@
 #!/bin/bash
 
-#check if exists, delete, call files again? parse body to get
-
-# Check if UPLOAD_DIR is set
-if [ -z "$UPLOAD_DIR" ]; then
-    HEADER=""
-    echo "<html><body><h1>Error</h1><p>UPLOAD_DIR environment variable is not set.</p></body></html>"
-    exit 1
-fi
+# Read the POST data
+read -n $CONTENT_LENGTH POST_DATA
 
 # Get directory
 DIRECTORY="$UPLOAD_DIR"
 
-# Read the request body into DATA
-CONTENT_LENGTH=$CONTENT_LENGTH
-read -n $CONTENT_LENGTH DATA
+# Extract the file name from the POST data
+FILENAME=$(echo "$POST_DATA" | sed -n 's/^.*file=\([^&]*\).*$/\1/p')
 
-# Get filename
-FILENAME=$(echo "$POST_DATA" | grep -oP '(?<=filename=)[^&]*')
+# Decode URL-encoded string (replace + with space and decode %XX)
+FILENAME=$(echo -e "$(echo "$FILENAME" | sed 's/+/ /g; s/%\([0-9A-Fa-f][0-9A-Fa-f]\)/\\x\1/g')")
 
-# Decode URL-encoded characters in the filename
-FILENAME=$(echo -e "$(echo "$FILENAME" | sed 's/+/ /g;s/%/\\x/g')")
+# Trim any whitespace
+FILENAME=$(echo "$FILENAME" | xargs)
 
-#set filePath
-FILEPATH="$DIRECTORY/$FILENAME"
+# Debugging: Print the original POST data and decoded filename
+echo "Original POST data: $POST_DATA" >&2
+echo "Decoded filename: '$FILENAME'" >&2
 
-# Check if the file exists and delete
-if [ -f "$FILEPATH" ]; then
-    rm "$FILEPATH"
+# Ensure the UPLOAD_DIR is set, and construct the correct file path
+if [ -n "$UPLOAD_DIR" ]; then
+    FILE_PATH="$UPLOAD_DIR/$FILENAME"
+else
+    FILE_PATH="./$FILENAME"
+fi
 
-# Build body
-BODY="<!DOCTYPE html>
-<html>
-<body>
+# Check if the file exists exactly as expected
+if [ ! -f "$FILE_PATH" ]; then
+    echo "File not found after decoding: '$FILE_PATH'" >&2
+    echo "HTTP/1.1 404 Not Found"
+    echo "Content-Type: text/html"
+    echo ""
+    echo "<html><body><h1>Error</h1><p>File $FILENAME not found in $UPLOAD_DIR.</p>
+     <p><a href=\"files.sh\">Back</a></p></body></html>"
+    exit 1
+fi
 
-<h1>File was successfully deleted!!</h1>
-
-<p>We are sad to see your data go!</p>
-<p><a href=\"$DIRECTORY/files.sh\">Back</a></p>
-
-
-</body>
-</html>"
-
-# Build header
-HEADER="HTTP/1.1 200\r\n
-Connection: close\r\n
-Content-length: $BODYLEN\r\n
-Content-type: text/html\r\n\r\n
-"
-
-# Output -e so the backslash is interpreted
-echo -e $HEADER
-echo -e $BODY
+# Delete the file
+rm "$FILE_PATH"
+echo "HTTP/1.1 200 OK"
+echo "Content-Type: text/html"
+echo ""
+echo "<html><body><h1>File Deleted</h1><p>$FILENAME has been deleted from $UPLOAD_DIR.</p>
+     <p><a href=\"files.sh\">Back</a></p></body></html>"

@@ -6,9 +6,11 @@ import cgitb
 import http.cookies
 import datetime
 import sys
-
 import logging
+
 logger = logging.getLogger(__name__)
+if not os.path.isdir("logs"):
+    os.mkdir("logs")
 logging.basicConfig(filename='logs/form.log', encoding='utf-8', level=logging.DEBUG)
 
 def fillForm():
@@ -48,7 +50,7 @@ def fillForm():
         <body>
         
         <h1>Thank you {name} for your precious data!!</h1>
-        <p><a href="/index.html">Back</a></p>
+        <p><a href="/">Back</a></p>
         
         </body>
         </html>"""

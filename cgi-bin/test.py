@@ -5,7 +5,6 @@ import os
 import unittest
 from unittest.mock import patch
 from form import fillForm
-
 class BytesIOWithBuffer(io.BytesIO):
     @property
     def buffer(self):
