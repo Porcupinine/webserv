@@ -1,18 +1,17 @@
 /* ************************************************************************** */
 /*                                                                            */
-/*                                                        :::      ::::::::   */
-/*   WebServ.cpp                                        :+:      :+:    :+:   */
-/*                                                    +:+ +:+         +:+     */
-/*   By: dmaessen <dmaessen@student.42.fr>          +#+  +:+       +#+        */
-/*                                                +#+#+#+#+#+   +#+           */
-/*   Created: 2024/08/19 12:55:16 by dmaessen          #+#    #+#             */
-/*   Updated: 2024/08/20 13:06:07 by dmaessen         ###   ########.fr       */
+/*                                                        ::::::::            */
+/*   WebServ.cpp                                        :+:    :+:            */
+/*                                                     +:+                    */
+/*   By: dmaessen <dmaessen@student.42.fr>            +#+                     */
+/*                                                   +#+                      */
+/*   Created: 2024/08/19 12:55:16 by dmaessen      #+#    #+#                 */
+/*   Updated: 2024/08/20 15:39:44 by ewehl         ########   odam.nl         */
 /*                                                                            */
 /* ************************************************************************** */
 
 #include "../../inc/WebServ.hpp"
 #include "../../inc/VirtualHost.hpp"
-#include "../../inc/CgiHandler.hpp"
 #include "../../inc/Utils.hpp"
 #include <fcntl.h>
 #include <ctime>
@@ -57,17 +56,6 @@ WebServ::~WebServ() {
 	// _closeConnections();
 }
 
-// void WebServ::handleRequest(SharedData* shared) {
-// 	std::cout << PURPLE << "Do I get here handleReq?" << RESET << std::endl;
-// 	std::cout << "Received request:\n" << shared->request << std::endl;
-// 	shared->response = "HTTP/1.1 200 OK\r\n"
-// 	"Content-Type: text/plain\r\n"
-// 	"Content-Length: 13\r\n"
-// 	"\r\n"
-// 	"Hello, world!";
-// 	shared->status = Status::writing;
-// }
-
 void	WebServ::writeData(SharedData* shared) {
 	std::cout << PURPLE << "Inside WriteData" << RESET << std::endl;
 	if (shared->status == Status::closing) return;
@@ -78,7 +66,6 @@ void	WebServ::writeData(SharedData* shared) {
 	len = send(clientFd, shared->response.c_str(), len, MSG_NOSIGNAL);
 	if (len == -1) {
 		std::cerr << "Some error occured trying to send. Reason " << RED << strerror(errno) << RESET << std::endl;
-		printf("\t\t%s%d%s", CYAN, clientFd, RESET);
 		shared->status = Status::closing;
 	} else if (len < static_cast<int>(shared->response.size()) && len != 0) {
 		shared->response = shared->response.substr(len, shared->response.npos);
@@ -91,32 +78,6 @@ void	WebServ::writeData(SharedData* shared) {
 	}
 }
 
-// bool requestIsComplete(const std::string& buffer) {
-// 	size_t headers_end = buffer.find("\r\n\r\n");
-// 	if (headers_end == std::string::npos) {
-// 		return false;
-// 	}
-
-// 	size_t content_length_pos = buffer.find("Content-Length:");
-// 	if (content_length_pos != std::string::npos && content_length_pos < headers_end) {
-// 		size_t start = buffer.find_first_of("0123456789", content_length_pos);
-// 		if (start != std::string::npos) {
-// 			size_t end = buffer.find(LINE_ENDING, start);
-// 			if (end != std::string::npos) {
-// 				int content_length = std::stoi(buffer.substr(start, end - start));
-// 				size_t total_request_size = headers_end + 4 + content_length; // 4 for "\r\n\r\n"
-// 				std::cout << total_request_size << "vs " << buffer.size() << std::endl;
-// 				return buffer.size() >= total_request_size;
-// 			}
-// 		}
-// 	} else {
-// 		// No Content-Length header found, assume no body expected
-// 		return true; // The headers are complete, and no body is expected
-// 	}
-
-// 	return false;
-// }
-
 void WebServ::readData(SharedData* shared) {
 	char buffer[BUFFER_SIZE];
 	int bytesRead;
@@ -125,8 +86,6 @@ void WebServ::readData(SharedData* shared) {
 	while (true) {
 		bytesRead = recv(shared->fd, buffer, BUFFER_SIZE - 1, MSG_DONTWAIT);
 
-		// std::cout << RED << " BYTES READ: "<< bytesRead << RESET << std::endl;
-		// std::cout << buffer << std::endl;
 		if (bytesRead > 0) {
 			buffer[bytesRead] = '\0';
 			shared->request.append(buffer, bytesRead);
@@ -141,17 +100,10 @@ void WebServ::readData(SharedData* shared) {
 				// shared->status = (requestIsComplete(buffer) ? Status::handling_request : Status::reading);
 				break;
 			} else {
-				// Assuming an error that we need to handle as a critical failure
 				std::cerr << "Critical error reading from socket.\n";
-				shared->response_code = 500;
-				shared->status = Status::handling_request;
+				shared->status = Status::closing;
 			}
 		}
-	}
-
-	if (shared->status == Status::handling_request) {
-//		std::cerr << "fd = " << shared->fd << std::endl;
-		std::cerr << "is this the one ? Request = " << shared->request << std::endl;
 	}
 }
 
@@ -167,8 +119,6 @@ void	WebServ::newConnection(SharedData* shared) {
 
 	std::cout << PURPLE << "ClientFd: " << clientFd << "\tSharedFd: " << shared->fd << RESET << std::endl;
 	_setNonBlocking(clientFd);
-
-	std::cout << "Serv conf = " << shared->server_config->root_dir << std::endl;
 
 	auto clientShared = std::make_shared<SharedData>();
 	clientShared->fd = clientFd;
@@ -194,6 +144,9 @@ void	WebServ::newConnection(SharedData* shared) {
 	if (epoll_ctl(shared->epoll_fd, EPOLL_CTL_ADD, clientFd, &event) == -1) {
 		std::cerr << "Error registering new client on epoll: " << strerror(errno) << std::endl;
 		close(clientFd);
+		close(clientShared->fd);
+		clientShared->fd = -1;
+		shared->status = Status::closing;
 		return;
 	}
 
@@ -213,7 +166,6 @@ void	WebServ::run() {
 			if (_events[idx].events & EPOLLIN && shared->status == Status::reading)
 				readData(shared);
 			if (shared->status == Status::handling_request){
-				// handleRequest(shared);
 				std::cout << PURPLE << "Inside ParseReq" << RESET << std::endl;
 				req = ParseRequest(shared);
 				if (shared->status == Status::start_cgi)
@@ -232,11 +184,11 @@ void	WebServ::run() {
 			if ((_events[idx].events & EPOLLOUT) && shared->status == Status::writing)
 				writeData(shared);
 			if ((_events[idx].events & (EPOLLERR | EPOLLHUP)) || shared->status == Status::closing) {
-				(_events[idx].events == EPOLLERR) ? closeConnection(shared) : (void)(std::cout << "EPOLLHUP..\n") ; 
+				// (_events[idx].events == EPOLLERR) ? closeConnection(shared) : (void)(std::cout << "EPOLLHUP..\n") ; 
 				std::cout << RED << "HERE" << RESET << std::endl;
+				shared->request.clear(); // might introduce complications.. Guess well find out.
 				closeCGIfds(shared);
 				closeConnection(shared);
-				shared->request.clear(); // might introduce complications.. Guess well find out.
 			}
 		}
 	}
@@ -255,67 +207,42 @@ void	WebServ::_closeConnections() {
 }
 
 void WebServ::_checkHangingSockets(SharedData *data) {
-    double timeout = (data->status == Status::in_cgi) ? CGI_TIMEOUT : data->server->getTimeout();
-    time_t currentTime = std::time(nullptr);
-    double diff = std::difftime(currentTime, data->timestamp_last_request);
+	if (data->status == Status::listening) return;
 
-    // std::cout << "tmstamp = " << data->timestamp_last_request
-    //           << " current time = " << currentTime
-    //           << " server timeout = " << timeout
-    //           << " diff = " << diff << std::endl;
+	double timeout = (data->status == Status::in_cgi) ? CGI_TIMEOUT : data->server->getTimeout();
+	time_t currentTime = std::time(nullptr);
+	double diff = std::difftime(currentTime, data->timestamp_last_request);
 
-    if (diff >= timeout) {
-        std::cout << "Do I get in CheckHanging?" << std::endl;
-        switch (data->status) {
-            case Status::listening:
-                std::cout << "for testing purposes.." << std::endl;
-            //     data->response_code = 404;
-				std::time(&(data->timestamp_last_request));
-			// 	data->status = Status::handling_request;
-                break;
-            case Status::reading:
-                std::cout << "reading.." << std::endl;
-                data->response_code = 408;
-				std::time(&(data->timestamp_last_request));
-				data->status = Status::handling_request;
-                break;
-            case Status::handling_request:
-                std::cout << CYAN << "handling_request.." << std::endl;
-                data->response_code = 500; //..??
-				data->status = Status::closing; // ../
-                break;
-            case Status::start_cgi:
-                std::cout << "start_cgi.." << std::endl;
-                data->response_code = 504;
-				std::time(&(data->timestamp_last_request));
-				data->status = Status::handling_request;
-                if (data->cgi_read != -1){
-                    close(data->cgi_read);
-                    data->cgi_read = -1;
-                }
-				if (data->cgi_write != -1){
-                    close(data->cgi_write);
-                    data->cgi_write = -1;
-                }
-                if (kill(data->cgi_pid, 0) == 0) {
-                    kill(data->cgi_pid, SIGTERM);
-                }
-                break;
-			case Status::in_cgi: // Is this necessary?
-				std::cout << "in_cgi.." << std::endl;
-				// data->response_code = ...;
-				break;
-			case Status::writing:
-				std::cout << "writing.." << std::endl;
-				break;
-			case Status::closing:
-				std::cout << "CLOSING.." << std::endl;
-				// closeConnection(data);
-				break;
-			// case Status::writing:
-			// 	data->response_code = ...;
-			// 	break;
-		}
+	if (diff < timeout) return;
+
+	data->response_code = 408;
+	data->status = Status::closing;
+
+	switch (data->status) {
+		case Status::listening: // because werror.
+		case Status::reading:
+			std::cout << "Reading.." << std::endl;
+			break;
+		case Status::handling_request:
+			std::cout << "Handling_Request.." << std::endl;
+			break;
+		case Status::start_cgi:
+			std::cout << "START_CGI.." << std::endl;
+			break;
+		case Status::in_cgi:
+			data->response_code = 504;
+			std::time(&(data->timestamp_last_request));
+			data->status = Status::handling_request;
+			if (data->cgi_pid != 0) {
+				kill(data->cgi_pid, SIGTERM);
+			}
+			break;
+		case Status::writing:
+			std::cout << "WRITING.." << std::endl;
+			break;
+		case Status::closing:
+			std::cout << "CLOSING.." << std::endl;
+			break;
 	}
 }
 

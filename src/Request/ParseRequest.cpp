@@ -6,7 +6,7 @@
 /*   By: dmaessen <dmaessen@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2024/07/07 15:50:05 by dmaessen          #+#    #+#             */
-/*   Updated: 2024/08/20 15:34:42 by dmaessen         ###   ########.fr       */
+/*   Updated: 2024/08/21 12:58:15 by dmaessen         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -15,10 +15,13 @@
 
 ParseRequest::ParseRequest::ParseRequest(struct SharedData* shared) : _methodType(""), _path(""), _version(""), _bodyMsg(""), _port(0), _returnValue(200), _query(""), _redirection(false), _dir(false), _rawPath("") {
     initHeaders();
+    
+    std::cout<<shared->request<<"\n"; // to rm
+    
     if (shared->request.empty())
         shared->status = Status::closing;
     parseStr(shared->request, shared);
-    if (cgiInvolved(_path) == false) {
+    if (cgiInvolved(_path) == false || _methodType == "DELETE") {
         shared->connection_closed = true;
 		shared->status = Status::writing;
     }
@@ -72,8 +75,8 @@ void ParseRequest::parseStr(std::string &info, struct SharedData* shared) {
         _cookies = parseCookies(_headers["Cookie"]);
     
     _cgiresponse = "";
-    if (cgiInvolved(_path) == true) {
-        shared->status = Status::start_cgi; // TODO changed the arg
+    if (cgiInvolved(_path) == true && _methodType != "DELETE") {
+        shared->status = Status::start_cgi;
         return ;
     }
 	
@@ -170,7 +173,7 @@ std::string ParseRequest::setValue(const std::string &line) {
     i = line.find_first_of(":", 1);
     i = line.find_first_not_of(" ", i + 1);
     endline = line.find_first_of("\r", i);
-    line.substr(i, endline - 1);
+	(void)line.substr(i, endline - 1);
     if (i != std::string::npos)
         res.append(line, i, std::string::npos);
     return rmSpaces(res);
@@ -366,7 +369,7 @@ int ParseRequest::parseFirstline(const std::string &info, struct SharedData* sha
         std::cerr << "Error: substring out of range: " << e.what() << "\n";
         return _returnValue;
     }
-    
+
     i = line.find_first_of(' ');
     
     if (i == std::string::npos) {
@@ -397,7 +400,7 @@ int ParseRequest::parsePath(const std::string &line, size_t i, struct SharedData
 	
     if (_path == "/favicon.ico")
 		return _returnValue;
-        
+
     Locations *loc = shared.server->getLocation(_path);
 
     std::string abspath = shared.server->getRootFolder(_path);
@@ -416,7 +419,7 @@ int ParseRequest::parsePath(const std::string &line, size_t i, struct SharedData
     }
 
     _absPathRoot = current;
-    
+
     Locations *spe = shared.server->getSpecifier(_path);
     if (spe != nullptr) {
         if (spe->root_dir != ""){
@@ -430,7 +433,7 @@ int ParseRequest::parsePath(const std::string &line, size_t i, struct SharedData
             _rawPath = spe->specifier;
         }
     }
-    
+
 	if ((_path[0] == '/' && _path.size() == 2) || _path == "/")
         _path = _absPathRoot + abspath + "/" + shared.server->getIndex(_path);
     else if (loc != nullptr) {
