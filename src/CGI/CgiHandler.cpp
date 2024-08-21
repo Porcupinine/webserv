@@ -6,7 +6,7 @@
 /*   By: laura <laura@student.codam.nl>               +#+                     */
 /*                                                   +#+                      */
 /*   Created: 2024/08/20 08:01:07 by laura         #+#    #+#                 */
-/*   Updated: 2024/08/20 13:04:37 by ewehl         ########   odam.nl         */
+/*   Updated: 2024/08/20 19:58:54 by ewehl         ########   odam.nl         */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -63,7 +63,7 @@ namespace {
 		env[count] = new char[tmp.size()];
 		std::strcpy(env[count], tmp.data());
 		count++;
-		tmp = "UPLOAD_DIR=" + request.getAbsPath() + shared->server_config->upload_dir; //TODO remove fucking point??
+		tmp = "UPLOAD_DIR=" + request.getAbsPath() + shared->server_config->upload_dir;
 		env[count] = new char[tmp.size()];
 		std::strcpy(env[count], tmp.data());
 		count++;
@@ -98,32 +98,31 @@ namespace {
 			close(pipeRead); pipeRead = -1; // Close unused read end
 			close(pipeWrite); pipeWrite = -1; // Close the original pipe write end
 			freeEnv(env); // Will this leak if I kill the process?
-			// DOMI
-			return 1;
+			shared->response_code = 504;
+			shared->status = Status::handling_request;
+			std::exit(EXIT_FAILURE);
 		}
 		if (execve(argv[0], argv, env) == -1) {
 			std::cerr << "This is no middle age\n";
 			std::cerr << strerror(errno)<< "\n";
 			close(pipeRead); pipeRead = -1;
 			close(pipeWrite); pipeWrite = -1;
-			shared->response_code = 500;
-			shared->status = Status::handling_request;
 			freeEnv(env); // Will this leak if I kill the process?
-			// DOMI
-			exit(1);
+			shared->response_code = 504;
+			shared->status = Status::handling_request;
+			std::exit(EXIT_FAILURE);
 		}
-		return 0;
+		std::exit(EXIT_SUCCESS);
 	}
 }
 
 int cgiHandler(SharedData* shared, ParseRequest& request) {
-	std::cout<<"file path: \'"<<request.getPath()<<"\'\n";
+	std::cout << "file path: \'" << request.getPath() << "\'\n";
 	try {
 		(void)std::filesystem::exists(request.getPath()); // why is this cast?
 	}
 	catch (std::exception &ex) {
-		std::cerr<<"Error: "<<ex.what();
-		// if this happens we need to go to domi. err 500? or something gateway 504.
+		std::cerr << "Error: " << ex.what();
 		shared->response_code = 500;
 		shared->status = Status::handling_request;
 	}
@@ -132,14 +131,12 @@ int cgiHandler(SharedData* shared, ParseRequest& request) {
 
 	if (pipe(pipeParentToChild) == -1) {
 		std::cerr<<"Pipe failed, you gotta call Mario!\n";
-		// if this happens we need to go to domi. err 500? or something gateway 504.
 		shared->response_code = 500;
 		shared->status = Status::handling_request;
 		return 1;
 	}
 	if (pipe(pipeChildToParent) == -1) {
-		std::cerr<<"Pipe child failed, you gotta call Mario!\n";
-		// if this happens we need to go to domi. err 500? or something gateway 504.
+		std::cerr << "Pipe child failed, you gotta call Mario!\n";
 		shared->response_code = 500;
 		shared->status = Status::handling_request;
 		return 1;
@@ -149,18 +146,13 @@ int cgiHandler(SharedData* shared, ParseRequest& request) {
 	addToEpoll(shared, pipeParentToChild[1], EPOLLOUT);
 	shared->cgi_write = pipeParentToChild[1];
 
-	//for testing
-	shared->request = request.getBodyMsg();
-	std::cout << "request in handler = " << shared->request << std::endl;
-
 	printf("pPtC[0] = %d\t pPtC[1] = %d\n", pipeParentToChild[0], pipeParentToChild[1]);
 	printf("pCtP[0] = %d\t pCtP[1] = %d\n", pipeChildToParent[0], pipeChildToParent[1]);
 
 	int pid = fork();
 	shared->cgi_pid = pid;
 	if (pid == -1) {
-		std::cerr<<"There are no forks, you can try the philos!\n";
-		// if this happens we need to go to domi. err 500? or something gateway 504.
+		std::cerr << "There are no forks, you can try the philos!\n";
 		shared->response_code = 500;
 		shared->status = Status::handling_request;
 		return 1;
@@ -172,35 +164,6 @@ int cgiHandler(SharedData* shared, ParseRequest& request) {
 	} else {
 		close(pipeParentToChild[0]);
 		close(pipeChildToParent[1]);
-		// auto body = request.getBodyMsg();
-		// if(write(pipeParentToChild[1], body.c_str(), body.size()) == -1){
-		// 	std::cerr << "Couldn't write to child, reason: " << strerror(errno) << "\n";
-		// }
-		// close(pipeParentToChild[1]);
-		// std::cout<<"body done!\n";
-
-		//this gets its own function
-		// ssize_t buffLen = 0;
-		// std::string response;
-		// std::string buffer(BUFFER_SIZE, '\0');
-		// while ((buffLen = ::read(pipeChildToParent[0], buffer.data(), BUFFER_SIZE)) > 0) {
-		// 	response.append(buffer.c_str(), buffLen);
-		// }
-		// if (buffLen < 0) {
-		// 	std::cerr<<"Failed to read!\n";
-		// }
-		// std::cout<<"------------response-------------\n\'"<<response<<"\'\n";
-		// shared->response = response + "\0";
-		// shared->status = Status::writing;
-		// shared->connection_closed = true;
-		// close(pipeParentToChild[0]); // Close the read end after reading
-		// shared->status = Status::in_cgi;
-		// int status;
-		// if (waitpid(pid, &status, 0) == -1) {
-		// 	std::cerr << "Failed to wait for child process\n";
-		// } else if (WIFEXITED(status)) {
-		// 	std::cout << "Child exited with status " << WEXITSTATUS(status) << "\n";
-		// }
 	}
 	return 0;
 }
@@ -213,7 +176,6 @@ void writeCGI(SharedData* shared, ParseRequest& request) {
 		std::cerr << "Couldn't write to child, reason: " << strerror(errno) << "\n";
 		shared->response_code = 504;
 		shared->status = Status::handling_request;
-		// if this happens we need to go to domi. err 500? or something gateway 504.
 	}
 	close(shared->cgi_write);
 	shared->cgi_write = -1;
@@ -231,7 +193,6 @@ void readCGI(SharedData* shared) {
 	}
 	if (buffLen < 0) {
 		std::cerr<< "Couldn't read CGI response! " << strerror(errno) << "\n";
-		// if this happens we need to go to domi. err 500? or something gateway 504.
 		shared->response_code = 504;
 		shared->status = Status::handling_request;
 	}

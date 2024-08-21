@@ -6,13 +6,12 @@
 /*   By: dmaessen <dmaessen@student.42.fr>            +#+                     */
 /*                                                   +#+                      */
 /*   Created: 2024/08/19 12:55:16 by dmaessen      #+#    #+#                 */
-/*   Updated: 2024/08/20 12:46:22 by ewehl         ########   odam.nl         */
+/*   Updated: 2024/08/20 15:39:44 by ewehl         ########   odam.nl         */
 /*                                                                            */
 /* ************************************************************************** */
 
 #include "../../inc/WebServ.hpp"
 #include "../../inc/VirtualHost.hpp"
-#include "../../inc/CgiHandler.hpp"
 #include "../../inc/Utils.hpp"
 #include <fcntl.h>
 #include <ctime>
@@ -56,17 +55,6 @@ WebServ::~WebServ() {
 	_sharedPtrs_SharedData.clear();
 	// _closeConnections();
 }
-
-// void WebServ::handleRequest(SharedData* shared) {
-// 	std::cout << PURPLE << "Do I get here handleReq?" << RESET << std::endl;
-// 	std::cout << "Received request:\n" << shared->request << std::endl;
-// 	shared->response = "HTTP/1.1 200 OK\r\n"
-// 	"Content-Type: text/plain\r\n"
-// 	"Content-Length: 13\r\n"
-// 	"\r\n"
-// 	"Hello, world!";
-// 	shared->status = Status::writing;
-// }
 
 void	WebServ::writeData(SharedData* shared) {
 	std::cout << PURPLE << "Inside WriteData" << RESET << std::endl;
@@ -196,7 +184,7 @@ void	WebServ::run() {
 			if ((_events[idx].events & EPOLLOUT) && shared->status == Status::writing)
 				writeData(shared);
 			if ((_events[idx].events & (EPOLLERR | EPOLLHUP)) || shared->status == Status::closing) {
-				// (_events[idx].events == EPOLLERR) ? closeConnection(shared) : (void)(std::cout << "EPOLLHUP..\n") ;
+				// (_events[idx].events == EPOLLERR) ? closeConnection(shared) : (void)(std::cout << "EPOLLHUP..\n") ; 
 				std::cout << RED << "HERE" << RESET << std::endl;
 				shared->request.clear(); // might introduce complications.. Guess well find out.
 				closeCGIfds(shared);
@@ -219,65 +207,42 @@ void	WebServ::_closeConnections() {
 }
 
 void WebServ::_checkHangingSockets(SharedData *data) {
-    double timeout = (data->status == Status::in_cgi) ? CGI_TIMEOUT : data->server->getTimeout();
-    time_t currentTime = std::time(nullptr);
-    double diff = std::difftime(currentTime, data->timestamp_last_request);
+	if (data->status == Status::listening) return;
 
-    // std::cout << "tmstamp = " << data->timestamp_last_request
-    //           << " current time = " << currentTime
-    //           << " server timeout = " << timeout
-    //           << " diff = " << diff << std::endl;
+	double timeout = (data->status == Status::in_cgi) ? CGI_TIMEOUT : data->server->getTimeout();
+	time_t currentTime = std::time(nullptr);
+	double diff = std::difftime(currentTime, data->timestamp_last_request);
 
-    if (diff >= timeout) {
-        std::cout << "Do I get in CheckHanging?" << std::endl;
-        switch (data->status) {
-            case Status::listening:
-                std::cout << "for testing purposes.." << std::endl;
-            //     data->response_code = 404;
-				std::time(&(data->timestamp_last_request));
-			// 	data->status = Status::handling_request;
-                break;
-            case Status::reading:
-                std::cout << "reading.." << std::endl;
-                data->response_code = 408;
-				std::time(&(data->timestamp_last_request));
-				data->status = Status::handling_request;
-                break;
-            case Status::handling_request:
-                std::cout << CYAN << "handling_request.." << std::endl;
-                data->response_code = 500; //..??
-				data->status = Status::closing; // ../
-                break;
-            case Status::start_cgi:
-                std::cout << "start_cgi.." << std::endl;
-                data->response_code = 504;
-				std::time(&(data->timestamp_last_request));
-				data->status = Status::handling_request;
-                if (data->cgi_read != -1){
-                    close(data->cgi_read);
-                    data->cgi_read = -1;
-                }
-				if (data->cgi_write != -1){
-                    close(data->cgi_write);
-                    data->cgi_write = -1;
-                }
-				std::cerr << "\n\n\n-----------------------------------------------------------------------------------\n" << data->cgi_pid << "\n" << "--------------------------------------------------------------------------------------------\n\n\n";
-                if (kill(data->cgi_pid, 0) == 0) {
-                    kill(data->cgi_pid, SIGTERM);
-                }
-                break;
-			case Status::in_cgi: // Is this necessary?
-				std::cout << "in_cgi.." << std::endl;
-				// data->response_code = ...;
-				break;
-			case Status::writing:
-				std::cout << "writing.." << std::endl;
-				break;
-			case Status::closing:
-				std::cout << "CLOSING.." << std::endl;
-				// closeConnection(data);
-				break;
-		}
+	if (diff < timeout) return;
+
+	data->response_code = 408;
+	data->status = Status::closing;
+
+	switch (data->status) {
+		case Status::listening: // because werror.
+		case Status::reading:
+			std::cout << "Reading.." << std::endl;
+			break;
+		case Status::handling_request:
+			std::cout << "Handling_Request.." << std::endl;
+			break;
+		case Status::start_cgi:
+			std::cout << "START_CGI.." << std::endl;
+			break;
+		case Status::in_cgi:
+			data->response_code = 504;
+			std::time(&(data->timestamp_last_request));
+			data->status = Status::handling_request;
+			if (data->cgi_pid != 0) {
+				kill(data->cgi_pid, SIGTERM);
+			}
+			break;
+		case Status::writing:
+			std::cout << "WRITING.." << std::endl;
+			break;
+		case Status::closing:
+			std::cout << "CLOSING.." << std::endl;
+			break;
 	}
 }
 
