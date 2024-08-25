@@ -19,9 +19,14 @@ def uploadFile() -> (int, str):
     if not os.path.isdir("logdir"):
         os.mkdir("logdir")
 
+
+    logger.info("Will create field storage")
     # Get data parsed from cgi module
     form = cgi.FieldStorage()
+    logger.info(f'form: {form}')
+    logger.info("field storage created")
     fileData = form['filename']
+    logger.info("retrieved filename")
     name, extension = os.path.splitext(fileData.filename)
 
     # Check if filename contains spaces
@@ -104,7 +109,7 @@ Server: {os.environ.get("SERVER")}\r\n\r"""
     logger.info(f'body: {body}')
     print(header)
     print(body)
-except:
-    logger.error("Your script failed!!")
+except Exception as ex:
+    logger.error(f'Your script failed!! Exception {ex}')
 finally:
     print("\0")
